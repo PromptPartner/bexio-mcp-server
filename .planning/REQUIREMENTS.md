@@ -34,23 +34,23 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Reference Data (New)
 
-- [ ] **REFDATA-01**: Contact groups: list, get, create, delete
-- [ ] **REFDATA-02**: Contact sectors: list, get, create
-- [ ] **REFDATA-03**: Salutations: list, get, create, delete
-- [ ] **REFDATA-04**: Titles: list, get, create, delete
-- [ ] **REFDATA-05**: Countries: list, get, create, delete
-- [ ] **REFDATA-06**: Languages: list, get, create
-- [ ] **REFDATA-07**: Units: list, get, create, delete
-- [ ] **REFDATA-08**: Payment types: list, get, create
-- [ ] **REFDATA-09**: Company profile: get, update
-- [ ] **REFDATA-10**: Permissions: list
+- [x] **REFDATA-01**: Contact groups: list, get, create, delete
+- [x] **REFDATA-02**: Contact sectors: list, get, create
+- [x] **REFDATA-03**: Salutations: list, get, create, delete
+- [x] **REFDATA-04**: Titles: list, get, create, delete
+- [x] **REFDATA-05**: Countries: list, get, create, delete
+- [x] **REFDATA-06**: Languages: list, get, create
+- [x] **REFDATA-07**: Units: list, get, create, delete
+- [x] **REFDATA-08**: Payment types: list, get, create
+- [x] **REFDATA-09**: Company profile: get, update
+- [x] **REFDATA-10**: Permissions: list
 
 ### Banking (New)
 
-- [ ] **BANK-01**: Bank accounts: list, get (read-only)
-- [ ] **BANK-02**: Currencies: list, get, create, delete, update
-- [ ] **BANK-03**: IBAN payments: create, get, update (Swiss ISO 20022)
-- [ ] **BANK-04**: QR payments: create, get, update (Swiss QR-invoice standard)
+- [x] **BANK-01**: Bank accounts: list, get (read-only)
+- [x] **BANK-02**: Currencies: list, get, create, delete, update
+- [x] **BANK-03**: IBAN payments: create, get, update (Swiss ISO 20022)
+- [x] **BANK-04**: QR payments: create, get, update (Swiss QR-invoice standard)
 
 ### Projects & Time Tracking (New)
 
@@ -161,20 +161,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXIST-10 | Phase 1 | Complete |
 | EXIST-11 | Phase 1 | Complete |
 | EXIST-12 | Phase 1 | Complete |
-| REFDATA-01 | Phase 2 | Pending |
-| REFDATA-02 | Phase 2 | Pending |
-| REFDATA-03 | Phase 2 | Pending |
-| REFDATA-04 | Phase 2 | Pending |
-| REFDATA-05 | Phase 2 | Pending |
-| REFDATA-06 | Phase 2 | Pending |
-| REFDATA-07 | Phase 2 | Pending |
-| REFDATA-08 | Phase 2 | Pending |
-| REFDATA-09 | Phase 2 | Pending |
-| REFDATA-10 | Phase 2 | Pending |
-| BANK-01 | Phase 2 | Pending |
-| BANK-02 | Phase 2 | Pending |
-| BANK-03 | Phase 2 | Pending |
-| BANK-04 | Phase 2 | Pending |
+| REFDATA-01 | Phase 2 | Complete |
+| REFDATA-02 | Phase 2 | Complete |
+| REFDATA-03 | Phase 2 | Complete |
+| REFDATA-04 | Phase 2 | Complete |
+| REFDATA-05 | Phase 2 | Complete |
+| REFDATA-06 | Phase 2 | Complete |
+| REFDATA-07 | Phase 2 | Complete |
+| REFDATA-08 | Phase 2 | Complete |
+| REFDATA-09 | Phase 2 | Complete |
+| REFDATA-10 | Phase 2 | Complete |
+| BANK-01 | Phase 2 | Complete |
+| BANK-02 | Phase 2 | Complete |
+| BANK-03 | Phase 2 | Complete |
+| BANK-04 | Phase 2 | Complete |
 | PROJ-01 | Phase 3 | Pending |
 | PROJ-02 | Phase 3 | Pending |
 | PROJ-03 | Phase 3 | Pending |

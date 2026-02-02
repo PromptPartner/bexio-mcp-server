@@ -13,7 +13,7 @@ This roadmap transforms the v1 Bexio MCP server (83 tools, SDK 0.5.0, 2,418-line
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Migration** - SDK upgrade, modular architecture, existing 83 tools working
-- [ ] **Phase 2: Reference Data & Banking** - Foundational configuration data, Swiss banking/payments
+- [x] **Phase 2: Reference Data & Banking** - Foundational configuration data, Swiss banking/payments
 - [ ] **Phase 3: Projects & Accounting** - Time tracking, project management, chart of accounts, manual entries
 - [ ] **Phase 4: Purchase, Files & Payroll** - Bills, expenses, documents, HR (conditional)
 - [ ] **Phase 5: UI & Packaging** - MCP Apps capability, MCPB bundle, npm package
@@ -51,9 +51,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md - Reference Data Tools: Contact groups, sectors, salutations, titles, countries, languages, units (28 tools)
-- [ ] 02-02-PLAN.md - Company & Payments Config: Company profile, permissions, payment types (6 tools)
-- [ ] 02-03-PLAN.md - Banking Tools: Bank accounts, currencies, IBAN payments, QR payments (13 tools)
+- [x] 02-01-PLAN.md - Reference Data Tools: Contact groups, sectors, salutations, titles, countries, languages, units (26 tools)
+- [x] 02-02-PLAN.md - Company & Payments Config: Company profile, permissions, payment types (6 tools)
+- [x] 02-03-PLAN.md - Banking Tools: Bank accounts, currencies, IBAN payments, QR payments (13 tools)
 
 ### Phase 3: Projects & Accounting
 **Goal**: Complete project management, time tracking, and accounting foundation
@@ -129,7 +129,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Migration | 3/3 | **Complete** | 2026-02-01 |
-| 2. Reference Data & Banking | 0/3 | Planned | - |
+| 2. Reference Data & Banking | 3/3 | **Complete** | 2026-02-01 |
 | 3. Projects & Accounting | 0/3 | Not started | - |
 | 4. Purchase, Files & Payroll | 0/3 | Not started | - |
 | 5. UI & Packaging | 0/3 | Not started | - |
@@ -138,5 +138,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 ---
 *Roadmap created: 2026-02-01*
 *Phase 1 complete: 2026-02-01*
-*Phase 2 planned: 2026-02-01*
+*Phase 2 complete: 2026-02-01*
 *Total requirements: 67 | Phases: 6 | Plans: 17 (estimated)*
