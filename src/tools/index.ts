@@ -13,6 +13,7 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { BexioClient } from "../bexio-client.js";
 
 // Domain imports
+import * as reference from "./reference/index.js";
 import * as contacts from "./contacts/index.js";
 import * as invoices from "./invoices/index.js";
 import * as orders from "./orders/index.js";
@@ -31,8 +32,9 @@ export type HandlerFn = (
   args: unknown
 ) => Promise<unknown>;
 
-// Aggregate all tool definitions (83 total)
+// Aggregate all tool definitions (111 total)
 const allDefinitions: Tool[] = [
+  ...reference.toolDefinitions,  // 28 tools (contact groups, sectors, salutations, titles, countries, languages, units)
   ...contacts.toolDefinitions,   // 7 tools
   ...invoices.toolDefinitions,   // 15 tools
   ...orders.toolDefinitions,     // 7 tools
@@ -48,6 +50,7 @@ const allDefinitions: Tool[] = [
 
 // Aggregate all handlers
 const allHandlers: Record<string, HandlerFn> = {
+  ...reference.handlers,
   ...contacts.handlers,
   ...invoices.handlers,
   ...orders.handlers,
