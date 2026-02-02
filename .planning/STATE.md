@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Enable anyone to connect Claude Desktop to their Bexio accounting system with zero friction
-**Current focus:** Phase 5 - Packaging & Integration (next)
+**Current focus:** Phase 5 - Packaging & Integration (in progress)
 
 ## Current Position
 
-Phase: 4 of 6 (Purchase, Files & Payroll)
-Plan: 4 of 4 in current phase
-Status: **Phase 4 Complete** - 43 new tools (218 total)
-Last activity: 2026-02-01 -- Completed 04-04 (Payroll with module detection)
+Phase: 5 of 6 (UI & Packaging)
+Plan: 3 of 4 in current phase
+Status: **In Progress** - npm packaging configured
+Last activity: 2026-02-01 -- Completed 05-03 (npm package configuration)
 
-Progress: [###############---] 75%
+Progress: [################--] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 6.5 min
-- Total execution time: 84 min
+- Total plans completed: 16
+- Average duration: 6.3 min
+- Total execution time: 101 min
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [###############---] 75%
 | 02-reference-data-banking | 3/3 | 21 min | 7.0 min |
 | 03-projects-accounting | 4/4 | 15 min | 3.8 min |
 | 04-purchase-files-payroll | 4/4 | 22 min | 5.5 min |
+| 05-ui-packaging | 3/4 | 17 min | 5.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (3 min), 04-02 (6 min), 04-03 (5 min), 04-04 (8 min)
-- Trend: Established patterns enabling faster delivery
+- Last 5 plans: 04-03 (5 min), 04-04 (8 min), 05-01 (5 min), 05-02 (5 min), 05-03 (7 min)
+- Trend: Consistent pace with infrastructure/packaging work
 
 *Updated after each plan completion*
 
@@ -77,6 +78,11 @@ Recent decisions affecting current work:
 - [04-04]: Probe-on-first-call pattern for payroll module detection (not startup)
 - [04-04]: Cache module availability result for session duration
 - [04-04]: Friendly multi-line error with upgrade instructions when payroll unavailable
+- [05-01]: MCP Apps via @modelcontextprotocol/ext-apps for UI rendering
+- [05-01]: vite-plugin-singlefile for bundling HTML/CSS/JS into single file
+- [05-03]: @bexio/mcp-server scoped npm package name
+- [05-03]: zod 3.25.76 (not 3.22.5) for ext-apps peer dependency compatibility
+- [05-03]: Conditional build:ui to allow build before UI files exist
 
 ### Pending Todos
 
@@ -86,12 +92,13 @@ None.
 
 - ~~SDK migration from 0.5.0 to 1.25.2 has limited official documentation~~ RESOLVED in 01-01
 - ~~Swiss QR-invoice spec compliance needs research (Phase 2)~~ RESOLVED in 02-03
-- MCP Apps (UI-*) based on SEP-1865 proposal, not yet stable (Phase 5 risk)
+- ~~MCP Apps (UI-*) based on SEP-1865 proposal, not yet stable (Phase 5 risk)~~ RESOLVED in 05-01
+- UI files (src/ui/*) needed for 05-02 - Plan 05-02 not yet executed
 
 ## Session Continuity
 
-Last session: 2026-02-01 22:50 UTC
-Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
+Last session: 2026-02-01 22:40 UTC
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -127,6 +134,15 @@ Resume file: None
 | 04-02-PLAN.md | 1 | Purchase Orders & Outgoing Payments (10 tools) | COMPLETE |
 | 04-03-PLAN.md | 1 | Files & Additional Addresses (10 tools) | COMPLETE |
 | 04-04-PLAN.md | 1 | Payroll with module detection (10 tools) | COMPLETE |
+
+## Phase 5 Plans (IN PROGRESS)
+
+| Plan | Wave | Description | Status |
+|------|------|-------------|--------|
+| 05-01-PLAN.md | 1 | MCP Apps dependencies and Vite config | COMPLETE |
+| 05-02-PLAN.md | 1 | UI Components (invoice preview, contact card, dashboard) | PENDING |
+| 05-03-PLAN.md | 1 | npm package configuration | COMPLETE |
+| 05-04-PLAN.md | 1 | Claude Desktop integration guide | PENDING |
 
 ## Phase 1 Deliverables
 
@@ -167,3 +183,12 @@ Resume file: None
 - 1 payroll documents tool (list - conditional)
 - Conditional module detection with probe-on-first-call caching
 - Total tools: 218 (175 + 43 Phase 4)
+
+## Phase 5 Deliverables (Partial)
+
+- MCP Apps SDK integration (@modelcontextprotocol/ext-apps)
+- Vite build configuration for single-file HTML apps
+- npm package configuration (@bexio/mcp-server)
+- CLI binary (bexio-mcp-server)
+- LICENSE (MIT) and README.md for npm
+- 3 UI tools registered (preview_invoice, show_contact_card, show_dashboard)
