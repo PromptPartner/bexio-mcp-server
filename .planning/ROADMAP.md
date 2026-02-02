@@ -83,12 +83,13 @@ Plans:
   3. User can manage outgoing payments linked to bills
   4. User can upload, list, and download files/documents
   5. User can manage employees and absences (when Bexio payroll module is active)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: Purchase Management - Bills CRUD + actions, expenses, purchase orders, outgoing payments
-- [ ] 04-02: Files & Documents - Files CRUD, file download, additional addresses
-- [ ] 04-03: Payroll (Conditional) - Employees, absences, payroll documents (graceful handling when module unavailable)
+- [ ] 04-01-PLAN.md - Bills & Expenses: Bills CRUD, search, actions (issue, mark paid), expenses CRUD (13 tools)
+- [ ] 04-02-PLAN.md - Purchase Orders & Outgoing Payments: Purchase orders CRUD, outgoing payments linked to bills (10 tools)
+- [ ] 04-03-PLAN.md - Files & Documents: Files CRUD, download, additional addresses (10 tools)
+- [ ] 04-04-PLAN.md - Payroll (Conditional): Employees, absences, payroll documents with module detection (10 tools)
 
 ### Phase 5: UI & Packaging
 **Goal**: Add MCP Apps UI elements and create distribution-ready MCPB bundle
@@ -132,7 +133,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation & Migration | 3/3 | **Complete** | 2026-02-01 |
 | 2. Reference Data & Banking | 3/3 | **Complete** | 2026-02-01 |
 | 3. Projects & Accounting | 4/4 | **Complete** | 2026-02-01 |
-| 4. Purchase, Files & Payroll | 0/3 | Not started | - |
+| 4. Purchase, Files & Payroll | 0/4 | Planned | - |
 | 5. UI & Packaging | 0/3 | Not started | - |
 | 6. Distribution | 0/2 | Not started | - |
 
@@ -141,4 +142,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 *Phase 1 complete: 2026-02-01*
 *Phase 2 complete: 2026-02-01*
 *Phase 3 complete: 2026-02-01*
-*Total requirements: 67 | Phases: 6 | Plans: 18 (estimated)*
+*Phase 4 planned: 2026-02-01*
+*Total requirements: 67 | Phases: 6 | Plans: 19 (estimated)*
