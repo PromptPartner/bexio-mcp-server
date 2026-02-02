@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.8] - 2026-02-02
+
+### Added
+- MCP Registry support with `mcpName` identifier
+- `server.json` manifest for registry submission
+- `PUBLISHING.md` guide for release workflow
+
 ## [2.0.0] - 2026-02-02
 
 ### Added
@@ -42,6 +49,7 @@ Initial implementation by [Sebastian Bryner](https://www.linkedin.com/in/sebasti
 - MCP SDK 0.5.0 integration
 - Basic Bexio API client
 
-[unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.0...HEAD
+[unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.8...HEAD
+[2.0.8]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.0...v2.0.8
 [2.0.0]: https://github.com/promptpartner/bexio-mcp-server/releases/tag/v2.0.0
 [1.0.0]: https://bryner.tech/
