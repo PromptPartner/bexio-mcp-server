@@ -48,12 +48,12 @@ Plans:
   3. User can view and update company profile
   4. User can view bank accounts and create IBAN/QR payments (Swiss standards)
   5. Currency management works for multi-currency invoicing
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Reference Data Tools - Contact groups, sectors, salutations, titles, countries, languages, units
-- [ ] 02-02: Company & Payments Config - Company profile, permissions, payment types
-- [ ] 02-03: Banking Tools - Bank accounts, currencies, IBAN payments, QR payments
+- [ ] 02-01-PLAN.md - Reference Data Tools: Contact groups, sectors, salutations, titles, countries, languages, units (28 tools)
+- [ ] 02-02-PLAN.md - Company & Payments Config: Company profile, permissions, payment types (6 tools)
+- [ ] 02-03-PLAN.md - Banking Tools: Bank accounts, currencies, IBAN payments, QR payments (13 tools)
 
 ### Phase 3: Projects & Accounting
 **Goal**: Complete project management, time tracking, and accounting foundation
@@ -129,7 +129,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Migration | 3/3 | **Complete** | 2026-02-01 |
-| 2. Reference Data & Banking | 0/3 | Not started | - |
+| 2. Reference Data & Banking | 0/3 | Planned | - |
 | 3. Projects & Accounting | 0/3 | Not started | - |
 | 4. Purchase, Files & Payroll | 0/3 | Not started | - |
 | 5. UI & Packaging | 0/3 | Not started | - |
@@ -138,4 +138,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 ---
 *Roadmap created: 2026-02-01*
 *Phase 1 complete: 2026-02-01*
+*Phase 2 planned: 2026-02-01*
 *Total requirements: 67 | Phases: 6 | Plans: 17 (estimated)*
