@@ -117,11 +117,11 @@ Plans:
   2. npm package is published to public registry and installable
   3. GitHub release contains source code and .mcpb bundle
   4. Installation documentation covers all three channels (MCPB, npm, source)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Registry & npm - Submit to MCP Registry, publish npm package
-- [ ] 06-02: GitHub & Docs - Create release with assets, write installation guide for all channels
+- [ ] 06-01-PLAN.md - Package Configuration: Update to @promptpartner scope, manifest v0.3, comprehensive README, CHANGELOG
+- [ ] 06-02-PLAN.md - Publishing & Release: npm publish, GitHub release with .mcpb, MCP Registry submission
 
 ## Progress
 
