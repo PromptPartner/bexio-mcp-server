@@ -91,6 +91,7 @@ export async function createHttpServer(
       arguments?: unknown;
     };
   }>("/tools/call", async (request, reply) => {
+    const toolName = request.body?.name;
     try {
       const { name, arguments: args = {} } = request.body;
 
@@ -115,7 +116,7 @@ export async function createHttpServer(
       return reply.code(500).send({
         success: false,
         error: errorMessage,
-        tool: name,
+        tool: toolName || "unknown",
         timestamp: new Date().toISOString(),
       });
     }
