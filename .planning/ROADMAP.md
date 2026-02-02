@@ -101,12 +101,12 @@ Plans:
   3. Contact card displays formatted contact information
   4. MCPB bundle passes validation and installs with double-click
   5. npm package runs correctly via npx @bexio/mcp-server
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: MCP Apps Implementation - Capability declaration, invoice preview, contact card, dashboard UI
-- [ ] 05-02: MCPB Bundle - manifest.json, esbuild bundling, icon, mcpb pack validation
-- [ ] 05-03: npm Package - package.json bin field, npx support, dual distribution setup
+- [ ] 05-01-PLAN.md - MCP Apps Implementation: UI tools (preview_invoice, show_contact_card, show_dashboard), HTML templates, Vite bundling
+- [ ] 05-02-PLAN.md - MCPB Bundle: manifest.json, icon, user_config, mcpb pack validation
+- [ ] 05-03-PLAN.md - npm Package: Scoped package name, bin field, shebang, LICENSE, README
 
 ### Phase 6: Distribution
 **Goal**: Publish to all distribution channels with installation documentation
