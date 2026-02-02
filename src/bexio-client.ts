@@ -183,6 +183,120 @@ export class BexioClient {
     return this.makeRequest("DELETE", `/unit/${unitId}`);
   }
 
+  // ===== COMPANY PROFILE =====
+  async getCompanyProfile(): Promise<unknown> {
+    return this.makeRequest("GET", "/company_profile");
+  }
+
+  async updateCompanyProfile(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/company_profile", undefined, data);
+  }
+
+  // ===== PERMISSIONS =====
+  async listPermissions(): Promise<unknown> {
+    return this.makeRequest("GET", "/permission");
+  }
+
+  // ===== PAYMENT TYPES =====
+  async listPaymentTypes(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/payment_type", params);
+  }
+
+  async getPaymentType(paymentTypeId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/payment_type/${paymentTypeId}`);
+  }
+
+  async createPaymentType(data: { name: string }): Promise<unknown> {
+    return this.makeRequest("POST", "/payment_type", undefined, data);
+  }
+
+  // ===== BANK ACCOUNTS (Read-Only) =====
+  async listBankAccounts(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/bank_account", params);
+  }
+
+  async getBankAccount(accountId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/bank_account/${accountId}`);
+  }
+
+  // ===== CURRENCIES =====
+  async listCurrencies(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/currency", params);
+  }
+
+  async getCurrency(currencyId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/currency/${currencyId}`);
+  }
+
+  async createCurrency(data: { name: string; round_factor: number }): Promise<unknown> {
+    return this.makeRequest("POST", "/currency", undefined, data);
+  }
+
+  async updateCurrency(currencyId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("PATCH", `/currency/${currencyId}`, undefined, data);
+  }
+
+  async deleteCurrency(currencyId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/currency/${currencyId}`);
+  }
+
+  // ===== IBAN PAYMENTS (Swiss ISO 20022) =====
+  async createIbanPayment(data: {
+    bank_account_id: number;
+    iban: string;
+    instructed_amount: { currency: string; amount: number };
+    recipient: {
+      name: string;
+      street?: string;
+      house_number?: string;
+      zip: string;
+      city: string;
+      country_code: string;
+    };
+    execution_date: string;
+    message?: string;
+    is_salary_payment?: boolean;
+    allowance_type?: string;
+  }): Promise<unknown> {
+    return this.makeRequest("POST", "/iban_payment", undefined, data);
+  }
+
+  async getIbanPayment(paymentId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/iban_payment/${paymentId}`);
+  }
+
+  async updateIbanPayment(paymentId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("PATCH", `/iban_payment/${paymentId}`, undefined, data);
+  }
+
+  // ===== QR PAYMENTS (Swiss QR-invoice standard) =====
+  async createQrPayment(data: {
+    bank_account_id: number;
+    iban: string;
+    instructed_amount: { currency: string; amount: number };
+    recipient: {
+      name: string;
+      street?: string;
+      house_number?: string;
+      zip: string;
+      city: string;
+      country_code: string;
+    };
+    execution_date: string;
+    qr_reference_nr?: string;
+    additional_information?: string;
+  }): Promise<unknown> {
+    return this.makeRequest("POST", "/qr_payment", undefined, data);
+  }
+
+  async getQrPayment(paymentId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/qr_payment/${paymentId}`);
+  }
+
+  async updateQrPayment(paymentId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("PATCH", `/qr_payment/${paymentId}`, undefined, data);
+  }
+
   // ===== ORDERS =====
   async listOrders(params: PaginationParams = {}): Promise<unknown[]> {
     return this.makeRequest("GET", "/kb_order", params);
