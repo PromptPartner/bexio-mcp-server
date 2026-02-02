@@ -30,6 +30,7 @@ import * as items from "./items/index.js";
 import * as reports from "./reports/index.js";
 import * as users from "./users/index.js";
 import * as misc from "./misc/index.js";
+import * as purchase from "./purchase/index.js";
 
 // Type for handler functions
 export type HandlerFn = (
@@ -37,7 +38,7 @@ export type HandlerFn = (
   args: unknown
 ) => Promise<unknown>;
 
-// Aggregate all tool definitions (175 total)
+// Aggregate all tool definitions (188 total)
 const allDefinitions: Tool[] = [
   ...reference.toolDefinitions,    // 26 tools (contact groups, sectors, salutations, titles, countries, languages, units)
   ...company.toolDefinitions,      // 6 tools (company profile, permissions, payment types)
@@ -45,6 +46,7 @@ const allDefinitions: Tool[] = [
   ...projects.toolDefinitions,     // 21 tools (projects, project types, project statuses, milestones, work packages)
   ...timetracking.toolDefinitions, // 11 tools (timesheets, statuses, business activities, communication types)
   ...accounting.toolDefinitions,   // 15 tools (accounts, groups, years, entries, VAT, journal)
+  ...purchase.toolDefinitions,     // 13 tools (bills, expenses)
   ...contacts.toolDefinitions,     // 7 tools
   ...invoices.toolDefinitions,   // 15 tools
   ...orders.toolDefinitions,     // 7 tools
@@ -66,6 +68,7 @@ const allHandlers: Record<string, HandlerFn> = {
   ...projects.handlers,
   ...timetracking.handlers,
   ...accounting.handlers,
+  ...purchase.handlers,
   ...contacts.handlers,
   ...invoices.handlers,
   ...orders.handlers,

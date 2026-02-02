@@ -56,3 +56,9 @@ export * from "./accounting.js";
 
 // Purchase (Bills, Expenses)
 export * from "./purchase.js";
+
+// Files (Files, Additional Addresses)
+export * from "./files.js";
+
+// Payroll (Employees, Absences, Payroll Documents - conditional module)
+export * from "./payroll.js";

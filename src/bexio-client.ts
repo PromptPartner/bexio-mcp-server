@@ -1361,4 +1361,103 @@ export class BexioClient {
   async deleteExpense(expenseId: number): Promise<unknown> {
     return this.makeRequest("DELETE", `/kb_expense/${expenseId}`);
   }
+
+  // ===== EMPLOYEES (PAY-01) =====
+  // Note: Payroll module may not be enabled - handlers check availability
+  async listEmployees(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/employee", params);
+  }
+
+  async getEmployee(employeeId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/employee/${employeeId}`);
+  }
+
+  async createEmployee(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/employee", undefined, data);
+  }
+
+  async updateEmployee(employeeId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/employee/${employeeId}`, undefined, data);
+  }
+
+  // ===== ABSENCES (PAY-02) =====
+  async listAbsences(params: PaginationParams & { year?: number } = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/absence", params);
+  }
+
+  async getAbsence(absenceId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/absence/${absenceId}`);
+  }
+
+  async createAbsence(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/absence", undefined, data);
+  }
+
+  async updateAbsence(absenceId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/absence/${absenceId}`, undefined, data);
+  }
+
+  async deleteAbsence(absenceId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/absence/${absenceId}`);
+  }
+
+  // ===== PAYROLL DOCUMENTS (PAY-03) =====
+  async listPayrollDocuments(params: PaginationParams & { employee_id?: number } = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/payroll_document", params);
+  }
+
+  // ===== FILES (FILE-01) =====
+  async listFiles(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/file", params);
+  }
+
+  async getFile(fileId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/file/${fileId}`);
+  }
+
+  async uploadFile(data: { name: string; content_base64: string; content_type: string }): Promise<unknown> {
+    const buffer = Buffer.from(data.content_base64, "base64");
+    // Use form-data for multipart upload (transitive dep of axios)
+    const FormData = (await import("form-data")).default;
+    const formData = new FormData();
+    formData.append("file", buffer, {
+      filename: data.name,
+      contentType: data.content_type,
+    });
+    return this.client.post("/file", formData, {
+      headers: formData.getHeaders(),
+    }).then(r => r.data);
+  }
+
+  async downloadFile(fileId: number): Promise<string> {
+    const response = await this.client.get(`/file/${fileId}/download`, {
+      responseType: "arraybuffer",
+    });
+    return Buffer.from(response.data).toString("base64");
+  }
+
+  async updateFile(fileId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/file/${fileId}`, undefined, data);
+  }
+
+  async deleteFile(fileId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/file/${fileId}`);
+  }
+
+  // ===== ADDITIONAL ADDRESSES (FILE-02) =====
+  async listAdditionalAddresses(contactId: number, params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", `/contact/${contactId}/additional_address`, params);
+  }
+
+  async getAdditionalAddress(contactId: number, addressId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/contact/${contactId}/additional_address/${addressId}`);
+  }
+
+  async createAdditionalAddress(contactId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/contact/${contactId}/additional_address`, undefined, data);
+  }
+
+  async deleteAdditionalAddress(contactId: number, addressId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/contact/${contactId}/additional_address/${addressId}`);
+  }
 }
