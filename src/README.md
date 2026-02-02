@@ -72,10 +72,11 @@ BEXIO_API_TOKEN=your-token node dist/index.js
 
 ## Getting Your Bexio API Token
 
-1. Log in to [Bexio](https://office.bexio.com/)
-2. Go to **Settings** > **API Tokens**
-3. Click **Create Token**
-4. Copy the token and use it in your configuration
+1. Go to [developer.bexio.com](https://developer.bexio.com/)
+2. Log in with your regular Bexio account
+3. Navigate to **Personal Access Tokens**
+4. Click **Create New Token**
+5. Copy the token and use it in your configuration
 
 ## Features
 
@@ -146,7 +147,7 @@ Options:
 ## Troubleshooting
 
 ### "Invalid API token" error
-- Verify your token in Bexio Settings > API Tokens
+- Verify your token at [developer.bexio.com](https://developer.bexio.com/) > Personal Access Tokens
 - Ensure the token has not expired
 - Check that the token has the required permissions
 
