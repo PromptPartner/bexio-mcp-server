@@ -33,7 +33,7 @@ export default defineConfig({
   root: ".",
   base: "./",
   build: {
-    outDir: "../dist/ui",
+    outDir: "./dist/ui",
     emptyOutDir: true,
     // Inline all assets
     assetsInlineLimit: () => true,

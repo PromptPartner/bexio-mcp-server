@@ -31,8 +31,8 @@ const DASHBOARD_URI = "ui://bexio/dashboard.html";
  * @param client - BexioClient for API calls
  */
 export function registerUIResources(server: McpServer, client: BexioClient): void {
-  // Path to built UI files (vite outputs to dist/ui/ui/<name>/<name>.html)
-  const uiBasePath = path.join(import.meta.dirname, "../dist/ui/ui");
+  // Path to built UI files (vite outputs to src/dist/ui/ui/<name>/<name>.html)
+  const uiBasePath = path.join(import.meta.dirname, "ui/ui");
 
   // ===== INVOICE PREVIEW =====
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
