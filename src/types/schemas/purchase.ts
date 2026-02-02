@@ -105,3 +105,84 @@ export const DeleteExpenseParamsSchema = z.object({
 });
 
 export type DeleteExpenseParams = z.infer<typeof DeleteExpenseParamsSchema>;
+
+// ===== PURCHASE ORDERS =====
+
+// List purchase orders
+export const ListPurchaseOrdersParamsSchema = z.object({
+  limit: z.number().int().positive().default(50),
+  offset: z.number().int().min(0).default(0),
+});
+
+export type ListPurchaseOrdersParams = z.infer<typeof ListPurchaseOrdersParamsSchema>;
+
+// Get single purchase order
+export const GetPurchaseOrderParamsSchema = z.object({
+  purchase_order_id: z.number().int().positive(),
+});
+
+export type GetPurchaseOrderParams = z.infer<typeof GetPurchaseOrderParamsSchema>;
+
+// Create purchase order
+export const CreatePurchaseOrderParamsSchema = z.object({
+  purchase_order_data: z.record(z.unknown()),
+});
+
+export type CreatePurchaseOrderParams = z.infer<typeof CreatePurchaseOrderParamsSchema>;
+
+// Update purchase order
+export const UpdatePurchaseOrderParamsSchema = z.object({
+  purchase_order_id: z.number().int().positive(),
+  purchase_order_data: z.record(z.unknown()),
+});
+
+export type UpdatePurchaseOrderParams = z.infer<typeof UpdatePurchaseOrderParamsSchema>;
+
+// Delete purchase order
+export const DeletePurchaseOrderParamsSchema = z.object({
+  purchase_order_id: z.number().int().positive(),
+});
+
+export type DeletePurchaseOrderParams = z.infer<typeof DeletePurchaseOrderParamsSchema>;
+
+// ===== OUTGOING PAYMENTS (linked to bills) =====
+
+// List outgoing payments for a bill
+export const ListOutgoingPaymentsParamsSchema = z.object({
+  bill_id: z.number().int().positive(),
+});
+
+export type ListOutgoingPaymentsParams = z.infer<typeof ListOutgoingPaymentsParamsSchema>;
+
+// Get single outgoing payment
+export const GetOutgoingPaymentParamsSchema = z.object({
+  bill_id: z.number().int().positive(),
+  payment_id: z.number().int().positive(),
+});
+
+export type GetOutgoingPaymentParams = z.infer<typeof GetOutgoingPaymentParamsSchema>;
+
+// Create outgoing payment
+export const CreateOutgoingPaymentParamsSchema = z.object({
+  bill_id: z.number().int().positive(),
+  payment_data: z.record(z.unknown()),
+});
+
+export type CreateOutgoingPaymentParams = z.infer<typeof CreateOutgoingPaymentParamsSchema>;
+
+// Update outgoing payment
+export const UpdateOutgoingPaymentParamsSchema = z.object({
+  bill_id: z.number().int().positive(),
+  payment_id: z.number().int().positive(),
+  payment_data: z.record(z.unknown()),
+});
+
+export type UpdateOutgoingPaymentParams = z.infer<typeof UpdateOutgoingPaymentParamsSchema>;
+
+// Delete outgoing payment
+export const DeleteOutgoingPaymentParamsSchema = z.object({
+  bill_id: z.number().int().positive(),
+  payment_id: z.number().int().positive(),
+});
+
+export type DeleteOutgoingPaymentParams = z.infer<typeof DeleteOutgoingPaymentParamsSchema>;

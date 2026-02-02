@@ -1362,6 +1362,49 @@ export class BexioClient {
     return this.makeRequest("DELETE", `/kb_expense/${expenseId}`);
   }
 
+  // ===== PURCHASE ORDERS (PURCH-03) =====
+  async listPurchaseOrders(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/purchase_order", params);
+  }
+
+  async getPurchaseOrder(purchaseOrderId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/purchase_order/${purchaseOrderId}`);
+  }
+
+  async createPurchaseOrder(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/purchase_order", undefined, data);
+  }
+
+  async updatePurchaseOrder(purchaseOrderId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/purchase_order/${purchaseOrderId}`, undefined, data);
+  }
+
+  async deletePurchaseOrder(purchaseOrderId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/purchase_order/${purchaseOrderId}`);
+  }
+
+  // ===== OUTGOING PAYMENTS (linked to bills - PURCH-04) =====
+  // Note: Uses nested URL pattern /kb_bill/{id}/payment (mirrors incoming payments on invoices)
+  async listOutgoingPayments(billId: number): Promise<unknown[]> {
+    return this.makeRequest("GET", `/kb_bill/${billId}/payment`);
+  }
+
+  async getOutgoingPayment(billId: number, paymentId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/kb_bill/${billId}/payment/${paymentId}`);
+  }
+
+  async createOutgoingPayment(billId: number, paymentData: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_bill/${billId}/payment`, undefined, paymentData);
+  }
+
+  async updateOutgoingPayment(billId: number, paymentId: number, paymentData: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_bill/${billId}/payment/${paymentId}`, undefined, paymentData);
+  }
+
+  async deleteOutgoingPayment(billId: number, paymentId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/kb_bill/${billId}/payment/${paymentId}`);
+  }
+
   // ===== EMPLOYEES (PAY-01) =====
   // Note: Payroll module may not be enabled - handlers check availability
   async listEmployees(params: PaginationParams = {}): Promise<unknown[]> {
