@@ -195,6 +195,12 @@ Created by [Lukas Hertig](https://linkedin.com/in/lukashertig) from [PromptPartn
 
 This project builds upon the original Bexio MCP server created by [Sebastian Bryner](https://www.linkedin.com/in/sebastian-bryner/) of [bryner.tech](https://bryner.tech/). His v1.0 implementation provided the foundational architecture and initial 83 tools that made this expanded v2.0 possible.
 
+## Disclaimer
+
+This is an independent, community-driven project and is **not affiliated with, endorsed by, or officially connected to Bexio AG** in any way. "Bexio" is a trademark of Bexio AG. This project simply provides an integration layer to the publicly available Bexio API.
+
+Use of this software is at your own risk. The authors are not responsible for any issues arising from its use with your Bexio account.
+
 ## License
 
 MIT - See [LICENSE](LICENSE) for details.

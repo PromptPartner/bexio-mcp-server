@@ -2,3 +2,8 @@
 # Planning and local config
 .planning/
 .claude/
+
+# Local marketing/docs (not for git)
+LINKEDIN-POST.md
+VIDEO-SCRIPT.md
+MCP-REGISTRY-SUBMISSION-CHECKLIST.md
