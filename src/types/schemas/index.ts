@@ -38,3 +38,9 @@ export * from "./misc.js";
 
 // Reference Data (Contact Groups, Sectors, Salutations, Titles, Countries, Languages, Units)
 export * from "./reference.js";
+
+// Company (Company Profile, Permissions, Payment Types)
+export * from "./company.js";
+
+// Banking (Bank Accounts, Currencies, IBAN Payments, QR Payments)
+export * from "./banking.js";
