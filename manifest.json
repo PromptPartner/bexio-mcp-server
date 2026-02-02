@@ -1,14 +1,18 @@
 {
-  "manifest_version": "0.2",
+  "manifest_version": "0.3",
   "name": "bexio-mcp-server",
   "version": "2.0.0",
   "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 200+ more tools through natural conversation.",
   "author": {
-    "name": "Bexio MCP Contributors"
+    "name": "Lukas Hertig",
+    "email": "lukas@promptpartner.ai"
   },
-  "homepage": "https://github.com/bexio/mcp-server",
+  "homepage": "https://github.com/promptpartner/bexio-mcp-server",
   "icon": "icon.png",
   "license": "MIT",
+  "privacy_policies": [
+    "https://www.bexio.com/en-CH/privacy-policy"
+  ],
   "server": {
     "type": "node",
     "entry_point": "dist/index.js",
