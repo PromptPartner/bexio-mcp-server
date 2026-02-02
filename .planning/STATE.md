@@ -11,7 +11,7 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 Phase: 3 of 6 (Projects & Accounting)
 Plan: 4 of 4 in current phase
-Status: **Phase 3 Complete** - 47 new tools (166 total)
+Status: **Phase 3 Complete** - 47 new tools (175 total)
 Last activity: 2026-02-01 -- Completed 03-04-PLAN.md (Accounting Foundation)
 
 Progress: [##########--------] 50%
@@ -66,6 +66,7 @@ Recent decisions affecting current work:
 - [03-03]: Duration format HH:MM with Zod regex validation (Bexio API requirement)
 - [03-04]: Flat MCP params for manual entries, handler transforms to nested entries array
 - [03-04]: Read-only for account groups, business years, VAT periods (Bexio API limitation)
+- [03-02]: Nested URL pattern /pr_project/{id}/resource for milestones and work packages
 
 ### Pending Todos
 
@@ -79,8 +80,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01 17:58 UTC
-Stopped at: Completed 03-04-PLAN.md (Accounting Foundation)
+Last session: 2026-02-01 19:05 UTC
+Stopped at: Completed 03-02-PLAN.md (Project Nested Resources)
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -132,4 +133,4 @@ Resume file: None
 - 15 accounting tools (accounts, account groups, years, manual entries, VAT periods, journal)
 - Duration validation: HH:MM format enforced via Zod regex
 - Flat-to-nested transformation for manual entries
-- Total tools: 166 (128 + 47 Phase 3)
+- Total tools: 175 (128 + 47 Phase 3)
