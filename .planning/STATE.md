@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 ## Current Position
 
-Phase: 5 of 6 (UI & Packaging)
-Plan: 3 of 3 in current phase
-Status: **Phase 5 Complete** - 3 UI tools (221 total)
-Last activity: 2026-02-02 -- Completed 05-02 (MCPB Bundle Packaging)
+Phase: 6 of 6 (Distribution)
+Plan: 1 of 4 in current phase
+Status: **In Progress** - Package configuration complete
+Last activity: 2026-02-02 -- Completed 06-01 (Distribution Package Configuration)
 
-Progress: [##################] 92%
+Progress: [##################--] 95%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
-- Average duration: 6.2 min
-- Total execution time: 106 min
+- Total plans completed: 18
+- Average duration: 6.1 min
+- Total execution time: 109 min
 
 **By Phase:**
 
@@ -34,7 +34,7 @@ Progress: [##################] 92%
 | 05-ui-packaging | 3/3 | 29 min | 9.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-04 (8 min), 05-01 (5 min), 05-02 (5 min), 05-03 (7 min), 05-02 (5 min)
+- Last 5 plans: 05-01 (5 min), 05-02 (5 min), 05-03 (7 min), 05-02 (5 min), 06-01 (3 min)
 - Trend: Consistent pace with infrastructure/packaging work
 
 *Updated after each plan completion*
@@ -85,6 +85,8 @@ Recent decisions affecting current work:
 - [05-03]: Conditional build:ui to allow build before UI files exist
 - [05-02]: MCPB manifest version 0.2 schema (current stable)
 - [05-02]: Copy src/dist to root/dist for MCPB bundling
+- [06-01]: Package scope changed from @bexio to @promptpartner
+- [06-01]: Tool annotations not added (mcpb v2.1.2 schema unsupported)
 
 ### Pending Todos
 
@@ -100,7 +102,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed Phase 5 (UI & Packaging)
+Stopped at: Completed 06-01 (Distribution Package Configuration)
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -144,6 +146,15 @@ Resume file: None
 | 05-01-PLAN.md | 1 | MCP Apps UI Resources (3 UI tools) | COMPLETE |
 | 05-02-PLAN.md | 2 | MCPB Bundle Packaging | COMPLETE |
 | 05-03-PLAN.md | 1 | npm package configuration | COMPLETE |
+
+## Phase 6 Plans (IN PROGRESS)
+
+| Plan | Wave | Description | Status |
+|------|------|-------------|--------|
+| 06-01-PLAN.md | 1 | Distribution Package Configuration | COMPLETE |
+| 06-02-PLAN.md | 1 | npm Publishing & GitHub Release | PENDING |
+| 06-03-PLAN.md | 2 | MCP Registry Submission | PENDING |
+| 06-04-PLAN.md | 2 | Final Documentation | PENDING |
 
 ## Phase 1 Deliverables
 
@@ -199,3 +210,12 @@ Resume file: None
 - MCPB bundle packaging (manifest.json, icon.png, packaging scripts)
 - Bundle: 82.6KB compressed, 328.6KB unpacked, 100 files
 - Total tools: 221 (218 base + 3 UI)
+
+## Phase 6 Deliverables (Partial)
+
+- Package identity: @promptpartner/bexio-mcp-server
+- Author: Lukas Hertig <lukas@promptpartner.ai>
+- Repository: github.com/promptpartner/bexio-mcp-server
+- Manifest v0.3 with privacy_policies for MCP Registry
+- Comprehensive README with 3 installation methods
+- CHANGELOG in Keep A Changelog format
