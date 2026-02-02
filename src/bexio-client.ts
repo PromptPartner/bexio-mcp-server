@@ -488,6 +488,277 @@ export class BexioClient {
     return this.makeRequest("DELETE", `/contact_relation/${relationId}`);
   }
 
+  async searchContactRelations(
+    searchParams: Record<string, unknown>
+  ): Promise<unknown[]> {
+    return this.makeRequest(
+      "POST",
+      "/contact_relation/search",
+      undefined,
+      searchParams
+    );
+  }
+
+  // ===== USERS =====
+  async getCurrentUser(): Promise<unknown> {
+    return this.makeRequest("GET", "/user/me");
+  }
+
+  async listFictionalUsers(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/fictional_user", params);
+  }
+
+  async getFictionalUser(userId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/fictional_user/${userId}`);
+  }
+
+  async createFictionalUser(userData: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/fictional_user", undefined, userData);
+  }
+
+  async updateFictionalUser(
+    userId: number,
+    userData: Record<string, unknown>
+  ): Promise<unknown> {
+    return this.makeRequest("POST", `/fictional_user/${userId}`, undefined, userData);
+  }
+
+  async deleteFictionalUser(userId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/fictional_user/${userId}`);
+  }
+
+  // ===== COMMENTS =====
+  async listComments(): Promise<unknown[]> {
+    return this.makeRequest("GET", "/comment");
+  }
+
+  async getComment(commentId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/comment/${commentId}`);
+  }
+
+  async createComment(commentData: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/comment", undefined, commentData);
+  }
+
+  // ===== SEARCH REMINDERS =====
+  async searchReminders(searchParams: Record<string, unknown>): Promise<unknown[]> {
+    // Search across all invoices to find reminders matching criteria
+    // This is a computed operation - get all recent invoices and their reminders
+    const invoices = await this.listAllInvoices(100);
+    const allReminders: unknown[] = [];
+
+    for (const invoice of invoices.slice(0, 50)) {
+      const invoiceId = (invoice as { id?: number }).id;
+      if (invoiceId) {
+        try {
+          const reminders = await this.listReminders(invoiceId);
+          allReminders.push(
+            ...(reminders as unknown[]).map((r) => ({
+              ...(r as object),
+              invoice_id: invoiceId,
+            }))
+          );
+        } catch {
+          // Invoice may not have reminders, skip
+        }
+      }
+    }
+
+    return allReminders;
+  }
+
+  async getRemindersSentThisWeek(): Promise<unknown[]> {
+    // Get reminders sent this week
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const allReminders = await this.searchReminders({});
+    return allReminders.filter((r) => {
+      const sentDate = (r as { sent_date?: string }).sent_date;
+      if (!sentDate) return false;
+      const date = new Date(sentDate);
+      return date >= startOfWeek;
+    });
+  }
+
+  // ===== REPORTS (Computed from invoice data) =====
+  async getRevenueReport(
+    startDate: string,
+    endDate: string,
+    groupBy?: string
+  ): Promise<unknown> {
+    // Compute revenue from paid invoices in date range
+    const invoices = await this.listAllInvoices(100);
+    const filteredInvoices = invoices.filter((inv) => {
+      const invoice = inv as {
+        is_valid_from?: string;
+        kb_item_status_id?: number;
+      };
+      const invDate = invoice.is_valid_from;
+      // Status 9 = paid
+      const isPaid = invoice.kb_item_status_id === 9;
+      if (!invDate || !isPaid) return false;
+      return invDate >= startDate && invDate <= endDate;
+    });
+
+    const totalRevenue = filteredInvoices.reduce((sum: number, inv) => {
+      const total = (inv as { total?: number }).total ?? 0;
+      return sum + total;
+    }, 0);
+
+    return {
+      start_date: startDate,
+      end_date: endDate,
+      total_revenue: totalRevenue,
+      invoice_count: filteredInvoices.length,
+      group_by: groupBy || null,
+    };
+  }
+
+  async getCustomerRevenueReport(
+    startDate: string,
+    endDate: string,
+    limit = 10
+  ): Promise<unknown[]> {
+    const invoices = await this.listAllInvoices(100);
+    const customerRevenue: Record<number, { contact_id: number; total: number; count: number }> =
+      {};
+
+    invoices.forEach((inv) => {
+      const invoice = inv as {
+        contact_id?: number;
+        is_valid_from?: string;
+        total?: number;
+        kb_item_status_id?: number;
+      };
+      if (
+        invoice.contact_id &&
+        invoice.is_valid_from &&
+        invoice.is_valid_from >= startDate &&
+        invoice.is_valid_from <= endDate &&
+        invoice.kb_item_status_id === 9
+      ) {
+        if (!customerRevenue[invoice.contact_id]) {
+          customerRevenue[invoice.contact_id] = {
+            contact_id: invoice.contact_id,
+            total: 0,
+            count: 0,
+          };
+        }
+        customerRevenue[invoice.contact_id].total += invoice.total ?? 0;
+        customerRevenue[invoice.contact_id].count += 1;
+      }
+    });
+
+    return Object.values(customerRevenue)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, limit);
+  }
+
+  async getInvoiceStatusReport(
+    startDate: string,
+    endDate: string
+  ): Promise<unknown> {
+    const invoices = await this.listAllInvoices(100);
+    const statusCounts: Record<number, number> = {};
+
+    invoices.forEach((inv) => {
+      const invoice = inv as {
+        is_valid_from?: string;
+        kb_item_status_id?: number;
+      };
+      if (
+        invoice.is_valid_from &&
+        invoice.is_valid_from >= startDate &&
+        invoice.is_valid_from <= endDate &&
+        invoice.kb_item_status_id
+      ) {
+        statusCounts[invoice.kb_item_status_id] =
+          (statusCounts[invoice.kb_item_status_id] || 0) + 1;
+      }
+    });
+
+    return {
+      start_date: startDate,
+      end_date: endDate,
+      status_counts: statusCounts,
+    };
+  }
+
+  async getOverdueInvoicesReport(): Promise<unknown[]> {
+    return this.getOverdueInvoices();
+  }
+
+  async getMonthlyRevenueReport(year: number, month: number): Promise<unknown> {
+    const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
+
+    return this.getRevenueReport(startDate, endDate);
+  }
+
+  async getTopCustomersByRevenue(
+    limit = 10,
+    startDate?: string,
+    endDate?: string
+  ): Promise<unknown[]> {
+    const start = startDate || "2000-01-01";
+    const end = endDate || new Date().toISOString().split("T")[0];
+    return this.getCustomerRevenueReport(start, end, limit);
+  }
+
+  // ===== BUSINESS LOGIC =====
+  async getOpenInvoices(): Promise<unknown[]> {
+    // Status 7 = Draft/Open, Status 8 = Sent/Pending
+    const invoices = await this.listAllInvoices(100);
+    return invoices.filter((inv) => {
+      const statusId = (inv as { kb_item_status_id?: number }).kb_item_status_id;
+      return statusId === 7 || statusId === 8;
+    });
+  }
+
+  async getOverdueInvoices(): Promise<unknown[]> {
+    const today = new Date().toISOString().split("T")[0];
+    const invoices = await this.listAllInvoices(100);
+
+    return invoices.filter((inv) => {
+      const invoice = inv as {
+        kb_item_status_id?: number;
+        is_valid_until?: string;
+      };
+      // Status 8 = Sent but not paid, and due date passed
+      return (
+        invoice.kb_item_status_id === 8 &&
+        invoice.is_valid_until &&
+        invoice.is_valid_until < today
+      );
+    });
+  }
+
+  async getTasksDueThisWeek(): Promise<unknown[]> {
+    const now = new Date();
+    const endOfWeek = new Date(now);
+    endOfWeek.setDate(now.getDate() + (6 - now.getDay()));
+
+    const today = now.toISOString().split("T")[0];
+    const weekEnd = endOfWeek.toISOString().split("T")[0];
+
+    const invoices = await this.listAllInvoices(100);
+
+    return invoices.filter((inv) => {
+      const invoice = inv as {
+        kb_item_status_id?: number;
+        is_valid_until?: string;
+      };
+      // Open or sent invoices with due date this week
+      const isOpen = invoice.kb_item_status_id === 7 || invoice.kb_item_status_id === 8;
+      const dueDate = invoice.is_valid_until;
+      return isOpen && dueDate && dueDate >= today && dueDate <= weekEnd;
+    });
+  }
+
   // ===== STATIC DATA =====
   async listInvoiceStatuses(): Promise<unknown[]> {
     return [
