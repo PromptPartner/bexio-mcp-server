@@ -1307,4 +1307,58 @@ export class BexioClient {
   }): Promise<unknown[]> {
     return this.makeRequest("GET", "/journal", params);
   }
+
+  // ===== BILLS (Creditor Invoices - PURCH-01) =====
+  async listBills(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/kb_bill", params);
+  }
+
+  async getBill(billId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/kb_bill/${billId}`);
+  }
+
+  async createBill(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/kb_bill", undefined, data);
+  }
+
+  async updateBill(billId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_bill/${billId}`, undefined, data);
+  }
+
+  async deleteBill(billId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/kb_bill/${billId}`);
+  }
+
+  async searchBills(searchParams: Record<string, unknown>[], queryParams?: { limit?: number; offset?: number }): Promise<unknown[]> {
+    return this.makeRequest("POST", "/kb_bill/search", queryParams, searchParams);
+  }
+
+  async issueBill(billId: number): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_bill/${billId}/issue`);
+  }
+
+  async markBillAsPaid(billId: number): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_bill/${billId}/mark_as_paid`);
+  }
+
+  // ===== EXPENSES (PURCH-02) =====
+  async listExpenses(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/kb_expense", params);
+  }
+
+  async getExpense(expenseId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/kb_expense/${expenseId}`);
+  }
+
+  async createExpense(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", "/kb_expense", undefined, data);
+  }
+
+  async updateExpense(expenseId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_expense/${expenseId}`, undefined, data);
+  }
+
+  async deleteExpense(expenseId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/kb_expense/${expenseId}`);
+  }
 }
