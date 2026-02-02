@@ -14,6 +14,7 @@ import { logger } from "./logger.js";
 import { BexioClient } from "./bexio-client.js";
 import { getAllToolDefinitions, getHandler } from "./tools/index.js";
 import { formatSuccessResponse, formatErrorResponse, McpError } from "./shared/index.js";
+import { registerUIResources } from "./ui-resources.js";
 
 const SERVER_NAME = "bexio-mcp-server";
 const SERVER_VERSION = "2.0.0";
@@ -33,7 +34,8 @@ export class BexioMcpServer {
   initialize(client: BexioClient): void {
     this.client = client;
     this.registerTools();
-    logger.info(`Initialized with ${getAllToolDefinitions().length} tools`);
+    registerUIResources(this.server, client);
+    logger.info(`Initialized with ${getAllToolDefinitions().length} tools + 3 UI tools`);
   }
 
   private registerTools(): void {
