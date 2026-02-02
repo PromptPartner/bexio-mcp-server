@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 5 of 6 (UI & Packaging)
-Plan: 3 of 4 in current phase
-Status: **In Progress** - UI resources complete, npm packaging configured
-Last activity: 2026-02-01 -- Completed 05-01 (MCP Apps UI Resources)
+Plan: 4 of 4 in current phase
+Status: **In Progress** - UI resources, npm package, MCPB bundle complete
+Last activity: 2026-02-01 -- Completed 05-02 (MCPB Bundle Packaging)
 
-Progress: [################--] 80%
+Progress: [#################-] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
-- Average duration: 6.3 min
-- Total execution time: 101 min
+- Total plans completed: 17
+- Average duration: 6.2 min
+- Total execution time: 106 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [################--] 80%
 | 02-reference-data-banking | 3/3 | 21 min | 7.0 min |
 | 03-projects-accounting | 4/4 | 15 min | 3.8 min |
 | 04-purchase-files-payroll | 4/4 | 22 min | 5.5 min |
-| 05-ui-packaging | 3/4 | 17 min | 5.7 min |
+| 05-ui-packaging | 4/4 | 22 min | 5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-03 (5 min), 04-04 (8 min), 05-01 (5 min), 05-02 (5 min), 05-03 (7 min)
+- Last 5 plans: 04-04 (8 min), 05-01 (5 min), 05-02 (5 min), 05-03 (7 min), 05-02 (5 min)
 - Trend: Consistent pace with infrastructure/packaging work
 
 *Updated after each plan completion*
@@ -83,6 +83,8 @@ Recent decisions affecting current work:
 - [05-03]: @bexio/mcp-server scoped npm package name
 - [05-03]: zod 3.25.76 (not 3.22.5) for ext-apps peer dependency compatibility
 - [05-03]: Conditional build:ui to allow build before UI files exist
+- [05-02]: MCPB manifest version 0.2 schema (current stable)
+- [05-02]: Copy src/dist to root/dist for MCPB bundling
 
 ### Pending Todos
 
@@ -93,12 +95,12 @@ None.
 - ~~SDK migration from 0.5.0 to 1.25.2 has limited official documentation~~ RESOLVED in 01-01
 - ~~Swiss QR-invoice spec compliance needs research (Phase 2)~~ RESOLVED in 02-03
 - ~~MCP Apps (UI-*) based on SEP-1865 proposal, not yet stable (Phase 5 risk)~~ RESOLVED in 05-01
-- UI files (src/ui/*) needed for 05-02 - Plan 05-02 not yet executed
+- ~~UI files (src/ui/*) needed for 05-02~~ RESOLVED - bundle includes UI resources
 
 ## Session Continuity
 
-Last session: 2026-02-01 23:45 UTC
-Stopped at: Completed 05-01-PLAN.md (UI resources)
+Last session: 2026-02-01 22:52 UTC
+Stopped at: Completed 05-02-PLAN.md (MCPB Bundle Packaging)
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -140,9 +142,9 @@ Resume file: None
 | Plan | Wave | Description | Status |
 |------|------|-------------|--------|
 | 05-01-PLAN.md | 1 | MCP Apps UI Resources (3 UI tools) | COMPLETE |
-| 05-02-PLAN.md | 1 | MCPB Bundle | PENDING |
+| 05-02-PLAN.md | 2 | MCPB Bundle Packaging | COMPLETE |
 | 05-03-PLAN.md | 1 | npm package configuration | COMPLETE |
-| 05-04-PLAN.md | 1 | Claude Desktop integration guide | PENDING |
+| 05-04-PLAN.md | 2 | Claude Desktop integration guide | PENDING |
 
 ## Phase 1 Deliverables
 
@@ -195,4 +197,6 @@ Resume file: None
   - preview_invoice (invoice-preview.html)
   - show_contact_card (contact-card.html)
   - show_dashboard (dashboard.html)
+- MCPB bundle packaging (manifest.json, icon.png, packaging scripts)
+- Bundle: 82.6KB compressed, 328.6KB unpacked, 100 files
 - Total tools: 221 (218 base + 3 UI)
