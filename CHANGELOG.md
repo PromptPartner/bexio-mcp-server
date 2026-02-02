@@ -32,5 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vitest for testing
 - Vite for UI bundling
 
+## [1.0.0] - 2025
+
+Initial implementation by [Sebastian Bryner](https://www.linkedin.com/in/sebastian-bryner/) of [bryner.tech](https://bryner.tech/).
+
+### Added
+- Initial Bexio MCP server with 83 tools
+- Core domains: contacts, invoices, quotes, orders, payments
+- MCP SDK 0.5.0 integration
+- Basic Bexio API client
+
 [unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.0...HEAD
 [2.0.0]: https://github.com/promptpartner/bexio-mcp-server/releases/tag/v2.0.0
+[1.0.0]: https://bryner.tech/

@@ -150,6 +150,10 @@ npx @promptpartner/bexio-mcp-server --mode http --port 8000
 - Verify the config file path is correct for your OS
 - Check Claude Desktop logs for error messages
 
+## Acknowledgments
+
+This project builds upon the original Bexio MCP server created by [Sebastian Bryner](https://www.linkedin.com/in/sebastian-bryner/) of [bryner.tech](https://bryner.tech/). His v1.0 implementation provided the foundational architecture and initial 83 tools that made this expanded v2.0 possible.
+
 ## License
 
 MIT - See [LICENSE](LICENSE) for details.
