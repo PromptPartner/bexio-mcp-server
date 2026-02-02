@@ -22,8 +22,9 @@
     "type-check": "tsc --noEmit",
     "clean": "node -e \"const fs=require('fs'); if(fs.existsSync('dist')){fs.rmSync('dist',{recursive:true}); console.log('Cleaned dist/')}\"",
     "prebuild": "npm run clean",
-    "pack:mcpb": "npm run build && cd .. && mcpb pack",
-    "validate:mcpb": "cd .. && mcpb validate",
+    "pack:mcpb": "npm run build && npm run copy:bundle && cd .. && mcpb pack",
+    "copy:bundle": "node -e \"const fs=require('fs'); const path=require('path'); function copyDir(src,dest){fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).forEach(f=>{const srcPath=path.join(src,f);const destPath=path.join(dest,f);fs.statSync(srcPath).isDirectory()?copyDir(srcPath,destPath):fs.copyFileSync(srcPath,destPath)})} const rootDist=path.join(__dirname,'..','dist'); if(fs.existsSync(rootDist))fs.rmSync(rootDist,{recursive:true}); copyDir('dist',rootDist); console.log('Copied dist/ to root for MCPB bundling')\"",
+    "validate:mcpb": "cd .. && mcpb validate manifest.json",
     "prepublishOnly": "npm run build"
   },
   "repository": {
