@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "bexio-mcp-server",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 200+ more tools through natural conversation.",
   "author": {
     "name": "Lukas Hertig",

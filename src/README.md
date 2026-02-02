@@ -4,6 +4,10 @@ Complete Swiss accounting integration for [Bexio](https://www.bexio.com/) via th
 
 Manage invoices, contacts, projects, time tracking, and 200+ more tools through AI conversation or workflow automation.
 
+> ⚠️ **Early Release Software**
+>
+> This project is under active development. While it's functional and tested, you may encounter bugs or unexpected behavior. Features will continue to be added and improved over time. Please [report any issues](https://github.com/promptpartner/bexio-mcp-server/issues) you find!
+
 ## Compatibility
 
 | Client | Transport | Status |
@@ -164,6 +168,29 @@ Options:
 - Verify the config file path is correct for your OS
 - Check Claude Desktop logs for error messages
 
+## Privacy Policy
+
+This MCP server acts as a pass-through to the Bexio API and does not store any data. For full details, see our [Privacy Policy](PRIVACY.md).
+
+Your data is processed according to [Bexio's Privacy Policy](https://www.bexio.com/en-CH/privacy-policy).
+
+## Support
+
+- **Issues & Bug Reports:** [GitHub Issues](https://github.com/promptpartner/bexio-mcp-server/issues)
+- **Email:** lukas@promptpartner.ai
+
+## Support the Project
+
+If this project saves you time or helps your business, consider buying me a coffee! ☕
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/lukashertig)
+
+Your support helps keep this project maintained and improved!
+
+## Author
+
+Created by [Lukas Hertig](https://linkedin.com/in/lukashertig) from [PromptPartner.ai](https://promptpartner.ai)
+
 ## Acknowledgments
 
 This project builds upon the original Bexio MCP server created by [Sebastian Bryner](https://www.linkedin.com/in/sebastian-bryner/) of [bryner.tech](https://bryner.tech/). His v1.0 implementation provided the foundational architecture and initial 83 tools that made this expanded v2.0 possible.
@@ -176,4 +203,4 @@ MIT - See [LICENSE](LICENSE) for details.
 
 - [Bexio API Documentation](https://docs.bexio.com/)
 - [MCP Protocol Specification](https://modelcontextprotocol.io/)
-- [Report Issues](https://github.com/promptpartner/bexio-mcp-server/issues)
+- [PromptPartner.ai](https://promptpartner.ai)

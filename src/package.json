@@ -1,7 +1,7 @@
 {
   "name": "@promptpartner/bexio-mcp-server",
-  "version": "2.0.5",
-  "description": "Model Context Protocol server for Bexio API integration",
+  "version": "2.0.6",
+  "description": "Complete Swiss accounting integration for Bexio via MCP. Works with Claude Desktop, n8n, and any MCP client. 221 tools for invoices, contacts, projects, time tracking and more.",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
@@ -31,7 +31,8 @@
   },
   "author": {
     "name": "Lukas Hertig",
-    "email": "lukas@promptpartner.ai"
+    "email": "lukas@promptpartner.ai",
+    "url": "https://promptpartner.ai"
   },
   "repository": {
     "type": "git",
@@ -77,5 +78,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "funding": {
+    "type": "buymeacoffee",
+    "url": "https://buymeacoffee.com/lukashertig"
   }
 }
