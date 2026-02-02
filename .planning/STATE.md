@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Enable anyone to connect Claude Desktop to their Bexio accounting system with zero friction
-**Current focus:** Phase 4 - Purchase, Files & Payroll (plan 01 complete)
+**Current focus:** Phase 4 - Purchase, Files & Payroll (plan 02 complete)
 
 ## Current Position
 
 Phase: 4 of 6 (Purchase, Files & Payroll)
-Plan: 1 of 4 in current phase
-Status: **Plan 04-01 Complete** - 13 new tools (188 total)
-Last activity: 2026-02-01 -- Completed 04-01 (Bills & Expenses)
+Plan: 2 of 4 in current phase
+Status: **Plan 04-02 Complete** - 10 new tools (198 total)
+Last activity: 2026-02-01 -- Completed 04-02 (Purchase Orders & Outgoing Payments)
 
-Progress: [###########-------] 56%
+Progress: [############------] 61%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 6.6 min
-- Total execution time: 65 min
+- Total plans completed: 11
+- Average duration: 6.5 min
+- Total execution time: 71 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [###########-------] 56%
 | 01-foundation-migration | 3/3 | 26 min | 8.7 min |
 | 02-reference-data-banking | 3/3 | 21 min | 7.0 min |
 | 03-projects-accounting | 4/4 | 15 min | 3.8 min |
-| 04-purchase-files-payroll | 1/4 | 3 min | 3.0 min |
+| 04-purchase-files-payroll | 2/4 | 9 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (5 min), 03-03 (5 min), 03-04 (5 min), 04-01 (3 min)
+- Last 5 plans: 03-03 (5 min), 03-04 (5 min), 04-01 (3 min), 04-02 (6 min)
 - Trend: Established patterns enabling faster delivery
 
 *Updated after each plan completion*
@@ -70,6 +70,8 @@ Recent decisions affecting current work:
 - [03-02]: Nested URL pattern /pr_project/{id}/resource for milestones and work packages
 - [04-01]: Standard CRUD pattern for bills and expenses (mirrors sales invoices)
 - [04-01]: Search criteria array for bills (consistent with project search)
+- [04-02]: Outgoing payments use nested URL /kb_bill/{id}/payment (mirrors incoming payments)
+- [04-02]: Purchase orders use flat /purchase_order endpoint
 
 ### Pending Todos
 
@@ -83,8 +85,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01 21:40 UTC
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-02-01 21:43 UTC
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -117,8 +119,8 @@ Resume file: None
 | Plan | Wave | Description | Status |
 |------|------|-------------|--------|
 | 04-01-PLAN.md | 1 | Bills & Expenses (13 tools) | COMPLETE |
-| 04-02-PLAN.md | 1 | Files & Document Management | PENDING |
-| 04-03-PLAN.md | 1 | Additional Purchase Features | PENDING |
+| 04-02-PLAN.md | 1 | Purchase Orders & Outgoing Payments (10 tools) | COMPLETE |
+| 04-03-PLAN.md | 1 | Files & Document Management | PENDING |
 | 04-04-PLAN.md | 1 | Payroll (conditional) | PENDING |
 
 ## Phase 1 Deliverables
@@ -151,4 +153,6 @@ Resume file: None
 
 - 8 bill tools (list, get, create, update, delete, search, issue, mark_as_paid)
 - 5 expense tools (list, get, create, update, delete)
-- Total tools: 188 (175 + 13 Phase 4 plan 01)
+- 5 purchase order tools (list, get, create, update, delete)
+- 5 outgoing payment tools (list, get, create, update, delete - nested under bills)
+- Total tools: 198 (175 + 23 Phase 4 plans 01-02)
