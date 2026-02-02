@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Enable anyone to connect Claude Desktop to their Bexio accounting system with zero friction
-**Current focus:** Phase 4 - Purchase, Files & Payroll (plan 03 complete)
+**Current focus:** Phase 5 - Packaging & Integration (next)
 
 ## Current Position
 
 Phase: 4 of 6 (Purchase, Files & Payroll)
-Plan: 3 of 4 in current phase
-Status: **Plan 04-03 Complete** - 10 new tools (208 total)
-Last activity: 2026-02-01 -- Completed 04-03 (Files & Additional Addresses)
+Plan: 4 of 4 in current phase
+Status: **Phase 4 Complete** - 43 new tools (218 total)
+Last activity: 2026-02-01 -- Completed 04-04 (Payroll with module detection)
 
-Progress: [#############-----] 67%
+Progress: [###############---] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 6.3 min
-- Total execution time: 76 min
+- Total plans completed: 13
+- Average duration: 6.5 min
+- Total execution time: 84 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [#############-----] 67%
 | 01-foundation-migration | 3/3 | 26 min | 8.7 min |
 | 02-reference-data-banking | 3/3 | 21 min | 7.0 min |
 | 03-projects-accounting | 4/4 | 15 min | 3.8 min |
-| 04-purchase-files-payroll | 3/4 | 14 min | 4.7 min |
+| 04-purchase-files-payroll | 4/4 | 22 min | 5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (5 min), 04-01 (3 min), 04-02 (6 min), 04-03 (5 min)
+- Last 5 plans: 04-01 (3 min), 04-02 (6 min), 04-03 (5 min), 04-04 (8 min)
 - Trend: Established patterns enabling faster delivery
 
 *Updated after each plan completion*
@@ -74,6 +74,9 @@ Recent decisions affecting current work:
 - [04-02]: Purchase orders use flat /purchase_order endpoint
 - [04-03]: Base64 encoding for file content (MCP JSON transport requirement)
 - [04-03]: Additional addresses nested under contacts via contact_id parameter
+- [04-04]: Probe-on-first-call pattern for payroll module detection (not startup)
+- [04-04]: Cache module availability result for session duration
+- [04-04]: Friendly multi-line error with upgrade instructions when payroll unavailable
 
 ### Pending Todos
 
@@ -87,8 +90,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01 22:45 UTC
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-02-01 22:50 UTC
+Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -116,14 +119,14 @@ Resume file: None
 | 03-03-PLAN.md | 1 | Time Tracking Tools (11 tools) | COMPLETE |
 | 03-04-PLAN.md | 1 | Accounting Foundation (15 tools) | COMPLETE |
 
-## Phase 4 Plans (IN PROGRESS)
+## Phase 4 Plans (COMPLETE)
 
 | Plan | Wave | Description | Status |
 |------|------|-------------|--------|
 | 04-01-PLAN.md | 1 | Bills & Expenses (13 tools) | COMPLETE |
 | 04-02-PLAN.md | 1 | Purchase Orders & Outgoing Payments (10 tools) | COMPLETE |
 | 04-03-PLAN.md | 1 | Files & Additional Addresses (10 tools) | COMPLETE |
-| 04-04-PLAN.md | 1 | Payroll (conditional) | PENDING |
+| 04-04-PLAN.md | 1 | Payroll with module detection (10 tools) | COMPLETE |
 
 ## Phase 1 Deliverables
 
@@ -151,7 +154,7 @@ Resume file: None
 - Flat-to-nested transformation for manual entries
 - Total tools: 175 (128 + 47 Phase 3)
 
-## Phase 4 Deliverables (in progress)
+## Phase 4 Deliverables
 
 - 8 bill tools (list, get, create, update, delete, search, issue, mark_as_paid)
 - 5 expense tools (list, get, create, update, delete)
@@ -159,4 +162,8 @@ Resume file: None
 - 5 outgoing payment tools (list, get, create, update, delete - nested under bills)
 - 6 file tools (list, get, upload, download, update, delete)
 - 4 additional address tools (list, get, create, delete - nested under contacts)
-- Total tools: 208 (175 + 33 Phase 4 plans 01-03)
+- 4 employee tools (list, get, create, update - conditional)
+- 5 absence tools (list, get, create, update, delete - conditional)
+- 1 payroll documents tool (list - conditional)
+- Conditional module detection with probe-on-first-call caching
+- Total tools: 218 (175 + 43 Phase 4)
