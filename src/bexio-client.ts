@@ -1118,6 +1118,44 @@ export class BexioClient {
     return this.makeRequest("GET", `/pr_project_state/${statusId}`);
   }
 
+  // ===== MILESTONES (PROJ-04) =====
+  async listMilestones(projectId: number, params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", `/pr_project/${projectId}/milestone`, params);
+  }
+
+  async getMilestone(projectId: number, milestoneId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/pr_project/${projectId}/milestone/${milestoneId}`);
+  }
+
+  async createMilestone(projectId: number, data: { name: string; end_date?: string }): Promise<unknown> {
+    return this.makeRequest("POST", `/pr_project/${projectId}/milestone`, undefined, data);
+  }
+
+  async deleteMilestone(projectId: number, milestoneId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/pr_project/${projectId}/milestone/${milestoneId}`);
+  }
+
+  // ===== WORK PACKAGES (PROJ-05) =====
+  async listWorkPackages(projectId: number, params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", `/pr_project/${projectId}/workpackage`, params);
+  }
+
+  async getWorkPackage(projectId: number, workpackageId: number): Promise<unknown> {
+    return this.makeRequest("GET", `/pr_project/${projectId}/workpackage/${workpackageId}`);
+  }
+
+  async createWorkPackage(projectId: number, data: { name: string; estimated_time?: string }): Promise<unknown> {
+    return this.makeRequest("POST", `/pr_project/${projectId}/workpackage`, undefined, data);
+  }
+
+  async updateWorkPackage(projectId: number, workpackageId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("PATCH", `/pr_project/${projectId}/workpackage/${workpackageId}`, undefined, data);
+  }
+
+  async deleteWorkPackage(projectId: number, workpackageId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/pr_project/${projectId}/workpackage/${workpackageId}`);
+  }
+
   // ===== TIMESHEETS (PROJ-06) =====
   // Note: Duration format is "HH:MM" (e.g., "02:30" for 2.5 hours)
   async listTimesheets(params: PaginationParams = {}): Promise<unknown[]> {
