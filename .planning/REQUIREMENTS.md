@@ -9,28 +9,28 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Foundation
 
-- [ ] **FOUND-01**: Upgrade SDK from 0.5.0 to 1.25.2 with all breaking changes addressed
-- [ ] **FOUND-02**: Refactor server.ts (2,418 lines) into domain-organized modules (<200 lines each)
+- [x] **FOUND-01**: Upgrade SDK from 0.5.0 to 1.25.2 with all breaking changes addressed
+- [x] **FOUND-02**: Refactor server.ts (2,418 lines) into domain-organized modules (<200 lines each)
 - [ ] **FOUND-03**: Create MCPB bundle with manifest.json for one-click Claude Desktop install
 - [ ] **FOUND-04**: Publish npm package with bin field for `npx @bexio/mcp-server` usage
-- [ ] **FOUND-05**: Maintain dual transport (stdio for Claude Desktop, HTTP for n8n)
-- [ ] **FOUND-06**: Pin Zod to v3.22.x to avoid SDK compatibility issues
-- [ ] **FOUND-07**: Configure stderr-only logging to prevent stdout contamination
+- [x] **FOUND-05**: Maintain dual transport (stdio for Claude Desktop, HTTP for n8n)
+- [x] **FOUND-06**: Pin Zod to v3.22.x to avoid SDK compatibility issues
+- [x] **FOUND-07**: Configure stderr-only logging to prevent stdout contamination
 
 ### Existing Tools (Backward Compatibility)
 
-- [ ] **EXIST-01**: Preserve all 83 v1 tool names exactly (no renaming)
-- [ ] **EXIST-02**: Contacts: list, get, search, advanced_search, find_by_number, find_by_name, update (7 tools)
-- [ ] **EXIST-03**: Invoices: list, list_all, get, search, search_by_customer, create, issue, cancel, mark_sent, send, copy, statuses, list_all_statuses, get_open, get_overdue (15 tools)
-- [ ] **EXIST-04**: Quotes: list, get, create, search, search_by_customer, issue, accept, decline, send, create_order_from, create_invoice_from (11 tools)
-- [ ] **EXIST-05**: Orders: list, get, create, search, search_by_customer, create_delivery_from, create_invoice_from (7 tools)
-- [ ] **EXIST-06**: Payments: list, get, create, delete (4 tools)
-- [ ] **EXIST-07**: Reminders: list, get, create, delete, mark_sent, send, search, get_sent_this_week (8 tools)
-- [ ] **EXIST-08**: Deliveries: list, get, issue, search (4 tools)
-- [ ] **EXIST-09**: Items & Taxes: list, get, create items; list, get taxes (5 tools)
-- [ ] **EXIST-10**: Reports: revenue, customer_revenue, invoice_status, overdue_invoices, monthly_revenue, top_customers, tasks_due_this_week (7 tools)
-- [ ] **EXIST-11**: Users: current_user, fictional_users CRUD (6 tools)
-- [ ] **EXIST-12**: Comments & Relations: list, get, create comments; relations CRUD + search (9 tools)
+- [x] **EXIST-01**: Preserve all 83 v1 tool names exactly (no renaming)
+- [x] **EXIST-02**: Contacts: list, get, search, advanced_search, find_by_number, find_by_name, update (7 tools)
+- [x] **EXIST-03**: Invoices: list, list_all, get, search, search_by_customer, create, issue, cancel, mark_sent, send, copy, statuses, list_all_statuses, get_open, get_overdue (15 tools)
+- [x] **EXIST-04**: Quotes: list, get, create, search, search_by_customer, issue, accept, decline, send, create_order_from, create_invoice_from (11 tools)
+- [x] **EXIST-05**: Orders: list, get, create, search, search_by_customer, create_delivery_from, create_invoice_from (7 tools)
+- [x] **EXIST-06**: Payments: list, get, create, delete (4 tools)
+- [x] **EXIST-07**: Reminders: list, get, create, delete, mark_sent, send, search, get_sent_this_week (8 tools)
+- [x] **EXIST-08**: Deliveries: list, get, issue, search (4 tools)
+- [x] **EXIST-09**: Items & Taxes: list, get, create items; list, get taxes (5 tools)
+- [x] **EXIST-10**: Reports: revenue, customer_revenue, invoice_status, overdue_invoices, monthly_revenue, top_customers, tasks_due_this_week (7 tools)
+- [x] **EXIST-11**: Users: current_user, fictional_users CRUD (6 tools)
+- [x] **EXIST-12**: Comments & Relations: list, get, create comments; relations CRUD + search (9 tools)
 
 ### Reference Data (New)
 
@@ -142,25 +142,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
+| FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 5 | Pending |
 | FOUND-04 | Phase 5 | Pending |
-| FOUND-05 | Phase 1 | Pending |
-| FOUND-06 | Phase 1 | Pending |
-| FOUND-07 | Phase 1 | Pending |
-| EXIST-01 | Phase 1 | Pending |
-| EXIST-02 | Phase 1 | Pending |
-| EXIST-03 | Phase 1 | Pending |
-| EXIST-04 | Phase 1 | Pending |
-| EXIST-05 | Phase 1 | Pending |
-| EXIST-06 | Phase 1 | Pending |
-| EXIST-07 | Phase 1 | Pending |
-| EXIST-08 | Phase 1 | Pending |
-| EXIST-09 | Phase 1 | Pending |
-| EXIST-10 | Phase 1 | Pending |
-| EXIST-11 | Phase 1 | Pending |
-| EXIST-12 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Complete |
+| FOUND-06 | Phase 1 | Complete |
+| FOUND-07 | Phase 1 | Complete |
+| EXIST-01 | Phase 1 | Complete |
+| EXIST-02 | Phase 1 | Complete |
+| EXIST-03 | Phase 1 | Complete |
+| EXIST-04 | Phase 1 | Complete |
+| EXIST-05 | Phase 1 | Complete |
+| EXIST-06 | Phase 1 | Complete |
+| EXIST-07 | Phase 1 | Complete |
+| EXIST-08 | Phase 1 | Complete |
+| EXIST-09 | Phase 1 | Complete |
+| EXIST-10 | Phase 1 | Complete |
+| EXIST-11 | Phase 1 | Complete |
+| EXIST-12 | Phase 1 | Complete |
 | REFDATA-01 | Phase 2 | Pending |
 | REFDATA-02 | Phase 2 | Pending |
 | REFDATA-03 | Phase 2 | Pending |

@@ -12,7 +12,7 @@ This roadmap transforms the v1 Bexio MCP server (83 tools, SDK 0.5.0, 2,418-line
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Migration** - SDK upgrade, modular architecture, existing 83 tools working
+- [x] **Phase 1: Foundation & Migration** - SDK upgrade, modular architecture, existing 83 tools working
 - [ ] **Phase 2: Reference Data & Banking** - Foundational configuration data, Swiss banking/payments
 - [ ] **Phase 3: Projects & Accounting** - Time tracking, project management, chart of accounts, manual entries
 - [ ] **Phase 4: Purchase, Files & Payroll** - Bills, expenses, documents, HR (conditional)
@@ -34,9 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md - SDK Migration: Upgrade to 1.25.2, fix breaking changes, pin Zod 3.22.x
-- [ ] 01-02-PLAN.md - Modular Architecture: Create types/, shared/, tools/ structure with aggregation patterns
-- [ ] 01-03-PLAN.md - Tool Migration: Migrate all 83 tools to new structure, add HTTP transport, validate backward compatibility
+- [x] 01-01-PLAN.md - SDK Migration: Upgrade to 1.25.2, fix breaking changes, pin Zod 3.22.x
+- [x] 01-02-PLAN.md - Modular Architecture: Create types/, shared/, tools/ structure with aggregation patterns
+- [x] 01-03-PLAN.md - Tool Migration: Migrate all 83 tools to new structure, add HTTP transport, validate backward compatibility
 
 ### Phase 2: Reference Data & Banking
 **Goal**: Complete foundational data APIs and Swiss-standard banking/payment tools
@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Migration | 0/3 | **Planned** | - |
+| 1. Foundation & Migration | 3/3 | **Complete** | 2026-02-01 |
 | 2. Reference Data & Banking | 0/3 | Not started | - |
 | 3. Projects & Accounting | 0/3 | Not started | - |
 | 4. Purchase, Files & Payroll | 0/3 | Not started | - |
@@ -137,5 +137,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 ---
 *Roadmap created: 2026-02-01*
-*Phase 1 planned: 2026-02-01*
+*Phase 1 complete: 2026-02-01*
 *Total requirements: 67 | Phases: 6 | Plans: 17 (estimated)*
