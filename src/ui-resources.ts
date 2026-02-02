@@ -31,7 +31,8 @@ const DASHBOARD_URI = "ui://bexio/dashboard.html";
  * @param client - BexioClient for API calls
  */
 export function registerUIResources(server: McpServer, client: BexioClient): void {
-  const uiBasePath = path.join(import.meta.dirname, "../dist/ui");
+  // Path to built UI files (vite outputs to dist/ui/ui/<name>/<name>.html)
+  const uiBasePath = path.join(import.meta.dirname, "../dist/ui/ui");
 
   // ===== INVOICE PREVIEW =====
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +62,7 @@ export function registerUIResources(server: McpServer, client: BexioClient): voi
     { mimeType: RESOURCE_MIME_TYPE },
     async () => {
       const html = await fs.readFile(
-        path.join(uiBasePath, "invoice-preview.html"),
+        path.join(uiBasePath, "invoice-preview/invoice-preview.html"),
         "utf-8"
       );
       return {
@@ -98,7 +99,7 @@ export function registerUIResources(server: McpServer, client: BexioClient): voi
     { mimeType: RESOURCE_MIME_TYPE },
     async () => {
       const html = await fs.readFile(
-        path.join(uiBasePath, "contact-card.html"),
+        path.join(uiBasePath, "contact-card/contact-card.html"),
         "utf-8"
       );
       return {
@@ -175,7 +176,7 @@ export function registerUIResources(server: McpServer, client: BexioClient): voi
     { mimeType: RESOURCE_MIME_TYPE },
     async () => {
       const html = await fs.readFile(
-        path.join(uiBasePath, "dashboard.html"),
+        path.join(uiBasePath, "dashboard/dashboard.html"),
         "utf-8"
       );
       return {

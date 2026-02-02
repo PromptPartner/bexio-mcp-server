@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsc && npm run build:ui",
-    "build:ui": "node -e \"const fs=require('fs'); if(fs.existsSync('src/ui')){const{execSync}=require('child_process');execSync('npx vite build',{stdio:'inherit'})}else{console.log('Skipping UI build - src/ui not found')}\"",
+    "build:ui": "node -e \"const fs=require('fs'); if(fs.existsSync('ui')){const{execSync}=require('child_process');execSync('npx vite build',{stdio:'inherit'})}else{console.log('Skipping UI build - ui/ not found')}\"",
     "dev": "tsx watch src/index.ts",
     "dev:ui": "vite build --watch",
     "start": "node dist/index.js",
