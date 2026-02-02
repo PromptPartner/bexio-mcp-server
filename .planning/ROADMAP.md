@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Migration** - SDK upgrade, modular architecture, existing 83 tools working
 - [x] **Phase 2: Reference Data & Banking** - Foundational configuration data, Swiss banking/payments
-- [ ] **Phase 3: Projects & Accounting** - Time tracking, project management, chart of accounts, manual entries
+- [x] **Phase 3: Projects & Accounting** - Time tracking, project management, chart of accounts, manual entries
 - [ ] **Phase 4: Purchase, Files & Payroll** - Bills, expenses, documents, HR (conditional)
 - [ ] **Phase 5: UI & Packaging** - MCP Apps capability, MCPB bundle, npm package
 - [ ] **Phase 6: Distribution** - MCP Registry, npm publish, GitHub release, documentation
@@ -65,12 +65,13 @@ Plans:
   3. User can manage milestones and work packages within projects
   4. User can view chart of accounts and create manual journal entries
   5. User can query business years, calendar years, and VAT periods
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: Projects Core - Projects CRUD, types, statuses
-- [ ] 03-02: Time Tracking - Timesheets, milestones, work packages, business activities, communication types
-- [ ] 03-03: Accounting Foundation - Accounts, account groups, manual entries, business/calendar years, VAT periods, journal
+- [x] 03-01-PLAN.md - Projects Core: Projects CRUD, search, archive/unarchive, project types, project statuses (12 tools)
+- [x] 03-02-PLAN.md - Project Nested Resources: Milestones, work packages (nested under projects) (9 tools)
+- [x] 03-03-PLAN.md - Time Tracking: Timesheets, statuses, business activities, communication types (11 tools)
+- [x] 03-04-PLAN.md - Accounting Foundation: Accounts, account groups, years, manual entries, VAT periods, journal (15 tools)
 
 ### Phase 4: Purchase, Files & Payroll
 **Goal**: Complete procurement cycle, document management, and conditional payroll
@@ -130,7 +131,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Foundation & Migration | 3/3 | **Complete** | 2026-02-01 |
 | 2. Reference Data & Banking | 3/3 | **Complete** | 2026-02-01 |
-| 3. Projects & Accounting | 0/3 | Not started | - |
+| 3. Projects & Accounting | 4/4 | **Complete** | 2026-02-01 |
 | 4. Purchase, Files & Payroll | 0/3 | Not started | - |
 | 5. UI & Packaging | 0/3 | Not started | - |
 | 6. Distribution | 0/2 | Not started | - |
@@ -139,4 +140,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 *Roadmap created: 2026-02-01*
 *Phase 1 complete: 2026-02-01*
 *Phase 2 complete: 2026-02-01*
-*Total requirements: 67 | Phases: 6 | Plans: 17 (estimated)*
+*Phase 3 complete: 2026-02-01*
+*Total requirements: 67 | Phases: 6 | Plans: 18 (estimated)*
