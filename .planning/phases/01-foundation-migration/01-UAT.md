@@ -30,9 +30,8 @@ result: pass
 
 ### 5. Contacts Tool Works
 expected: Calling bexio_list_contacts (or similar contacts tool) returns contact data from Bexio API or a clear error if credentials are invalid.
-result: issue
-reported: "HTTP /tools/call endpoint crashes with 'name is not defined' - catch block references variable declared in try scope"
-severity: major
+result: pass (fixed)
+note: Fixed scoping bug in transports/http.ts - now returns proper error for invalid credentials
 
 ### 6. HTTP Transport Starts
 expected: Running `node dist/index.js --mode http --port 8000` starts HTTP server. Health check at http://localhost:8000/ responds with server info.
@@ -57,19 +56,21 @@ result: pass
 ## Summary
 
 total: 10
-passed: 9
-issues: 1
+passed: 10
+issues: 0
 pending: 0
 skipped: 0
 
 ## Gaps
 
 - truth: "Calling contacts tool via HTTP returns contact data or clear error"
-  status: failed
+  status: resolved
   reason: "User reported: HTTP /tools/call endpoint crashes with 'name is not defined' - catch block references variable declared in try scope"
   severity: major
   test: 5
-  root_cause: ""
-  artifacts: []
+  root_cause: "In transports/http.ts line 118, catch block references `name` variable that was declared with const inside try block (line 95). JavaScript scoping rules make it inaccessible in catch."
+  fix: "Extracted toolName before try block. Commit: 79a9bd3"
+  artifacts:
+    - path: "src/transports/http.ts"
+      issue: "Line 118: `tool: name` references out-of-scope variable"
   missing: []
-  debug_session: ""
