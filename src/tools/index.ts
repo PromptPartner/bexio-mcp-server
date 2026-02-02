@@ -16,6 +16,7 @@ import { BexioClient } from "../bexio-client.js";
 import * as reference from "./reference/index.js";
 import * as company from "./company/index.js";
 import * as banking from "./banking/index.js";
+import * as projects from "./projects/index.js";
 import * as contacts from "./contacts/index.js";
 import * as invoices from "./invoices/index.js";
 import * as orders from "./orders/index.js";
@@ -34,11 +35,12 @@ export type HandlerFn = (
   args: unknown
 ) => Promise<unknown>;
 
-// Aggregate all tool definitions (130 total)
+// Aggregate all tool definitions (140 total)
 const allDefinitions: Tool[] = [
-  ...reference.toolDefinitions,  // 28 tools (contact groups, sectors, salutations, titles, countries, languages, units)
+  ...reference.toolDefinitions,  // 26 tools (contact groups, sectors, salutations, titles, countries, languages, units)
   ...company.toolDefinitions,    // 6 tools (company profile, permissions, payment types)
   ...banking.toolDefinitions,    // 13 tools (bank accounts, currencies, IBAN payments, QR payments)
+  ...projects.toolDefinitions,   // 12 tools (projects, project types, project statuses)
   ...contacts.toolDefinitions,   // 7 tools
   ...invoices.toolDefinitions,   // 15 tools
   ...orders.toolDefinitions,     // 7 tools
@@ -57,6 +59,7 @@ const allHandlers: Record<string, HandlerFn> = {
   ...reference.handlers,
   ...company.handlers,
   ...banking.handlers,
+  ...projects.handlers,
   ...contacts.handlers,
   ...invoices.handlers,
   ...orders.handlers,
