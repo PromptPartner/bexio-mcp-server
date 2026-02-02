@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 Phase: 5 of 6 (UI & Packaging)
 Plan: 3 of 4 in current phase
-Status: **In Progress** - npm packaging configured
-Last activity: 2026-02-01 -- Completed 05-03 (npm package configuration)
+Status: **In Progress** - UI resources complete, npm packaging configured
+Last activity: 2026-02-01 -- Completed 05-01 (MCP Apps UI Resources)
 
 Progress: [################--] 80%
 
@@ -97,8 +97,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01 22:40 UTC
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-02-01 23:45 UTC
+Stopped at: Completed 05-01-PLAN.md (UI resources)
 Resume file: None
 
 ## Phase 1 Plans (COMPLETE)
@@ -139,8 +139,8 @@ Resume file: None
 
 | Plan | Wave | Description | Status |
 |------|------|-------------|--------|
-| 05-01-PLAN.md | 1 | MCP Apps dependencies and Vite config | COMPLETE |
-| 05-02-PLAN.md | 1 | UI Components (invoice preview, contact card, dashboard) | PENDING |
+| 05-01-PLAN.md | 1 | MCP Apps UI Resources (3 UI tools) | COMPLETE |
+| 05-02-PLAN.md | 1 | MCPB Bundle | PENDING |
 | 05-03-PLAN.md | 1 | npm package configuration | COMPLETE |
 | 05-04-PLAN.md | 1 | Claude Desktop integration guide | PENDING |
 
@@ -191,4 +191,8 @@ Resume file: None
 - npm package configuration (@bexio/mcp-server)
 - CLI binary (bexio-mcp-server)
 - LICENSE (MIT) and README.md for npm
-- 3 UI tools registered (preview_invoice, show_contact_card, show_dashboard)
+- 3 UI tools with HTML resources:
+  - preview_invoice (invoice-preview.html)
+  - show_contact_card (contact-card.html)
+  - show_dashboard (dashboard.html)
+- Total tools: 221 (218 base + 3 UI)
