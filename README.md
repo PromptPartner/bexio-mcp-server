@@ -134,6 +134,95 @@ This MCP server provides **221 tools** across all Bexio domains:
 - Absence tracking
 - Payroll documents
 
+## Examples
+
+Here are some real-world examples of using the Bexio MCP server with Claude:
+
+### Example 1: Finding Overdue Invoices
+
+**Prompt:**
+> "Show me all overdue invoices"
+
+**What happens:**
+Claude uses the `get_overdue_invoices` tool to query Bexio for all invoices past their due date.
+
+**Response:**
+> Found 3 overdue invoices:
+>
+> | Invoice # | Customer | Amount | Due Date | Days Overdue |
+> |-----------|----------|--------|----------|--------------|
+> | INV-2024-001 | Acme AG | CHF 2,450.00 | 2024-01-15 | 18 days |
+> | INV-2024-003 | Tech GmbH | CHF 890.50 | 2024-01-20 | 13 days |
+> | INV-2024-007 | Swiss Corp | CHF 5,200.00 | 2024-01-25 | 8 days |
+>
+> Total overdue: CHF 8,540.50
+
+---
+
+### Example 2: Creating an Invoice
+
+**Prompt:**
+> "Create an invoice for contact 'Sunrise AG' with two items: 10 hours of consulting at CHF 150/hour and a software license for CHF 500"
+
+**What happens:**
+Claude uses `find_contact_by_name` to locate the customer, then `create_invoice` with the specified line items.
+
+**Response:**
+> Created Invoice INV-2024-015 for Sunrise AG:
+>
+> - 10x Consulting Hours @ CHF 150.00 = CHF 1,500.00
+> - 1x Software License @ CHF 500.00 = CHF 500.00
+>
+> Subtotal: CHF 2,000.00
+> VAT (8.1%): CHF 162.00
+> **Total: CHF 2,162.00**
+>
+> Invoice is in draft status. Say "issue invoice INV-2024-015" to finalize it.
+
+---
+
+### Example 3: Project Time Summary
+
+**Prompt:**
+> "How much time was logged on project 'Website Redesign' this month?"
+
+**What happens:**
+Claude uses `search_projects` to find the project, then `search_timesheets` to get time entries filtered by project and date range.
+
+**Response:**
+> Time logged on "Website Redesign" (January 2024):
+>
+> | Team Member | Hours | Activities |
+> |-------------|-------|------------|
+> | Anna M. | 24:30 | Design, Meetings |
+> | Marco K. | 18:15 | Development |
+> | Lisa B. | 8:00 | Content Writing |
+>
+> **Total: 50 hours 45 minutes**
+>
+> Budget used: 50.75 of 80 hours (63%)
+
+---
+
+### Example 4: Customer Revenue Report
+
+**Prompt:**
+> "What's my revenue from 'Tech Solutions GmbH' this year?"
+
+**What happens:**
+Claude uses `find_contact_by_name` to identify the customer, then `get_revenue_by_customer` to calculate total revenue from paid invoices.
+
+**Response:**
+> Revenue from Tech Solutions GmbH (2024):
+>
+> - Q1: CHF 12,450.00 (3 invoices)
+> - Q2: CHF 8,200.00 (2 invoices)
+> - Q3: CHF 15,800.00 (4 invoices)
+> - Q4: CHF 6,500.00 (2 invoices, 1 pending)
+>
+> **Total paid: CHF 42,950.00**
+> **Pending: CHF 3,200.00**
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |
@@ -198,6 +287,15 @@ Created by [Lukas Hertig](https://linkedin.com/in/lukashertig) from [PromptPartn
 ## Acknowledgments
 
 This project builds upon the original Bexio MCP server created by [Sebastian Bryner](https://www.linkedin.com/in/sebastian-bryner/) of [bryner.tech](https://bryner.tech/). His v1.0 implementation provided the foundational architecture and initial 83 tools that made this expanded v2.0 possible.
+
+### Development Tools
+
+The v2.0 expansion from 83 to 221 tools was developed using:
+
+- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** - Anthropic's AI-powered development environment that enabled rapid iteration and comprehensive API coverage
+- **[GSD Framework](https://github.com/casualjim/get-shit-done)** - The "Get Shit Done" planning framework for structured AI-assisted development workflows
+
+These tools helped transform a 4-day estimated project into a 2-hour reality, demonstrating the potential of AI-augmented software development.
 
 ## Disclaimer
 
