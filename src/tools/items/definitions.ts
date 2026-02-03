@@ -9,6 +9,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_items",
     description: "List items from Bexio with optional pagination",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -28,6 +29,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_item",
     description: "Get a specific item by ID",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -42,6 +44,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_item",
     description: "Create a new item in Bexio",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -70,6 +73,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_taxes",
     description: "List taxes from Bexio with optional pagination",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -89,6 +93,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_tax",
     description: "Get a specific tax by ID",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {

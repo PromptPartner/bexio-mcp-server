@@ -9,6 +9,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_revenue_report",
     description: "Get revenue report for a specific period",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -33,6 +34,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_customer_revenue_report",
     description: "Get customer revenue report for a specific period",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -58,6 +60,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_invoice_status_report",
     description: "Get invoice status report for a specific period",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -78,6 +81,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_overdue_invoices_report",
     description: "Get overdue invoices report",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {},
@@ -86,6 +90,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_monthly_revenue_report",
     description: "Get monthly revenue report for a specific month",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -104,6 +109,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_top_customers_by_revenue",
     description: "Get top customers by revenue",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -128,6 +134,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_tasks_due_this_week",
     description: "Get all tasks due this week (invoices with due date this week)",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {},

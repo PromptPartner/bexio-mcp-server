@@ -9,6 +9,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_current_user",
     description: "Get the currently authenticated user",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {},
@@ -17,6 +18,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_fictional_users",
     description: "List fictional users from Bexio with optional pagination",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -36,6 +38,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_fictional_user",
     description: "Get a specific fictional user by ID",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -50,6 +53,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_fictional_user",
     description: "Create a new fictional user",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -64,6 +68,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "update_fictional_user",
     description: "Update a fictional user",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -82,6 +87,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "delete_fictional_user",
     description: "Delete a fictional user",
+    annotations: { destructiveHint: true },
     inputSchema: {
       type: "object",
       properties: {
