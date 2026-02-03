@@ -9,6 +9,14 @@
 .env
 .env.example
 
+# Token files - NEVER INCLUDE
+.mcpregistry_github_token
+.mcpregistry_registry_token
+*.token
+
+# Marketing assets (too large for bundle)
+marketing
+
 # Legacy version
 mcp_bexio-main-v1
 
