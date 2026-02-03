@@ -8,6 +8,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_invoices",
     description: "List invoices from Bexio with optional pagination",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -19,6 +20,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_all_invoices",
     description: "List every invoice in Bexio by paging automatically",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -29,6 +31,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_invoice",
     description: "Get a specific invoice by ID",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: { invoice_id: { type: "integer", description: "The invoice ID" } },
@@ -38,6 +41,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "search_invoices",
     description: "Search invoices via the Bexio search endpoint",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -59,6 +63,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "search_invoices_by_customer",
     description: "Search invoices by customer name (finds contact, then invoices)",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -71,6 +76,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_invoice",
     description: "Create a new invoice in Bexio",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: { invoice_data: { type: "object", description: "Invoice data to create" } },
@@ -80,6 +86,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "issue_invoice",
     description: "Issue an invoice",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: { invoice_id: { type: "integer", description: "The invoice ID to issue" } },
@@ -89,6 +96,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "cancel_invoice",
     description: "Cancel an invoice",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: { invoice_id: { type: "integer", description: "The invoice ID to cancel" } },
@@ -98,6 +106,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "mark_invoice_as_sent",
     description: "Mark an invoice as sent",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: { invoice_id: { type: "integer", description: "The invoice ID to mark as sent" } },
@@ -107,6 +116,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "send_invoice",
     description: "Send an invoice",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: { invoice_id: { type: "integer", description: "The invoice ID to send" } },
@@ -116,6 +126,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "copy_invoice",
     description: "Copy an invoice",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: { invoice_id: { type: "integer", description: "The invoice ID to copy" } },
@@ -125,11 +136,13 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_invoice_statuses",
     description: "List all available invoice statuses with their meanings",
+    annotations: { readOnlyHint: true },
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "list_all_statuses",
     description: "List all document statuses for invoices, quotes, and orders",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -143,11 +156,13 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_open_invoices",
     description: "Get all open invoices (draft and sent/pending)",
+    annotations: { readOnlyHint: true },
     inputSchema: { type: "object", properties: {} },
   },
   {
     name: "get_overdue_invoices",
     description: "Get all overdue invoices",
+    annotations: { readOnlyHint: true },
     inputSchema: { type: "object", properties: {} },
   },
 ];

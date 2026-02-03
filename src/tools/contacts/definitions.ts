@@ -9,6 +9,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_contacts",
     description: "List contacts from Bexio with optional pagination and filtering",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -36,6 +37,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_contact",
     description: "Get a specific contact by ID",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -50,6 +52,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "search_contacts",
     description: "Search contacts by name, email, or other fields",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -69,6 +72,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "advanced_search_contacts",
     description: "Perform advanced search on contacts using multiple criteria",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -107,6 +111,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "find_contact_by_number",
     description: "Find a specific contact by its contact number (e.g., '001008')",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -121,6 +126,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "find_contact_by_name",
     description: "Find contacts by name (searches through all pages)",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -135,6 +141,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "update_contact",
     description: "Update an existing contact's information",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {

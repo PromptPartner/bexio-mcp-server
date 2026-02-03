@@ -9,6 +9,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "list_quotes",
     description: "List quotes (offers) from Bexio with optional pagination",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -28,6 +29,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_quote",
     description: "Get a specific quote by ID",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -42,6 +44,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_quote",
     description: "Create a new quote (offer) for an existing contact",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -61,6 +64,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "search_quotes",
     description: "Search quotes with filters",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -76,6 +80,7 @@ export const toolDefinitions: Tool[] = [
     name: "search_quotes_by_customer",
     description:
       "Search quotes by customer name (2-step process: find contact by name, then find quotes by contact_id)",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -95,6 +100,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "issue_quote",
     description: "Issue a quote",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -109,6 +115,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "accept_quote",
     description: "Accept a quote",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -123,6 +130,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "decline_quote",
     description: "Decline a quote",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -137,6 +145,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "send_quote",
     description: "Send a quote",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -151,6 +160,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_order_from_quote",
     description: "Create an order from a quote",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
@@ -165,6 +175,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_invoice_from_quote",
     description: "Create an invoice from a quote",
+    annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
