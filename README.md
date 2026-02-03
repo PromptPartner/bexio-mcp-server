@@ -210,7 +210,7 @@ Claude uses `search_projects` to find the project, then `search_timesheets` to g
 > "What's my revenue from 'Tech Solutions GmbH' this year?"
 
 **What happens:**
-Claude uses `find_contact_by_name` to identify the customer, then `get_revenue_by_customer` to calculate total revenue from paid invoices.
+Claude uses `find_contact_by_name` to identify the customer, then `get_customer_revenue_report` to calculate total revenue from paid invoices.
 
 **Response:**
 > Revenue from Tech Solutions GmbH (2024):
