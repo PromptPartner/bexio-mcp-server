@@ -8,3 +8,13 @@ marketing/
 
 # Internal workflow docs (not for public repo)
 PUBLISHING.md
+
+# Sensitive files - NEVER COMMIT
+.env
+src/.env
+.mcpregistry_github_token
+.mcpregistry_registry_token
+*.token
+
+# Build artifacts (committed separately)
+*.mcpb
