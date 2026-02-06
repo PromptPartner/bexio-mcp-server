@@ -1,35 +1,25 @@
-# @promptpartner/bexio-mcp-server
+# Bexio MCP Server
 
-Complete Swiss accounting integration for [Bexio](https://www.bexio.com/) via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Works with **Claude Desktop**, **n8n**, and any MCP-compatible client.
+MCP server that connects Claude Desktop to [Bexio](https://www.bexio.com/), the Swiss accounting platform. 221 tools for invoices, contacts, projects, time tracking, banking, and more.
 
-Manage invoices, contacts, projects, time tracking, and 200+ more tools through AI conversation or workflow automation.
+> **Early Release** — Functional and tested, but under active development. [Report issues here.](https://github.com/promptpartner/bexio-mcp-server/issues)
 
-> ⚠️ **Early Release Software**
->
-> This project is under active development. While it's functional and tested, you may encounter bugs or unexpected behavior. Features will continue to be added and improved over time. Please [report any issues](https://github.com/promptpartner/bexio-mcp-server/issues) you find!
+## Install
 
-## Compatibility
+### Option 1: Download Extension (Recommended)
 
-| Client | Transport | Status |
-|--------|-----------|--------|
-| [Claude Desktop](https://claude.ai/download) | stdio | ✅ Fully supported |
-| [n8n](https://n8n.io/) | HTTP | ✅ Fully supported |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | stdio | ✅ Fully supported |
-| Other MCP clients | stdio/HTTP | ✅ Should work |
+1. Download the latest `.mcpb` from [Releases](https://github.com/PromptPartner/bexio-mcp-server/releases)
+2. In Claude Desktop, go to **Extensions** > **Advanced Settings** > **Install Extension**
+3. Select the downloaded `.mcpb` file
+4. Enter your Bexio API token when prompted — done!
 
-## Quick Start
+### Option 2: npm
 
-### For Claude Desktop
+```bash
+npx @promptpartner/bexio-mcp-server
+```
 
-**Option A: MCPB Bundle (Easiest)**
-
-1. Download `bexio-mcp-server.mcpb` from [Releases](https://github.com/promptpartner/bexio-mcp-server/releases)
-2. Double-click to install
-3. Enter your Bexio API token when prompted
-
-**Option B: npm**
-
-Add to `claude_desktop_config.json`:
+Or add to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -49,23 +39,7 @@ Config location:
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
-### For n8n and Other HTTP Clients
-
-Start the server in HTTP mode:
-
-```bash
-BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --port 8000
-```
-
-The server exposes MCP over HTTP at `http://localhost:8000`. Configure your MCP client to connect to this endpoint.
-
-### For Other stdio Clients
-
-```bash
-BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server
-```
-
-Or build from source:
+### Option 3: Build from Source
 
 ```bash
 git clone https://github.com/promptpartner/bexio-mcp-server
@@ -73,6 +47,23 @@ cd bexio-mcp-server/src
 npm install && npm run build
 BEXIO_API_TOKEN=your-token node dist/index.js
 ```
+
+### n8n and HTTP Clients
+
+Start in HTTP mode for n8n or other HTTP-based MCP clients:
+
+```bash
+BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --port 8000
+```
+
+## Compatibility
+
+| Client | Transport | Status |
+|--------|-----------|--------|
+| [Claude Desktop](https://claude.ai/download) | stdio | Fully supported |
+| [n8n](https://n8n.io/) | HTTP | Fully supported |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | stdio | Fully supported |
+| Other MCP clients | stdio/HTTP | Should work |
 
 ## Getting Your Bexio API Token
 

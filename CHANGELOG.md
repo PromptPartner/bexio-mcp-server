@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.11] - 2026-02-06
+
+### Changed
+- Restructured README with clearer install instructions
+- MCPB extension download from Releases is now the primary install option
+- Added Claude Desktop install path (Extensions > Advanced Settings > Install Extension)
+
 ## [2.0.9] - 2026-02-02
 
 ### Fixed
@@ -55,7 +62,8 @@ Initial implementation by [Sebastian Bryner](https://www.linkedin.com/in/sebasti
 - MCP SDK 0.5.0 integration
 - Basic Bexio API client
 
-[unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.9...HEAD
+[unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.11...HEAD
+[2.0.11]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.10...v2.0.11
 [2.0.9]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.8...v2.0.9
 [2.0.8]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.0...v2.0.8
 [2.0.0]: https://github.com/promptpartner/bexio-mcp-server/releases/tag/v2.0.0
