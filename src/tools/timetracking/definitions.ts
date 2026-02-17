@@ -130,11 +130,11 @@ export const toolDefinitions: Tool[] = [
                 description: "Field name to search (e.g., user_id, pr_project_id, date)",
               },
               value: {
-                description: "Value to search for",
+                description: "Value to search for (will be converted to string internally)",
               },
               criteria: {
                 type: "string",
-                description: "Comparison operator (e.g., '=', 'like', '>', '<')",
+                description: "Comparison operator (default: '='). Options: '=', 'like', '>', '<', '>=', '<='",
               },
             },
             required: ["field", "value"],
@@ -142,6 +142,22 @@ export const toolDefinitions: Tool[] = [
         },
       },
       required: ["search_criteria"],
+    },
+  },
+  {
+    name: "get_project_timesheets",
+    description:
+      "Get all timesheet entries for a specific project. Use this to fetch tracked time for a Bexio project.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: {
+          type: "integer",
+          description: "The Bexio project ID to fetch timesheets for (e.g., 775)",
+        },
+      },
+      required: ["project_id"],
     },
   },
 

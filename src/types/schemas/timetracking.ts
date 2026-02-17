@@ -56,16 +56,23 @@ export type DeleteTimesheetParams = z.infer<typeof DeleteTimesheetParamsSchema>;
 /**
  * Search criteria for timesheets.
  * Supports field/value/criteria pattern used by Bexio search API.
+ * Note: Bexio API requires value as string.
  */
 export const SearchTimesheetsParamsSchema = z.object({
   search_criteria: z.array(z.object({
     field: z.string(),
-    value: z.union([z.string(), z.number(), z.boolean()]),
-    criteria: z.string().optional(),
+    value: z.union([z.string(), z.number(), z.boolean()]).transform(v => String(v)),
+    criteria: z.string().default("="),
   })).min(1, "At least one search criterion is required"),
 });
 
 export type SearchTimesheetsParams = z.infer<typeof SearchTimesheetsParamsSchema>;
+
+export const GetProjectTimesheetsParamsSchema = z.object({
+  project_id: z.number().int().positive(),
+});
+
+export type GetProjectTimesheetsParams = z.infer<typeof GetProjectTimesheetsParamsSchema>;
 
 // ===== TIMESHEET STATUSES (PROJ-07) =====
 
