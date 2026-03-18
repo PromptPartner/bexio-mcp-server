@@ -58,17 +58,24 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "search_deliveries",
-    description: "Search deliveries with filters",
+    description: "Search deliveries via the Bexio search endpoint. Use query for simple text search, or filters for advanced criteria.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
-        search_params: {
-          type: "object",
-          description: "Search parameters for deliveries",
+        query: { type: "string", description: "Free-text value matched with LIKE" },
+        field: { type: "string", description: "Field to search (default: title)", default: "title" },
+        operator: { type: "string", description: "Comparison operator (LIKE, =, >)", default: "LIKE" },
+        filters: {
+          type: "array", description: "Explicit Bexio search filters",
+          items: {
+            type: "object",
+            properties: { field: { type: "string" }, operator: { type: "string" }, value: {} },
+            required: ["field", "operator", "value"],
+          },
         },
+        limit: { type: "integer", description: "Maximum results" },
       },
-      required: ["search_params"],
     },
   },
 ];

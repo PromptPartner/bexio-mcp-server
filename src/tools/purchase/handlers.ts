@@ -82,7 +82,7 @@ export const handlers: Record<string, HandlerFn> = {
     return client.markBillAsPaid(bill_id);
   },
 
-  // ===== EXPENSES (v4.0, UUID IDs) =====
+  // ===== EXPENSES (v3.0, UUID IDs) =====
   list_expenses: async (client, args) => {
     const { limit, offset } = ListExpensesParamsSchema.parse(args);
     return client.listExpenses({ limit, offset });

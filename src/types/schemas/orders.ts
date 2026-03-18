@@ -99,7 +99,15 @@ export type CreateOrderParams = z.infer<typeof CreateOrderParamsSchema>;
 
 // Search orders
 export const SearchOrdersParamsSchema = z.object({
-  search_params: z.record(z.unknown()),
+  query: z.string().optional(),
+  field: z.string().optional(),
+  operator: z.string().optional(),
+  filters: z.array(z.object({
+    field: z.string(),
+    operator: z.string(),
+    value: z.any(),
+  })).optional(),
+  limit: z.number().int().positive().optional(),
 });
 
 export type SearchOrdersParams = z.infer<typeof SearchOrdersParamsSchema>;

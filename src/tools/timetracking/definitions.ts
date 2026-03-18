@@ -59,7 +59,7 @@ export const toolDefinitions: Tool[] = [
         },
         date: {
           type: "string",
-          description: "Date of the work in YYYY-MM-DD format (required)",
+          description: "Date of the work in YYYY-MM-DD format (will be converted to DD.MM.YYYY for Bexio) (required)",
         },
         duration: {
           type: "string",
@@ -80,7 +80,7 @@ export const toolDefinitions: Tool[] = [
         },
         client_service_id: {
           type: "integer",
-          description: "ID of the business activity/service type (optional)",
+          description: "ID of the business activity/service type (required — use list_business_activities to find valid IDs)",
         },
         text: {
           type: "string",
@@ -92,7 +92,7 @@ export const toolDefinitions: Tool[] = [
           default: true,
         },
       },
-      required: ["user_id", "date", "duration"],
+      required: ["user_id", "date", "duration", "client_service_id"],
     },
   },
   {

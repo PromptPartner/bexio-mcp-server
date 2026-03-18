@@ -53,8 +53,35 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   search_quotes: async (client, args) => {
-    const { search_params } = SearchQuotesParamsSchema.parse(args);
-    return client.searchQuotes(search_params);
+    const params = SearchQuotesParamsSchema.parse(args);
+    const searchFilters: Array<{ field: string; operator: string; value: unknown }> = [];
+
+    if (params.filters) {
+      if (!Array.isArray(params.filters)) {
+        throw McpError.validation("filters must be a list of search expressions");
+      }
+      searchFilters.push(...params.filters as Array<{ field: string; operator: string; value: unknown }>);
+    }
+
+    if (params.query !== undefined) {
+      const op = params.operator?.toUpperCase() ?? "LIKE";
+      let value: string = params.query;
+      if (op === "LIKE" && !value.includes("%")) {
+        value = `%${params.query}%`;
+      }
+      searchFilters.push({
+        field: params.field ?? "title",
+        operator: op,
+        value: value,
+      });
+    }
+
+    if (searchFilters.length === 0) {
+      throw McpError.validation("Either query or filters must be provided");
+    }
+
+    const queryParams = params.limit ? { limit: params.limit } : undefined;
+    return client.searchQuotes(searchFilters, queryParams);
   },
 
   search_quotes_by_customer: async (client, args) => {
@@ -121,7 +148,11 @@ export const handlers: Record<string, HandlerFn> = {
 
   edit_quote: async (client, args) => {
     const { quote_id, quote_data } = EditQuoteParamsSchema.parse(args);
-    return client.editQuote(quote_id, quote_data);
+    // GET existing record first, then merge user changes on top
+    // Bexio PUT requires ALL mandatory fields, not just changed ones
+    const existing = await client.getQuote(quote_id) as Record<string, unknown>;
+    const merged = { ...existing, ...quote_data };
+    return client.editQuote(quote_id, merged);
   },
 
   delete_quote: async (client, args) => {

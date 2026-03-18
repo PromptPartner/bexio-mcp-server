@@ -30,7 +30,15 @@ export type CreateQuoteParams = z.infer<typeof CreateQuoteParamsSchema>;
 
 // Search quotes
 export const SearchQuotesParamsSchema = z.object({
-  search_params: z.record(z.unknown()),
+  query: z.string().optional(),
+  field: z.string().optional(),
+  operator: z.string().optional(),
+  filters: z.array(z.object({
+    field: z.string(),
+    operator: z.string(),
+    value: z.any(),
+  })).optional(),
+  limit: z.number().int().positive().optional(),
 });
 
 export type SearchQuotesParams = z.infer<typeof SearchQuotesParamsSchema>;

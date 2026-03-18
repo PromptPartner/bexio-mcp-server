@@ -44,13 +44,14 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_note: async (client, args) => {
     const params = CreateNoteParamsSchema.parse(args);
-    const mappedType = RESOURCE_TYPE_MAP[params.resource_type];
     return client.createNote({
-      event_module: mappedType,
-      event_module_id: params.resource_id,
-      title: params.title,
+      user_id: params.user_id,
+      event_start: params.event_start,
+      subject: params.subject,
       info: params.content,
       is_public: params.is_public,
+      contact_id: params.contact_id,
+      pr_project_id: params.pr_project_id,
     });
   },
 
@@ -67,7 +68,7 @@ export const handlers: Record<string, HandlerFn> = {
   search_notes: async (client, args) => {
     const params = SearchNotesParamsSchema.parse(args);
     const criteria: Record<string, unknown>[] = [
-      { field: "title", value: params.query, criteria: "like" },
+      { field: "subject", value: params.query, criteria: "like" },
     ];
     if (params.resource_type) {
       const mappedType = RESOURCE_TYPE_MAP[params.resource_type];

@@ -14,7 +14,6 @@ import {
   MarkReminderAsUnsentParamsSchema,
   GetReminderPdfParamsSchema,
   SendReminderParamsSchema,
-  SearchRemindersParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -57,9 +56,8 @@ export const handlers: Record<string, HandlerFn> = {
     return client.sendReminder(invoice_id, reminder_id);
   },
 
-  search_reminders: async (client, args) => {
-    const { search_params } = SearchRemindersParamsSchema.parse(args);
-    return client.searchReminders(search_params);
+  search_reminders: async (client, _args) => {
+    return client.searchReminders({});
   },
 
   get_reminders_sent_this_week: async (client) => {

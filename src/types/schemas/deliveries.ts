@@ -29,7 +29,15 @@ export type IssueDeliveryParams = z.infer<typeof IssueDeliveryParamsSchema>;
 
 // Search deliveries
 export const SearchDeliveriesParamsSchema = z.object({
-  search_params: z.record(z.unknown()),
+  query: z.string().optional(),
+  field: z.string().optional(),
+  operator: z.string().optional(),
+  filters: z.array(z.object({
+    field: z.string(),
+    operator: z.string(),
+    value: z.any(),
+  })).optional(),
+  limit: z.number().int().positive().optional(),
 });
 
 export type SearchDeliveriesParams = z.infer<

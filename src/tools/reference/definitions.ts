@@ -151,8 +151,8 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "create_contact_sector",
-    description: "Create a new contact sector (industry type)",
-    annotations: { destructiveHint: false },
+    description: "[NOT SUPPORTED] Create a new contact sector (industry type). Note: Bexio API does not support creating contact sectors. This resource is read-only.",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
@@ -444,12 +444,16 @@ export const toolDefinitions: Tool[] = [
           type: "string",
           description: "The name of the country",
         },
-        iso_3166_alpha2: {
+        name_short: {
+          type: "string",
+          description: "Short name of the country (e.g., 'CH', 'DE')",
+        },
+        iso3166_alpha2: {
           type: "string",
           description: "ISO 3166 alpha-2 country code (2 characters, e.g., 'CH', 'DE')",
         },
       },
-      required: ["name", "iso_3166_alpha2"],
+      required: ["name", "name_short", "iso3166_alpha2"],
     },
   },
   {
@@ -506,8 +510,8 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "create_language",
-    description: "Create a new language entry",
-    annotations: { destructiveHint: false },
+    description: "[NOT SUPPORTED] Create a new language entry. Note: Bexio API returns 501 Not Implemented for this endpoint. This resource is read-only.",
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {

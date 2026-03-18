@@ -6,9 +6,20 @@
 import { z } from "zod";
 
 // ===== COMMENTS =====
+// Comments are nested under document types: kb_offer, kb_order, kb_invoice, kb_delivery
+
+// List comments
+export const ListCommentsParamsSchema = z.object({
+  document_type: z.enum(["kb_offer", "kb_order", "kb_invoice", "kb_delivery"]),
+  document_id: z.number().int().positive(),
+});
+
+export type ListCommentsParams = z.infer<typeof ListCommentsParamsSchema>;
 
 // Get comment
 export const GetCommentParamsSchema = z.object({
+  document_type: z.enum(["kb_offer", "kb_order", "kb_invoice", "kb_delivery"]),
+  document_id: z.number().int().positive(),
   comment_id: z.number().int().positive(),
 });
 
@@ -16,6 +27,8 @@ export type GetCommentParams = z.infer<typeof GetCommentParamsSchema>;
 
 // Create comment
 export const CreateCommentParamsSchema = z.object({
+  document_type: z.enum(["kb_offer", "kb_order", "kb_invoice", "kb_delivery"]),
+  document_id: z.number().int().positive(),
   comment_data: z.record(z.unknown()),
 });
 
@@ -62,7 +75,15 @@ export type DeleteContactRelationParams = z.infer<
 
 // Search contact relations
 export const SearchContactRelationsParamsSchema = z.object({
-  search_params: z.record(z.unknown()),
+  query: z.string().optional(),
+  field: z.string().optional(),
+  operator: z.string().optional(),
+  filters: z.array(z.object({
+    field: z.string(),
+    operator: z.string(),
+    value: z.any(),
+  })).optional(),
+  limit: z.number().int().positive().optional(),
 });
 
 export type SearchContactRelationsParams = z.infer<

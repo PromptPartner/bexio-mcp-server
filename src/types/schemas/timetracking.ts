@@ -32,11 +32,13 @@ export const CreateTimesheetParamsSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   duration: z.string().regex(/^\d{2}:\d{2}$/, "Duration must be in HH:MM format (e.g., '02:30' for 2.5 hours)"),
 
+  // Required: business activity
+  client_service_id: z.number().int().positive({ message: "Client service ID is required" }),
+
   // Optional linking fields
   pr_project_id: z.number().int().positive().optional(),
   pr_package_id: z.number().int().positive().optional(),
   pr_milestone_id: z.number().int().positive().optional(),
-  client_service_id: z.number().int().positive().optional(),
 
   // Optional metadata
   text: z.string().optional(),

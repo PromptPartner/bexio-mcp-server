@@ -67,8 +67,11 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_contact: async (client, args) => {
     const { contact_type, ...fields } = CreateContactParamsSchema.parse(args);
-    const contact_type_id = contact_type === "person" ? 1 : 2;
-    return client.createContact({ contact_type_id, ...fields });
+    const contact_type_id = contact_type === "company" ? 1 : 2;
+    // user_id and owner_id are required by the bexio API — default to 1 if not provided
+    const user_id = fields.user_id ?? 1;
+    const owner_id = (fields as Record<string, unknown>).owner_id ?? user_id;
+    return client.createContact({ contact_type_id, ...fields, user_id, owner_id });
   },
 
   delete_contact: async (client, args) => {
@@ -79,10 +82,11 @@ export const handlers: Record<string, HandlerFn> = {
 
   bulk_create_contacts: async (client, args) => {
     const { contacts } = BulkCreateContactsParamsSchema.parse(args);
-    const mappedContacts = contacts.map(({ contact_type, ...fields }) => ({
-      contact_type_id: contact_type === "person" ? 1 : 2,
-      ...fields,
-    }));
+    const mappedContacts = contacts.map(({ contact_type, ...fields }) => {
+      const user_id = fields.user_id ?? 1;
+      const owner_id = (fields as Record<string, unknown>).owner_id ?? user_id;
+      return { contact_type_id: contact_type === "company" ? 1 : 2, ...fields, user_id, owner_id };
+    });
     return client.bulkCreateContacts(mappedContacts);
   },
 

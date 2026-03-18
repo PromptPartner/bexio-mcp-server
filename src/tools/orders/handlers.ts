@@ -47,8 +47,35 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   search_orders: async (client, args) => {
-    const { search_params } = SearchOrdersParamsSchema.parse(args);
-    return client.searchOrders(search_params);
+    const params = SearchOrdersParamsSchema.parse(args);
+    const searchFilters: Array<{ field: string; operator: string; value: unknown }> = [];
+
+    if (params.filters) {
+      if (!Array.isArray(params.filters)) {
+        throw McpError.validation("filters must be a list of search expressions");
+      }
+      searchFilters.push(...params.filters as Array<{ field: string; operator: string; value: unknown }>);
+    }
+
+    if (params.query !== undefined) {
+      const op = params.operator?.toUpperCase() ?? "LIKE";
+      let value: string = params.query;
+      if (op === "LIKE" && !value.includes("%")) {
+        value = `%${params.query}%`;
+      }
+      searchFilters.push({
+        field: params.field ?? "title",
+        operator: op,
+        value: value,
+      });
+    }
+
+    if (searchFilters.length === 0) {
+      throw McpError.validation("Either query or filters must be provided");
+    }
+
+    const queryParams = params.limit ? { limit: params.limit } : undefined;
+    return client.searchOrders(searchFilters, queryParams);
   },
 
   search_orders_by_customer: async (client, args) => {
@@ -95,7 +122,11 @@ export const handlers: Record<string, HandlerFn> = {
 
   edit_order: async (client, args) => {
     const { order_id, order_data } = EditOrderParamsSchema.parse(args);
-    return client.editOrder(order_id, order_data);
+    // GET existing record first, then merge user changes on top
+    // Bexio PUT requires ALL mandatory fields, not just changed ones
+    const existing = await client.getOrder(order_id) as Record<string, unknown>;
+    const merged = { ...existing, ...order_data };
+    return client.editOrder(order_id, merged);
   },
 
   delete_order: async (client, args) => {

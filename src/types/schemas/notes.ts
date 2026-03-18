@@ -56,13 +56,15 @@ export const GetNoteParamsSchema = z.object({
 
 export type GetNoteParams = z.infer<typeof GetNoteParamsSchema>;
 
-// Create note attached to a resource
+// Create note — uses Bexio fields: user_id, event_start, subject
 export const CreateNoteParamsSchema = z.object({
-  resource_type: ResourceTypeEnum,
-  resource_id: z.number().int().positive(),
-  title: z.string().min(1, "Title is required"),
+  user_id: z.number().int().positive({ message: "User ID is required" }),
+  event_start: z.string().min(1, "Event start date/time is required"),
+  subject: z.string().min(1, "Subject is required"),
   content: z.string().optional(),
   is_public: z.boolean().default(false),
+  contact_id: z.number().int().positive().optional(),
+  pr_project_id: z.number().int().positive().optional(),
 });
 
 export type CreateNoteParams = z.infer<typeof CreateNoteParamsSchema>;

@@ -8,7 +8,7 @@ import { z } from "zod";
 // Item creation payload
 export const ItemCreateSchema = z
   .object({
-    name_1: z.string().min(1, "Item name is required"),
+    intern_name: z.string().min(1, "Item name is required"),
     name_2: z.string().optional(),
     description: z.string().optional(),
     internal_pos: z.string().optional(),

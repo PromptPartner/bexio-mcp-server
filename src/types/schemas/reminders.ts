@@ -72,9 +72,17 @@ export const GetReminderPdfParamsSchema = z.object({
 
 export type GetReminderPdfParams = z.infer<typeof GetReminderPdfParamsSchema>;
 
-// Search reminders
+// Search reminders (note: reminders don't have a native Bexio search endpoint,
+// this iterates invoices locally and returns all reminders)
 export const SearchRemindersParamsSchema = z.object({
-  search_params: z.record(z.unknown()),
+  query: z.string().optional(),
+  field: z.string().optional(),
+  operator: z.string().optional(),
+  filters: z.array(z.object({
+    field: z.string(),
+    operator: z.string(),
+    value: z.any(),
+  })).optional(),
 });
 
 export type SearchRemindersParams = z.infer<typeof SearchRemindersParamsSchema>;

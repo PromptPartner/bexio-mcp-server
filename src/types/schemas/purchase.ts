@@ -1,6 +1,6 @@
 /**
  * Purchase-related Zod schemas and types.
- * Domain: Bills (v4.0), Expenses (v4.0), Purchase Orders (v3.0), Outgoing Payments (v4.0)
+ * Domain: Bills (v4.0), Expenses (v3.0), Purchase Orders (v3.0), Outgoing Payments (v4.0)
  */
 
 import { z } from "zod";
@@ -67,7 +67,7 @@ export const MarkBillAsPaidParamsSchema = z.object({
 
 export type MarkBillAsPaidParams = z.infer<typeof MarkBillAsPaidParamsSchema>;
 
-// ===== EXPENSES (v4.0 API, UUID IDs) =====
+// ===== EXPENSES (v3.0 API, UUID IDs) =====
 
 // List expenses
 export const ListExpensesParamsSchema = z.object({

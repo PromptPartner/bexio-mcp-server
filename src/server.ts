@@ -15,6 +15,7 @@ import { BexioClient } from "./bexio-client.js";
 import { getAllToolDefinitions, getHandler } from "./tools/index.js";
 import { formatSuccessResponse, formatErrorResponse, McpError } from "./shared/index.js";
 import { registerUIResources } from "./ui-resources.js";
+import { toZodShape } from "./schema-converter.js";
 
 const SERVER_NAME = "bexio-mcp-server";
 const SERVER_VERSION = "2.0.0";
@@ -62,13 +63,15 @@ export class BexioMcpServer {
         continue;
       }
 
-      // SDK 1.25.2 expects a ZodRawShape (plain object with Zod schemas)
-      // Use empty shape and let our handlers do the validation
-      this.server.tool(
+      // Convert JSON Schema from definitions to Zod shapes for McpServer.tool()
+      // This ensures the full parameter schema is exposed to MCP clients
+      const zodShape = toZodShape(def);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.server.tool as any)(
         def.name,
         def.description || "",
-        {},
-        async (args) => {
+        zodShape,
+        async (args: Record<string, unknown>) => {
           if (!this.client) {
             return formatErrorResponse(
               McpError.internal("Bexio client not initialized")

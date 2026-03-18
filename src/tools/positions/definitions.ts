@@ -30,7 +30,8 @@ const POSITION_TYPES = [
   {
     key: "subtotal",
     label: "subtotal",
-    createHint: "running subtotal at this position in the document",
+    createHint: "running subtotal at this position in the document. No fields needed — just provide document_type and document_id",
+    noBody: true,
   },
   {
     key: "discount",
@@ -41,13 +42,14 @@ const POSITION_TYPES = [
   {
     key: "pagebreak",
     label: "pagebreak",
-    createHint: "page break for PDF generation",
+    createHint: "page break for PDF generation. No fields needed — just provide document_type and document_id",
+    noBody: true,
   },
   {
     key: "sub",
     label: "sub (nested)",
     createHint:
-      "nested sub-item under a parent position. Fields: text (string), amount (number), unit_price (number), tax_id (integer), parent_id (integer)",
+      "nested sub-position group. Fields: text (string, required), show_pos_nr (boolean)",
   },
 ] as const;
 
@@ -83,7 +85,7 @@ const positionDataProperty = {
 /**
  * Generate 5 MCP tool definitions for a single position type.
  */
-function makePositionTools(type: (typeof POSITION_TYPES)[number]): Tool[] {
+function makePositionTools(type: { key: string; label: string; createHint: string; noBody?: boolean }): Tool[] {
   return [
     {
       name: `list_${type.key}_positions`,
@@ -111,8 +113,12 @@ function makePositionTools(type: (typeof POSITION_TYPES)[number]): Tool[] {
       annotations: { destructiveHint: false },
       inputSchema: {
         type: "object",
-        properties: { ...listProperties, ...positionDataProperty },
-        required: ["document_type", "document_id", "position_data"],
+        properties: type.noBody
+          ? { ...listProperties }
+          : { ...listProperties, ...positionDataProperty },
+        required: type.noBody
+          ? ["document_type", "document_id"]
+          : ["document_type", "document_id", "position_data"],
       },
     },
     {
