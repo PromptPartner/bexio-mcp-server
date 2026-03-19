@@ -66,10 +66,14 @@ export const handlers: Record<string, HandlerFn> = {
       UpdateContactRelationParamsSchema.parse(args);
     // Bexio PUT requires ALL fields, not just changed ones — fetch existing and merge
     const existing = await client.getContactRelation(relation_id) as Record<string, unknown>;
-    const merged = { ...existing, ...relation_data };
-    // Strip read-only fields
-    delete merged.id;
-    return client.updateContactRelation(relation_id, merged);
+    // Whitelist: only writable fields (Bexio rejects updated_at, id, etc.)
+    const writable = ["contact_id", "contact_sub_id", "description"];
+    const payload: Record<string, unknown> = {};
+    for (const key of writable) {
+      if (key in existing) payload[key] = existing[key];
+    }
+    Object.assign(payload, relation_data);
+    return client.updateContactRelation(relation_id, payload);
   },
 
   delete_contact_relation: async (client, args) => {
