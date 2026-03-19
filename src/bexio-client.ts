@@ -65,12 +65,9 @@ export class BexioClient {
     data?: unknown
   ): Promise<T> {
     logger.debug(`${method} ${endpoint}`, { params, hasData: !!data });
-    const response: AxiosResponse<T> = await this.client.request({
-      method,
-      url: endpoint,
-      params,
-      data,
-    });
+    const config: Record<string, unknown> = { method, url: endpoint, params };
+    if (data !== undefined) config.data = data;
+    const response: AxiosResponse<T> = await this.client.request(config as Parameters<typeof this.client.request>[0]);
     return response.data;
   }
 
@@ -300,25 +297,25 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "GET", `banking/accounts/${accountId}`);
   }
 
-  // ===== CURRENCIES =====
+  // ===== CURRENCIES (v3.0 API) =====
   async listCurrencies(params: PaginationParams = {}): Promise<unknown[]> {
-    return this.makeRequest("GET", "/currency", params);
+    return this.makeVersionedRequest("3.0", "GET", "currencies", params);
   }
 
   async getCurrency(currencyId: number): Promise<unknown> {
-    return this.makeRequest("GET", `/currency/${currencyId}`);
+    return this.makeVersionedRequest("3.0", "GET", `currencies/${currencyId}`);
   }
 
   async createCurrency(data: { name: string; round_factor: number }): Promise<unknown> {
-    return this.makeRequest("POST", "/currency", undefined, data);
+    return this.makeVersionedRequest("3.0", "POST", "currencies", undefined, data);
   }
 
   async updateCurrency(currencyId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PATCH", `/currency/${currencyId}`, undefined, data);
+    return this.makeVersionedRequest("3.0", "PATCH", `currencies/${currencyId}`, undefined, data);
   }
 
   async deleteCurrency(currencyId: number): Promise<unknown> {
-    return this.makeRequest("DELETE", `/currency/${currencyId}`);
+    return this.makeVersionedRequest("3.0", "DELETE", `currencies/${currencyId}`);
   }
 
   // ===== IBAN PAYMENTS (Swiss ISO 20022) =====
@@ -610,7 +607,11 @@ export class BexioClient {
   }
 
   async copyQuote(quoteId: number): Promise<unknown> {
-    return this.makeRequest("POST", `/kb_offer/${quoteId}/copy`, undefined, {});
+    // Bexio copy endpoint requires contact_id in body
+    const original = await this.getQuote(quoteId) as Record<string, unknown>;
+    return this.makeRequest("POST", `/kb_offer/${quoteId}/copy`, undefined, {
+      contact_id: original.contact_id,
+    });
   }
 
   // ===== INVOICES =====
@@ -714,7 +715,11 @@ export class BexioClient {
   }
 
   async copyInvoice(invoiceId: number): Promise<unknown> {
-    return this.makeRequest("POST", `/kb_invoice/${invoiceId}/copy`, undefined, {});
+    // Bexio copy endpoint requires contact_id in body
+    const original = await this.getInvoice(invoiceId) as Record<string, unknown>;
+    return this.makeRequest("POST", `/kb_invoice/${invoiceId}/copy`, undefined, {
+      contact_id: original.contact_id,
+    });
   }
 
   async editInvoice(invoiceId: number, invoiceData: Record<string, unknown>): Promise<unknown> {
@@ -1303,9 +1308,9 @@ export class BexioClient {
   async createProject(data: {
     user_id: number;
     name: string;
-    contact_id?: number;
-    pr_state_id?: number;
-    pr_project_type_id?: number;
+    contact_id: number;
+    pr_state_id: number;
+    pr_project_type_id: number;
     start_date?: string;
     end_date?: string;
     comment?: string;
@@ -1565,7 +1570,14 @@ export class BexioClient {
   }
 
   async searchBills(searchParams: Record<string, unknown>[], queryParams?: { limit?: number; offset?: number }): Promise<unknown[]> {
-    return this.makeVersionedRequest("4.0", "POST", "purchase/bills/search", queryParams, searchParams);
+    // Bexio v4.0 bills API does not support POST /search — use GET with query params
+    const params: Record<string, unknown> = { ...queryParams };
+    for (const criterion of searchParams) {
+      if (criterion.field && criterion.value !== undefined) {
+        params[criterion.field as string] = criterion.value;
+      }
+    }
+    return this.makeVersionedRequest("4.0", "GET", "purchase/bills", params);
   }
 
   async issueBill(billId: string): Promise<unknown> {
@@ -1618,9 +1630,13 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "DELETE", `purchase_orders/${purchaseOrderId}`);
   }
 
-  // ===== OUTGOING PAYMENTS (PURCH-04, v4.0 API, flat endpoint) =====
-  async listOutgoingPayments(params: PaginationParams = {}): Promise<unknown[]> {
-    return this.makeVersionedRequest("4.0", "GET", "purchase/outgoing-payments", params);
+  // ===== OUTGOING PAYMENTS (PURCH-04, v4.0 API, requires bill_id) =====
+  async listOutgoingPayments(params: PaginationParams = {}, billId?: string): Promise<unknown[]> {
+    const queryParams: Record<string, unknown> = { ...params };
+    if (billId) {
+      queryParams.bill_id = billId;
+    }
+    return this.makeVersionedRequest("4.0", "GET", "purchase/outgoing-payments", queryParams);
   }
 
   async getOutgoingPayment(paymentId: string): Promise<unknown> {
@@ -1694,17 +1710,13 @@ export class BexioClient {
 
   async uploadFile(data: { name: string; content_base64: string; content_type: string }): Promise<unknown> {
     const buffer = Buffer.from(data.content_base64, "base64");
-    // Use form-data for multipart upload (transitive dep of axios)
-    const FormData = (await import("form-data")).default;
+    // Use Node.js built-in FormData (Node 18+) for multipart upload
+    const blob = new Blob([buffer], { type: data.content_type });
     const formData = new FormData();
-    formData.append("file", buffer, {
-      filename: data.name,
-      contentType: data.content_type,
-    });
+    formData.append("file", blob, data.name);
     const url = "https://api.bexio.com/3.0/files";
     return axios.post(url, formData, {
       headers: {
-        ...formData.getHeaders(),
         Authorization: `Bearer ${this.config.apiToken}`,
       },
     }).then(r => r.data);
@@ -1869,6 +1881,10 @@ export class BexioClient {
 
   async createPosition(documentType: string, documentId: number, positionType: string, data: Record<string, unknown>): Promise<unknown> {
     return this.makeRequest("POST", `/${documentType}/${documentId}/${positionType}`, undefined, data);
+  }
+
+  async createPositionWithoutBody(documentType: string, documentId: number, positionType: string): Promise<unknown> {
+    return this.makeRequest("POST", `/${documentType}/${documentId}/${positionType}`);
   }
 
   async editPosition(documentType: string, documentId: number, positionType: string, positionId: number, data: Record<string, unknown>): Promise<unknown> {

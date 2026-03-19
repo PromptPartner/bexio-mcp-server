@@ -148,11 +148,28 @@ export const handlers: Record<string, HandlerFn> = {
 
   edit_quote: async (client, args) => {
     const { quote_id, quote_data } = EditQuoteParamsSchema.parse(args);
-    // GET existing record first, then merge user changes on top
-    // Bexio PUT requires ALL mandatory fields, not just changed ones
+    // GET existing record, then pick only writable fields + merge user changes
     const existing = await client.getQuote(quote_id) as Record<string, unknown>;
-    const merged = { ...existing, ...quote_data };
-    return client.editQuote(quote_id, merged);
+    // Whitelist: only fields Bexio accepts on PUT for kb_offer
+    const writable = [
+      "contact_id", "contact_sub_id", "user_id", "logopaper_id",
+      "language_id", "bank_account_id", "currency_id", "payment_type_id",
+      "header", "footer", "title", "mwst_type", "mwst_is_net",
+      "show_position_taxes", "is_valid_from", "is_valid_until",
+      "delivery_address_type",
+      "kb_terms_of_payment_template_id", "template_slug",
+    ];
+    const payload: Record<string, unknown> = {};
+    for (const key of writable) {
+      if (key in existing) payload[key] = existing[key];
+    }
+    // Required fields that may not appear in GET response — use defaults
+    payload.nb_decimals_amount = existing.nb_decimals_amount ?? 2;
+    payload.nb_decimals_price = existing.nb_decimals_price ?? 2;
+    payload.is_compact_view = existing.is_compact_view ?? false;
+    // Apply user changes on top
+    Object.assign(payload, quote_data);
+    return client.editQuote(quote_id, payload);
   },
 
   delete_quote: async (client, args) => {

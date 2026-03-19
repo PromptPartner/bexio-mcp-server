@@ -36,7 +36,7 @@ export const toolDefinitions: Tool[] = [
   // ===== PERMISSIONS (REFDATA-10) =====
   {
     name: "list_permissions",
-    description: "List all available user permissions in the Bexio account",
+    description: "[NOT SUPPORTED] Bexio does not provide a permissions API endpoint. Permissions are managed in the Bexio web UI.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",

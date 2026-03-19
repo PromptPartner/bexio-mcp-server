@@ -71,13 +71,19 @@ function makePositionHandlers(posKey: string): Record<string, HandlerFn> {
       const { document_type, document_id, position_data } =
         CreatePositionParamsSchema.parse(args);
       const docType = DOCUMENT_TYPE_MAP[document_type];
-      // Subtotal and pagebreak positions don't accept a JSON body
-      const data = BODYLESS_POSITION_TYPES.has(posKey) ? {} : position_data;
+      // Subtotal needs {text: "..."}, pagebreak needs non-empty body like {pagebreak: true}
+      if (posKey === "subtotal") {
+        const data = { text: position_data?.text || "Subtotal", ...position_data };
+        return client.createPosition(docType, document_id, POSITION_TYPE_MAP[posKey], data);
+      }
+      if (posKey === "pagebreak") {
+        return client.createPosition(docType, document_id, POSITION_TYPE_MAP[posKey], { pagebreak: true });
+      }
       return client.createPosition(
         docType,
         document_id,
         POSITION_TYPE_MAP[posKey],
-        data,
+        position_data,
       );
     },
 

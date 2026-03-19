@@ -173,15 +173,19 @@ export const toolDefinitions: Tool[] = [
         },
         address_data: {
           type: "object",
-          description: "The address data",
+          description: "The address data. Note: 'address' is a read-only computed field — use street_name + house_number instead.",
           properties: {
             name: {
               type: "string",
               description: "Name/label for the address",
             },
-            address: {
+            street_name: {
               type: "string",
-              description: "Street address",
+              description: "Street name (Bexio field — do NOT use 'address', it is read-only)",
+            },
+            house_number: {
+              type: "string",
+              description: "House/building number",
             },
             postcode: {
               type: "string",

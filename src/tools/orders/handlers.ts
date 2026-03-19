@@ -122,11 +122,24 @@ export const handlers: Record<string, HandlerFn> = {
 
   edit_order: async (client, args) => {
     const { order_id, order_data } = EditOrderParamsSchema.parse(args);
-    // GET existing record first, then merge user changes on top
-    // Bexio PUT requires ALL mandatory fields, not just changed ones
     const existing = await client.getOrder(order_id) as Record<string, unknown>;
-    const merged = { ...existing, ...order_data };
-    return client.editOrder(order_id, merged);
+    const writable = [
+      "contact_id", "contact_sub_id", "user_id", "logopaper_id",
+      "language_id", "bank_account_id", "currency_id", "payment_type_id",
+      "header", "footer", "title", "mwst_type", "mwst_is_net",
+      "show_position_taxes", "is_valid_from",
+      "delivery_address_type",
+      "kb_terms_of_payment_template_id", "template_slug",
+    ];
+    const payload: Record<string, unknown> = {};
+    for (const key of writable) {
+      if (key in existing) payload[key] = existing[key];
+    }
+    payload.nb_decimals_amount = existing.nb_decimals_amount ?? 2;
+    payload.nb_decimals_price = existing.nb_decimals_price ?? 2;
+    payload.is_compact_view = existing.is_compact_view ?? false;
+    Object.assign(payload, order_data);
+    return client.editOrder(order_id, payload);
   },
 
   delete_order: async (client, args) => {

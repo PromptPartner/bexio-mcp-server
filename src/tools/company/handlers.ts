@@ -29,9 +29,12 @@ export const handlers: Record<string, HandlerFn> = {
     return client.updateCompanyProfile(profile_data);
   },
 
-  list_permissions: async (client, args) => {
+  list_permissions: async (_client, args) => {
     ListPermissionsParamsSchema.parse(args);
-    return client.listPermissions();
+    throw new Error(
+      "The Bexio API does not provide a /permission endpoint. " +
+      "Permissions are managed in the Bexio web UI under Settings > User Management."
+    );
   },
 
   list_payment_types: async (client, args) => {

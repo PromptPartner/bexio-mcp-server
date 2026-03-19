@@ -44,15 +44,19 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_note: async (client, args) => {
     const params = CreateNoteParamsSchema.parse(args);
-    return client.createNote({
+    const rawArgs = args as Record<string, unknown>;
+    const noteData: Record<string, unknown> = {
       user_id: params.user_id,
       event_start: params.event_start,
       subject: params.subject,
-      info: params.content,
-      is_public: params.is_public,
-      contact_id: params.contact_id,
-      pr_project_id: params.pr_project_id,
-    });
+    };
+    // Only include optional fields when explicitly provided in raw input
+    // Bexio rejects unexpected fields like is_public
+    if (params.content !== undefined) noteData.info = params.content;
+    if ("is_public" in rawArgs) noteData.is_public = params.is_public;
+    if (params.contact_id !== undefined) noteData.contact_id = params.contact_id;
+    if (params.pr_project_id !== undefined) noteData.pr_project_id = params.pr_project_id;
+    return client.createNote(noteData as Parameters<typeof client.createNote>[0]);
   },
 
   update_note: async (client, args) => {

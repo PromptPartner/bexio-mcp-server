@@ -82,34 +82,25 @@ export const handlers: Record<string, HandlerFn> = {
     return client.markBillAsPaid(bill_id);
   },
 
-  // ===== EXPENSES (v3.0, UUID IDs) =====
-  list_expenses: async (client, args) => {
-    const { limit, offset } = ListExpensesParamsSchema.parse(args);
-    return client.listExpenses({ limit, offset });
+  // ===== EXPENSES (NOT SUPPORTED — Bexio has no purchase/expenses endpoint) =====
+  list_expenses: async (_client, _args) => {
+    throw new Error("The Bexio API does not provide a /purchase/expenses endpoint. Expenses are managed via the Bexio web UI or through bills (purchase/bills).");
   },
 
-  get_expense: async (client, args) => {
-    const { expense_id } = GetExpenseParamsSchema.parse(args);
-    const expense = await client.getExpense(expense_id);
-    if (!expense) {
-      throw McpError.notFound("Expense", expense_id);
-    }
-    return expense;
+  get_expense: async (_client, _args) => {
+    throw new Error("The Bexio API does not provide a /purchase/expenses endpoint. Expenses are managed via the Bexio web UI or through bills (purchase/bills).");
   },
 
-  create_expense: async (client, args) => {
-    const { expense_data } = CreateExpenseParamsSchema.parse(args);
-    return client.createExpense(expense_data);
+  create_expense: async (_client, _args) => {
+    throw new Error("The Bexio API does not provide a /purchase/expenses endpoint. Expenses are managed via the Bexio web UI or through bills (purchase/bills).");
   },
 
-  update_expense: async (client, args) => {
-    const { expense_id, expense_data } = UpdateExpenseParamsSchema.parse(args);
-    return client.updateExpense(expense_id, expense_data);
+  update_expense: async (_client, _args) => {
+    throw new Error("The Bexio API does not provide a /purchase/expenses endpoint. Expenses are managed via the Bexio web UI or through bills (purchase/bills).");
   },
 
-  delete_expense: async (client, args) => {
-    const { expense_id } = DeleteExpenseParamsSchema.parse(args);
-    return client.deleteExpense(expense_id);
+  delete_expense: async (_client, _args) => {
+    throw new Error("The Bexio API does not provide a /purchase/expenses endpoint. Expenses are managed via the Bexio web UI or through bills (purchase/bills).");
   },
 
   // ===== PURCHASE ORDERS (v3.0, integer IDs) =====
@@ -142,10 +133,11 @@ export const handlers: Record<string, HandlerFn> = {
     return client.deletePurchaseOrder(purchase_order_id);
   },
 
-  // ===== OUTGOING PAYMENTS (v4.0, flat endpoint, UUID IDs) =====
+  // ===== OUTGOING PAYMENTS (v4.0, requires bill_id) =====
   list_outgoing_payments: async (client, args) => {
-    const { limit, offset } = ListOutgoingPaymentsParamsSchema.parse(args);
-    return client.listOutgoingPayments({ limit, offset });
+    const params = ListOutgoingPaymentsParamsSchema.parse(args);
+    const bill_id = (params as Record<string, unknown>).bill_id as string;
+    return client.listOutgoingPayments({ limit: params.limit, offset: params.offset }, bill_id);
   },
 
   get_outgoing_payment: async (client, args) => {

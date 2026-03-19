@@ -64,7 +64,12 @@ export const handlers: Record<string, HandlerFn> = {
   update_contact_relation: async (client, args) => {
     const { relation_id, relation_data } =
       UpdateContactRelationParamsSchema.parse(args);
-    return client.updateContactRelation(relation_id, relation_data);
+    // Bexio PUT requires ALL fields, not just changed ones — fetch existing and merge
+    const existing = await client.getContactRelation(relation_id) as Record<string, unknown>;
+    const merged = { ...existing, ...relation_data };
+    // Strip read-only fields
+    delete merged.id;
+    return client.updateContactRelation(relation_id, merged);
   },
 
   delete_contact_relation: async (client, args) => {

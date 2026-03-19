@@ -90,14 +90,21 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "create_fictional_user",
-    description: "Create a new fictional user",
+    description: "Create a new fictional user. Requires salutation_type, firstname, lastname, and email.",
     annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
         user_data: {
           type: "object",
-          description: "User data to create",
+          description: "User data to create. Must include: salutation_type (mr/mrs), firstname, lastname, email",
+          properties: {
+            salutation_type: { type: "string", description: "Salutation: 'mr' or 'mrs'" },
+            firstname: { type: "string", description: "First name" },
+            lastname: { type: "string", description: "Last name" },
+            email: { type: "string", description: "Email address (required by Bexio)" },
+          },
+          required: ["salutation_type", "firstname", "lastname", "email"],
         },
       },
       required: ["user_data"],
