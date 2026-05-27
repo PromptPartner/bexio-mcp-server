@@ -62,7 +62,6 @@ BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --por
 |--------|-----------|--------|
 | [Claude Desktop](https://claude.ai/download) | stdio | Fully supported |
 | [n8n](https://n8n.io/) | HTTP | Fully supported |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | stdio | Fully supported |
 | Other MCP clients | stdio/HTTP | Should work |
 
 ## Getting Your Bexio API Token

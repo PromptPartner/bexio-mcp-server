@@ -1,6 +1,6 @@
 {
   "name": "@promptpartner/bexio-mcp-server",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "mcpName": "io.github.PromptPartner/bexio-mcp-server",
   "description": "Complete Swiss accounting integration for Bexio via MCP. Works with Claude Desktop, n8n, and any MCP client. 310 tools for invoices, contacts, projects, time tracking and more.",
   "main": "dist/index.js",

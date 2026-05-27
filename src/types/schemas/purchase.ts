@@ -1,6 +1,6 @@
 /**
  * Purchase-related Zod schemas and types.
- * Domain: Bills (v4.0), Expenses (v4.0), Purchase Orders (v3.0), Outgoing Payments (v4.0)
+ * Domain: Bills (v4.0), Expenses (v3.0), Purchase Orders (v3.0), Outgoing Payments (v4.0)
  */
 
 import { z } from "zod";
@@ -67,7 +67,7 @@ export const MarkBillAsPaidParamsSchema = z.object({
 
 export type MarkBillAsPaidParams = z.infer<typeof MarkBillAsPaidParamsSchema>;
 
-// ===== EXPENSES (v4.0 API, UUID IDs) =====
+// ===== EXPENSES (v3.0 API, UUID IDs) =====
 
 // List expenses
 export const ListExpensesParamsSchema = z.object({
@@ -149,6 +149,9 @@ export type DeletePurchaseOrderParams = z.infer<typeof DeletePurchaseOrderParams
 
 // List outgoing payments (flat — no longer nested under bills)
 export const ListOutgoingPaymentsParamsSchema = z.object({
+  // Bexio's v4.0 GET /purchase/outgoing-payments requires a bill_id (payments
+  // are listed per bill); omitting it returns HTTP 400.
+  bill_id: z.string().describe("UUID of the bill whose outgoing payments to list"),
   limit: z.number().int().positive().default(50),
   offset: z.number().int().min(0).default(0),
 });

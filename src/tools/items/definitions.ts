@@ -52,7 +52,7 @@ export const toolDefinitions: Tool[] = [
           type: "object",
           description: "Item data to create",
           properties: {
-            name_1: { type: "string", description: "Item name (primary name field)" },
+            intern_name: { type: "string", description: "Internal item name (primary name field)" },
             name_2: { type: "string", description: "Item name (secondary name field)" },
             description: { type: "string", description: "Item description" },
             internal_pos: { type: "string", description: "Internal position number" },
@@ -64,7 +64,7 @@ export const toolDefinitions: Tool[] = [
             tax_id: { type: "integer", description: "Tax ID" },
             account_id: { type: "integer", description: "Account ID" },
           },
-          required: ["name_1"],
+          required: ["intern_name"],
         },
       },
       required: ["item_data"],

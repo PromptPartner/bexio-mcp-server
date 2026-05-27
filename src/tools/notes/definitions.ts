@@ -69,39 +69,37 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        resource_type: {
-          type: "string",
-          enum: [
-            "contact",
-            "invoice",
-            "quote",
-            "order",
-            "delivery",
-            "project",
-            "bill",
-          ],
-          description:
-            "The type of resource to attach the note to (e.g., 'contact', 'invoice')",
-        },
-        resource_id: {
+        user_id: {
           type: "integer",
-          description: "The ID of the resource to attach the note to",
+          description: "ID of the user creating the note (required — use get_current_user to find your ID)",
         },
-        title: {
+        event_start: {
           type: "string",
-          description: "Title of the note",
+          description: "Start date/time of the note event in ISO format, e.g., '2025-01-15 10:00:00' (required)",
+        },
+        subject: {
+          type: "string",
+          description: "Subject/title of the note (required)",
         },
         content: {
           type: "string",
-          description: "Content/body of the note (optional)",
+          description: "Content/body of the note (optional, sent as 'info' field)",
         },
         is_public: {
           type: "boolean",
           description: "Whether the note is publicly visible (default: false)",
           default: false,
         },
+        contact_id: {
+          type: "integer",
+          description: "ID of the contact to link the note to (optional)",
+        },
+        pr_project_id: {
+          type: "integer",
+          description: "ID of the project to link the note to (optional)",
+        },
       },
-      required: ["resource_type", "resource_id", "title"],
+      required: ["user_id", "event_start", "subject"],
     },
   },
   {

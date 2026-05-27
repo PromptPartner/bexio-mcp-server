@@ -15,6 +15,7 @@ import { BexioClient } from "./bexio-client.js";
 import { getAllToolDefinitions, getHandler } from "./tools/index.js";
 import { formatSuccessResponse, formatErrorResponse, McpError } from "./shared/index.js";
 import { registerUIResources } from "./ui-resources.js";
+import { jsonSchemaToZodShape } from "./schema-converter.js";
 
 const SERVER_NAME = "bexio-mcp-server";
 const SERVER_VERSION = "2.0.0";
@@ -62,13 +63,30 @@ export class BexioMcpServer {
         continue;
       }
 
-      // SDK 1.25.2 expects a ZodRawShape (plain object with Zod schemas)
-      // Use empty shape and let our handlers do the validation
+      // SDK expects a ZodRawShape (plain object with Zod schemas). Derive it from
+      // the tool's JSON-Schema inputSchema so tools/list advertises the real
+      // parameters AND the SDK passes parsed args through to the handler. Passing
+      // an empty shape here is what previously caused every parametrized tool to
+      // receive `undefined` (see schema-converter.ts). Handlers still re-validate
+      // with their domain Zod schema.
+      let inputShape: z.ZodRawShape;
+      try {
+        inputShape = jsonSchemaToZodShape(def.inputSchema);
+      } catch (error) {
+        logger.warn(`Failed to convert inputSchema for tool ${def.name}; registering with empty shape`, error);
+        inputShape = {};
+      }
+
+      // Cast the dynamically-built shape to `any` for the SDK call: with a
+      // statically-unknown ZodRawShape, the SDK's generic arg-type inference
+      // (z.infer over the shape) recurses past TS's depth limit (TS2589). Args
+      // are re-validated by the handler's own schema, so the static type is moot.
       this.server.tool(
         def.name,
         def.description || "",
-        {},
-        async (args) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        inputShape as any,
+        async (args: unknown) => {
           if (!this.client) {
             return formatErrorResponse(
               McpError.internal("Bexio client not initialized")

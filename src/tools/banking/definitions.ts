@@ -232,12 +232,16 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        bank_account_id: {
+          type: "integer",
+          description: "ID of the bank account the payment belongs to (use list_bank_accounts to find)",
+        },
         payment_id: {
           type: "integer",
           description: "The ID of the IBAN payment to retrieve",
         },
       },
-      required: ["payment_id"],
+      required: ["bank_account_id", "payment_id"],
     },
   },
   {
@@ -247,6 +251,10 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        bank_account_id: {
+          type: "integer",
+          description: "ID of the bank account the payment belongs to (use list_bank_accounts to find)",
+        },
         payment_id: {
           type: "integer",
           description: "The ID of the IBAN payment to update",
@@ -256,7 +264,7 @@ export const toolDefinitions: Tool[] = [
           description: "Payment fields to update",
         },
       },
-      required: ["payment_id", "payment_data"],
+      required: ["bank_account_id", "payment_id", "payment_data"],
     },
   },
 
@@ -343,12 +351,16 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        bank_account_id: {
+          type: "integer",
+          description: "ID of the bank account the payment belongs to (use list_bank_accounts to find)",
+        },
         payment_id: {
           type: "integer",
           description: "The ID of the QR payment to retrieve",
         },
       },
-      required: ["payment_id"],
+      required: ["bank_account_id", "payment_id"],
     },
   },
   {
@@ -358,6 +370,10 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        bank_account_id: {
+          type: "integer",
+          description: "ID of the bank account the payment belongs to (use list_bank_accounts to find)",
+        },
         payment_id: {
           type: "integer",
           description: "The ID of the QR payment to update",
@@ -367,7 +383,7 @@ export const toolDefinitions: Tool[] = [
           description: "Payment fields to update",
         },
       },
-      required: ["payment_id", "payment_data"],
+      required: ["bank_account_id", "payment_id", "payment_data"],
     },
   },
 ];

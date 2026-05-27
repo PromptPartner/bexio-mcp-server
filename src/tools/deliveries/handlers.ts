@@ -38,7 +38,34 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   search_deliveries: async (client, args) => {
-    const { search_params } = SearchDeliveriesParamsSchema.parse(args);
-    return client.searchDeliveries(search_params);
+    const params = SearchDeliveriesParamsSchema.parse(args);
+    const searchFilters: Array<{ field: string; operator: string; value: unknown }> = [];
+
+    if (params.filters) {
+      if (!Array.isArray(params.filters)) {
+        throw McpError.validation("filters must be a list of search expressions");
+      }
+      searchFilters.push(...params.filters as Array<{ field: string; operator: string; value: unknown }>);
+    }
+
+    if (params.query !== undefined) {
+      const op = params.operator?.toUpperCase() ?? "LIKE";
+      let value: string = params.query;
+      if (op === "LIKE" && !value.includes("%")) {
+        value = `%${params.query}%`;
+      }
+      searchFilters.push({
+        field: params.field ?? "title",
+        operator: op,
+        value: value,
+      });
+    }
+
+    if (searchFilters.length === 0) {
+      throw McpError.validation("Either query or filters must be provided");
+    }
+
+    const queryParams = params.limit ? { limit: params.limit } : undefined;
+    return client.searchDeliveries(searchFilters, queryParams);
   },
 };

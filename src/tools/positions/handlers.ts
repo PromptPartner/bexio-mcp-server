@@ -32,6 +32,9 @@ const POSITION_KEYS = [
   "sub",
 ] as const;
 
+/** Position types that don't accept a JSON body (Bexio returns 415 if body is sent) */
+const BODYLESS_POSITION_TYPES = new Set(["subtotal", "pagebreak"]);
+
 /**
  * Generate 5 handler functions for a single position type.
  */
@@ -68,6 +71,14 @@ function makePositionHandlers(posKey: string): Record<string, HandlerFn> {
       const { document_type, document_id, position_data } =
         CreatePositionParamsSchema.parse(args);
       const docType = DOCUMENT_TYPE_MAP[document_type];
+      // Subtotal needs {text: "..."}, pagebreak needs non-empty body like {pagebreak: true}
+      if (posKey === "subtotal") {
+        const data = { text: position_data?.text || "Subtotal", ...position_data };
+        return client.createPosition(docType, document_id, POSITION_TYPE_MAP[posKey], data);
+      }
+      if (posKey === "pagebreak") {
+        return client.createPosition(docType, document_id, POSITION_TYPE_MAP[posKey], { pagebreak: true });
+      }
       return client.createPosition(
         docType,
         document_id,

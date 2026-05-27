@@ -53,8 +53,35 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   search_quotes: async (client, args) => {
-    const { search_params } = SearchQuotesParamsSchema.parse(args);
-    return client.searchQuotes(search_params);
+    const params = SearchQuotesParamsSchema.parse(args);
+    const searchFilters: Array<{ field: string; operator: string; value: unknown }> = [];
+
+    if (params.filters) {
+      if (!Array.isArray(params.filters)) {
+        throw McpError.validation("filters must be a list of search expressions");
+      }
+      searchFilters.push(...params.filters as Array<{ field: string; operator: string; value: unknown }>);
+    }
+
+    if (params.query !== undefined) {
+      const op = params.operator?.toUpperCase() ?? "LIKE";
+      let value: string = params.query;
+      if (op === "LIKE" && !value.includes("%")) {
+        value = `%${params.query}%`;
+      }
+      searchFilters.push({
+        field: params.field ?? "title",
+        operator: op,
+        value: value,
+      });
+    }
+
+    if (searchFilters.length === 0) {
+      throw McpError.validation("Either query or filters must be provided");
+    }
+
+    const queryParams = params.limit ? { limit: params.limit } : undefined;
+    return client.searchQuotes(searchFilters, queryParams);
   },
 
   search_quotes_by_customer: async (client, args) => {
@@ -121,7 +148,28 @@ export const handlers: Record<string, HandlerFn> = {
 
   edit_quote: async (client, args) => {
     const { quote_id, quote_data } = EditQuoteParamsSchema.parse(args);
-    return client.editQuote(quote_id, quote_data);
+    // GET existing record, then pick only writable fields + merge user changes
+    const existing = await client.getQuote(quote_id) as Record<string, unknown>;
+    // Whitelist: only fields Bexio accepts on PUT for kb_offer
+    const writable = [
+      "contact_id", "contact_sub_id", "user_id", "logopaper_id",
+      "language_id", "bank_account_id", "currency_id", "payment_type_id",
+      "header", "footer", "title", "mwst_type", "mwst_is_net",
+      "show_position_taxes", "is_valid_from", "is_valid_until",
+      "delivery_address_type",
+      "kb_terms_of_payment_template_id", "template_slug",
+    ];
+    const payload: Record<string, unknown> = {};
+    for (const key of writable) {
+      if (key in existing) payload[key] = existing[key];
+    }
+    // Required fields that may not appear in GET response — use defaults
+    payload.nb_decimals_amount = existing.nb_decimals_amount ?? 2;
+    payload.nb_decimals_price = existing.nb_decimals_price ?? 2;
+    payload.is_compact_view = existing.is_compact_view ?? false;
+    // Apply user changes on top
+    Object.assign(payload, quote_data);
+    return client.editQuote(quote_id, payload);
   },
 
   delete_quote: async (client, args) => {

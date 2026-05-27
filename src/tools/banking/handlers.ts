@@ -104,8 +104,8 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   get_iban_payment: async (client, args) => {
-    const { payment_id } = GetIbanPaymentParamsSchema.parse(args);
-    const payment = await client.getIbanPayment(payment_id);
+    const { bank_account_id, payment_id } = GetIbanPaymentParamsSchema.parse(args);
+    const payment = await client.getIbanPayment(bank_account_id, payment_id);
     if (!payment) {
       throw McpError.notFound("IBAN payment", payment_id);
     }
@@ -113,8 +113,8 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   update_iban_payment: async (client, args) => {
-    const { payment_id, payment_data } = UpdateIbanPaymentParamsSchema.parse(args);
-    return client.updateIbanPayment(payment_id, payment_data);
+    const { bank_account_id, payment_id, payment_data } = UpdateIbanPaymentParamsSchema.parse(args);
+    return client.updateIbanPayment(bank_account_id, payment_id, payment_data);
   },
 
   // ===== QR PAYMENTS (Swiss QR-invoice standard) =====
@@ -146,8 +146,8 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   get_qr_payment: async (client, args) => {
-    const { payment_id } = GetQrPaymentParamsSchema.parse(args);
-    const payment = await client.getQrPayment(payment_id);
+    const { bank_account_id, payment_id } = GetQrPaymentParamsSchema.parse(args);
+    const payment = await client.getQrPayment(bank_account_id, payment_id);
     if (!payment) {
       throw McpError.notFound("QR payment", payment_id);
     }
@@ -155,7 +155,7 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   update_qr_payment: async (client, args) => {
-    const { payment_id, payment_data } = UpdateQrPaymentParamsSchema.parse(args);
-    return client.updateQrPayment(payment_id, payment_data);
+    const { bank_account_id, payment_id, payment_data } = UpdateQrPaymentParamsSchema.parse(args);
+    return client.updateQrPayment(bank_account_id, payment_id, payment_data);
   },
 };

@@ -91,7 +91,7 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "search_bills",
-    description: "Search bills (creditor invoices) by criteria",
+    description: "Search/filter bills (creditor invoices) by criteria. Uses GET with query params (Bexio v4.0 does not support POST /search for bills).",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
@@ -311,14 +311,18 @@ export const toolDefinitions: Tool[] = [
     },
   },
 
-  // ===== OUTGOING PAYMENTS (v4.0 API, flat endpoint) =====
+  // ===== OUTGOING PAYMENTS (v4.0 API, requires bill_id) =====
   {
     name: "list_outgoing_payments",
-    description: "List all outgoing payments with optional pagination",
+    description: "List outgoing payments for a specific bill. Bexio requires a bill_id (payments are listed per bill).",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
+        bill_id: {
+          type: "string",
+          description: "UUID of the bill whose outgoing payments to list (use list_bills to find)",
+        },
         limit: {
           type: "integer",
           description: "Maximum number of payments to return (default: 50)",
@@ -328,6 +332,7 @@ export const toolDefinitions: Tool[] = [
           description: "Number of payments to skip (default: 0)",
         },
       },
+      required: ["bill_id"],
     },
   },
   {

@@ -48,14 +48,22 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_timesheet: async (client, args) => {
     const params = CreateTimesheetParamsSchema.parse(args);
+    // Convert date from YYYY-MM-DD to DD.MM.YYYY format required by Bexio
+    let formattedDate = params.date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(params.date)) {
+      const [y, m, d] = params.date.split("-");
+      formattedDate = `${d}.${m}.${y}`;
+    }
     return client.createTimesheet({
       user_id: params.user_id,
-      date: params.date,
-      duration: params.duration,
+      client_service_id: params.client_service_id,
+      tracking: {
+        date: formattedDate,
+        duration: params.duration,
+      },
       pr_project_id: params.pr_project_id,
       pr_package_id: params.pr_package_id,
       pr_milestone_id: params.pr_milestone_id,
-      client_service_id: params.client_service_id,
       text: params.text,
       allowable_bill: params.allowable_bill,
     });

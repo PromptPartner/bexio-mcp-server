@@ -84,12 +84,14 @@ export const CreateIbanPaymentParamsSchema = z.object({
 export type CreateIbanPaymentParams = z.infer<typeof CreateIbanPaymentParamsSchema>;
 
 export const GetIbanPaymentParamsSchema = z.object({
+  bank_account_id: z.number().int().positive(),
   payment_id: z.number().int().positive(),
 });
 
 export type GetIbanPaymentParams = z.infer<typeof GetIbanPaymentParamsSchema>;
 
 export const UpdateIbanPaymentParamsSchema = z.object({
+  bank_account_id: z.number().int().positive(),
   payment_id: z.number().int().positive(),
   payment_data: z.record(z.unknown()),
 });
@@ -117,12 +119,14 @@ export const CreateQrPaymentParamsSchema = z.object({
 export type CreateQrPaymentParams = z.infer<typeof CreateQrPaymentParamsSchema>;
 
 export const GetQrPaymentParamsSchema = z.object({
+  bank_account_id: z.number().int().positive(),
   payment_id: z.number().int().positive(),
 });
 
 export type GetQrPaymentParams = z.infer<typeof GetQrPaymentParamsSchema>;
 
 export const UpdateQrPaymentParamsSchema = z.object({
+  bank_account_id: z.number().int().positive(),
   payment_id: z.number().int().positive(),
   payment_data: z.record(z.unknown()),
 });

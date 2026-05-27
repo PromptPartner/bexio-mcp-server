@@ -44,14 +44,19 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_note: async (client, args) => {
     const params = CreateNoteParamsSchema.parse(args);
-    const mappedType = RESOURCE_TYPE_MAP[params.resource_type];
-    return client.createNote({
-      event_module: mappedType,
-      event_module_id: params.resource_id,
-      title: params.title,
-      info: params.content,
-      is_public: params.is_public,
-    });
+    const rawArgs = args as Record<string, unknown>;
+    const noteData: Record<string, unknown> = {
+      user_id: params.user_id,
+      event_start: params.event_start,
+      subject: params.subject,
+    };
+    // Only include optional fields when explicitly provided in raw input
+    // Bexio rejects unexpected fields like is_public
+    if (params.content !== undefined) noteData.info = params.content;
+    if ("is_public" in rawArgs) noteData.is_public = params.is_public;
+    if (params.contact_id !== undefined) noteData.contact_id = params.contact_id;
+    if (params.pr_project_id !== undefined) noteData.pr_project_id = params.pr_project_id;
+    return client.createNote(noteData as Parameters<typeof client.createNote>[0]);
   },
 
   update_note: async (client, args) => {
@@ -67,7 +72,7 @@ export const handlers: Record<string, HandlerFn> = {
   search_notes: async (client, args) => {
     const params = SearchNotesParamsSchema.parse(args);
     const criteria: Record<string, unknown>[] = [
-      { field: "title", value: params.query, criteria: "like" },
+      { field: "subject", value: params.query, criteria: "like" },
     ];
     if (params.resource_type) {
       const mappedType = RESOURCE_TYPE_MAP[params.resource_type];

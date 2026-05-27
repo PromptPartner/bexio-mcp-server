@@ -23,9 +23,9 @@ export type GetProjectParams = z.infer<typeof GetProjectParamsSchema>;
 export const CreateProjectParamsSchema = z.object({
   user_id: z.number().int().positive(),
   name: z.string().min(1, "Project name is required"),
-  contact_id: z.number().int().positive().optional(),
-  pr_state_id: z.number().int().positive().optional(),
-  pr_project_type_id: z.number().int().positive().optional(),
+  contact_id: z.number().int().positive(),
+  pr_state_id: z.number().int().positive(),
+  pr_project_type_id: z.number().int().positive(),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
   comment: z.string().optional(),

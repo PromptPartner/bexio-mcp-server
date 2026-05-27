@@ -82,7 +82,7 @@ export const handlers: Record<string, HandlerFn> = {
     return client.markBillAsPaid(bill_id);
   },
 
-  // ===== EXPENSES (v4.0, UUID IDs) =====
+  // ===== EXPENSES (v4.0 API at /4.0/expenses, UUID IDs — verified working) =====
   list_expenses: async (client, args) => {
     const { limit, offset } = ListExpensesParamsSchema.parse(args);
     return client.listExpenses({ limit, offset });
@@ -142,10 +142,10 @@ export const handlers: Record<string, HandlerFn> = {
     return client.deletePurchaseOrder(purchase_order_id);
   },
 
-  // ===== OUTGOING PAYMENTS (v4.0, flat endpoint, UUID IDs) =====
+  // ===== OUTGOING PAYMENTS (v4.0, requires bill_id) =====
   list_outgoing_payments: async (client, args) => {
-    const { limit, offset } = ListOutgoingPaymentsParamsSchema.parse(args);
-    return client.listOutgoingPayments({ limit, offset });
+    const { bill_id, limit, offset } = ListOutgoingPaymentsParamsSchema.parse(args);
+    return client.listOutgoingPayments({ bill_id, limit, offset });
   },
 
   get_outgoing_payment: async (client, args) => {

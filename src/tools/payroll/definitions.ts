@@ -44,8 +44,8 @@ export const toolDefinitions: Tool[] = [
       type: "object",
       properties: {
         employee_id: {
-          type: "integer",
-          description: "The ID of the employee to retrieve",
+          type: "string",
+          description: "The UUID of the employee to retrieve",
         },
       },
       required: ["employee_id"],
@@ -98,8 +98,8 @@ export const toolDefinitions: Tool[] = [
       type: "object",
       properties: {
         employee_id: {
-          type: "integer",
-          description: "The ID of the employee to update",
+          type: "string",
+          description: "The UUID of the employee to update",
         },
         employee_data: {
           type: "object",
@@ -113,14 +113,18 @@ export const toolDefinitions: Tool[] = [
   // ===== ABSENCES (PAY-02) =====
   {
     name: "list_absences",
-    description: "List employee absences (vacation, sick leave, etc.). Requires Bexio Payroll module subscription. Optional year filter.",
+    description: "List a specific employee's absences (vacation, sick leave, etc.). Requires Bexio Payroll module subscription. Optional year filter.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
-        year: {
+        employee_id: {
+          type: "string",
+          description: "The UUID of the employee whose absences to list (use list_employees to find)",
+        },
+        business_year: {
           type: "integer",
-          description: "Filter absences by year (e.g., 2024)",
+          description: "Business year (required by Bexio, e.g. 2025)",
         },
         limit: {
           type: "integer",
@@ -133,6 +137,7 @@ export const toolDefinitions: Tool[] = [
           default: 0,
         },
       },
+      required: ["employee_id", "business_year"],
     },
   },
   {
@@ -142,12 +147,16 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        employee_id: {
+          type: "string",
+          description: "The employee the absence belongs to (use list_employees to find)",
+        },
         absence_id: {
-          type: "integer",
+          type: "string",
           description: "The ID of the absence to retrieve",
         },
       },
-      required: ["absence_id"],
+      required: ["employee_id", "absence_id"],
     },
   },
   {
@@ -157,9 +166,9 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        user_id: {
-          type: "integer",
-          description: "The ID of the user/employee for this absence",
+        employee_id: {
+          type: "string",
+          description: "The employee this absence is for (use list_employees to find)",
         },
         absence_type_id: {
           type: "integer",
@@ -188,7 +197,7 @@ export const toolDefinitions: Tool[] = [
           description: "Optional note for this absence",
         },
       },
-      required: ["user_id", "absence_type_id", "start_date", "end_date"],
+      required: ["employee_id", "absence_type_id", "start_date", "end_date"],
     },
   },
   {
@@ -198,8 +207,12 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        employee_id: {
+          type: "string",
+          description: "The employee the absence belongs to (use list_employees to find)",
+        },
         absence_id: {
-          type: "integer",
+          type: "string",
           description: "The ID of the absence to update",
         },
         absence_data: {
@@ -207,7 +220,7 @@ export const toolDefinitions: Tool[] = [
           description: "The data to update (e.g., end_date, note)",
         },
       },
-      required: ["absence_id", "absence_data"],
+      required: ["employee_id", "absence_id", "absence_data"],
     },
   },
   {
@@ -217,12 +230,16 @@ export const toolDefinitions: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        employee_id: {
+          type: "string",
+          description: "The employee the absence belongs to (use list_employees to find)",
+        },
         absence_id: {
-          type: "integer",
+          type: "string",
           description: "The ID of the absence to delete",
         },
       },
-      required: ["absence_id"],
+      required: ["employee_id", "absence_id"],
     },
   },
 
@@ -235,7 +252,7 @@ export const toolDefinitions: Tool[] = [
       type: "object",
       properties: {
         employee_id: {
-          type: "integer",
+          type: "string",
           description: "Filter by employee ID to see only their documents",
         },
         limit: {

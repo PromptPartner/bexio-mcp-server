@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-05-28
+
+### Added
+- `BEXIO_ENABLED_CATEGORIES` env var: comma-separated whitelist of tool categories to register, to reduce system-prompt token usage for focused workflows or smaller models. Empty/unset registers all tools (backward compatible). Thanks to @Fabrik4 (#5).
+
+### Fixed (write operations & schemas, from live API testing)
+Incorporated fixes from @ueliwyss (#4), verified against the live Bexio API:
+- Edit operations (quote/order/invoice) use a writable-field whitelist and supply Bexio-required defaults (`nb_decimals_amount`, `nb_decimals_price`, `is_compact_view`) that GET doesn't return, fixing PUT rejections.
+- Copy (quote/invoice) sends the required `contact_id` (fetched from the source document).
+- Subtotal/pagebreak position creation sends the non-empty body Bexio requires.
+- `search_bills` uses GET (Bexio v4.0 rejects POST /search for bills); `search_*` tools accept a `query`/`field`/`operator`/`filters` shape.
+- Schema corrections: `create_project` required fields; `create_fictional_user` (`email` required, `salutation_type` male/female); `create_additional_address` uses `street_name`/`house_number`; `create_note` only sends `is_public` when provided; `update_contact_relation` fetch-then-merge for partial updates; `create_timesheet` uses the nested `tracking` object; comments are nested under their document.
+
+### Fixed (Bexio API v3.0/v4.0 endpoint migration)
+Bexio retired a large set of v2.0 endpoints; the tools below were calling dead paths (404/400) and now target the current API. Verified live against a real Bexio account except where noted.
+
+- Currencies → `/3.0/currencies`; bank accounts → `/3.0/banking/accounts`
+- Calendar years, business years, VAT periods → `/3.0/accounting/{calendar_years,business_years,vat_periods}`
+- Permissions → `/3.0/permissions`; current user → `/3.0/users/me`; fictional users → `/3.0/fictional_users` (update is PATCH)
+- Document templates → `/3.0/document_templates`; files → `/3.0/files` (update is PATCH; upload/download hit v3.0 directly)
+- Invoice reminders → `/2.0/kb_invoice/{id}/kb_reminder` (was `/reminder`, 404)
+- Expenses → `/4.0/expenses` (moved out of `/4.0/purchase/expenses`)
+- Employees → `/4.0/payroll/employees`; **employee IDs are now UUID strings** (were integers)
+- Absences → nested `/4.0/payroll/employees/{employee_id}/absences`; `list_absences` now requires `employee_id` and `business_year`; absence IDs are strings
+- `list_outgoing_payments` now requires `bill_id` (Bexio lists outgoing payments per bill; previously returned HTTP 400)
+- IBAN/QR payments → nested `/3.0/banking/bank_accounts/{bank_account_id}/...`; `get_*`/`update_*` now require `bank_account_id`
+- Project milestones → `/3.0/projects/{id}/milestones`; work packages → `/3.0/projects/{id}/packages`; project unarchive action renamed to `reactivate`
+- Quote actions corrected to Bexio's names: decline→`reject`, revert→`revertIssue`, create-order→`order`, create-invoice→`invoice`; order create-delivery→`delivery`, create-invoice→`invoice`
+- Contact restore now uses PATCH
+- `list_payroll_documents` returns a clear error (Bexio v4.0 has no payroll-documents list endpoint)
+- `makeVersionedRequest` now normalizes errors to `McpError` (status-based recovery hints; fixes payroll module availability detection)
+
+### Notes
+- **Not live-verified on the test account (HTTP 403 — module/scope restricted):** purchase orders (`/3.0/purchase_orders`), stock locations/areas (`/2.0/stock_place`, `/2.0/stock`). Paths follow the current Bexio API; confirm with an account that has these modules enabled.
+- Endpoints still served on v2.0 (contacts, invoices, orders, quotes, accounts, items, notes, tasks, reference data) are unchanged.
+
+## [2.2.1] - 2026-05-27
+
+### Fixed
+- **Tool parameters were silently dropped for all parametrized tools.** Tools were registered with an empty input schema, so `tools/list` advertised `properties: {}` to MCP clients (e.g. Claude Desktop). Clients stripped every argument before sending, and handlers then reported each required field as `undefined`. Only parameterless tools worked. Tool definitions' JSON-Schema `inputSchema` is now converted to a Zod shape and passed to the SDK, so the full parameter schema is exposed to clients and arguments reach the handlers (new `src/schema-converter.ts`).
+- Stringified numbers sent by clients (e.g. `"170"`, `"100.00"`) are now coerced to numbers at the schema boundary, so write tools like `create_manual_entry` accept them.
+- `get_journal` now uses `GET /3.0/accounting/journal` (was the non-existent v2.0 `/journal`, which returned 404).
+- Manual entries (`list/create/update/delete_manual_entry`) now use `/3.0/accounting/manual_entries` (was the non-existent v2.0 `/manual_entry`, which returned 404). `get_manual_entry` resolves an entry from the list, since Bexio has no single-entry show endpoint.
+
 ## [2.2.0] - 2026-03-03
 
 ### Added

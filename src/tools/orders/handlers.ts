@@ -47,8 +47,35 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   search_orders: async (client, args) => {
-    const { search_params } = SearchOrdersParamsSchema.parse(args);
-    return client.searchOrders(search_params);
+    const params = SearchOrdersParamsSchema.parse(args);
+    const searchFilters: Array<{ field: string; operator: string; value: unknown }> = [];
+
+    if (params.filters) {
+      if (!Array.isArray(params.filters)) {
+        throw McpError.validation("filters must be a list of search expressions");
+      }
+      searchFilters.push(...params.filters as Array<{ field: string; operator: string; value: unknown }>);
+    }
+
+    if (params.query !== undefined) {
+      const op = params.operator?.toUpperCase() ?? "LIKE";
+      let value: string = params.query;
+      if (op === "LIKE" && !value.includes("%")) {
+        value = `%${params.query}%`;
+      }
+      searchFilters.push({
+        field: params.field ?? "title",
+        operator: op,
+        value: value,
+      });
+    }
+
+    if (searchFilters.length === 0) {
+      throw McpError.validation("Either query or filters must be provided");
+    }
+
+    const queryParams = params.limit ? { limit: params.limit } : undefined;
+    return client.searchOrders(searchFilters, queryParams);
   },
 
   search_orders_by_customer: async (client, args) => {
@@ -95,7 +122,24 @@ export const handlers: Record<string, HandlerFn> = {
 
   edit_order: async (client, args) => {
     const { order_id, order_data } = EditOrderParamsSchema.parse(args);
-    return client.editOrder(order_id, order_data);
+    const existing = await client.getOrder(order_id) as Record<string, unknown>;
+    const writable = [
+      "contact_id", "contact_sub_id", "user_id", "logopaper_id",
+      "language_id", "bank_account_id", "currency_id", "payment_type_id",
+      "header", "footer", "title", "mwst_type", "mwst_is_net",
+      "show_position_taxes", "is_valid_from",
+      "delivery_address_type",
+      "kb_terms_of_payment_template_id", "template_slug",
+    ];
+    const payload: Record<string, unknown> = {};
+    for (const key of writable) {
+      if (key in existing) payload[key] = existing[key];
+    }
+    payload.nb_decimals_amount = existing.nb_decimals_amount ?? 2;
+    payload.nb_decimals_price = existing.nb_decimals_price ?? 2;
+    payload.is_compact_view = existing.is_compact_view ?? false;
+    Object.assign(payload, order_data);
+    return client.editOrder(order_id, payload);
   },
 
   delete_order: async (client, args) => {

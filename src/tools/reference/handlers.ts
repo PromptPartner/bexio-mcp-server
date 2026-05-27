@@ -104,9 +104,10 @@ export const handlers: Record<string, HandlerFn> = {
     return sector;
   },
 
-  create_contact_sector: async (client, args) => {
-    const { name } = CreateContactSectorParamsSchema.parse(args);
-    return client.createContactSector({ name });
+  create_contact_sector: async (_client, _args) => {
+    throw new Error(
+      "Bexio API does not support creating contact sectors. This resource is read-only. Use list_contact_sectors to see available sectors."
+    );
   },
 
   search_contact_sectors: async (client, args) => {
@@ -200,8 +201,8 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   create_country: async (client, args) => {
-    const { name, iso_3166_alpha2 } = CreateCountryParamsSchema.parse(args);
-    return client.createCountry({ name, iso_3166_alpha2 });
+    const { name, name_short, iso3166_alpha2 } = CreateCountryParamsSchema.parse(args);
+    return client.createCountry({ name, name_short, iso3166_alpha2 });
   },
 
   delete_country: async (client, args) => {
@@ -224,9 +225,10 @@ export const handlers: Record<string, HandlerFn> = {
     return language;
   },
 
-  create_language: async (client, args) => {
-    const { name, iso_639_1 } = CreateLanguageParamsSchema.parse(args);
-    return client.createLanguage({ name, iso_639_1 });
+  create_language: async (_client, _args) => {
+    throw new Error(
+      "Bexio API returns 501 Not Implemented for language creation. This resource is read-only. Use list_languages to see available languages."
+    );
   },
 
   // ===== UNITS (REFDATA-07) =====

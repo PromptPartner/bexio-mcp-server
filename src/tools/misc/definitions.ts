@@ -6,44 +6,73 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const toolDefinitions: Tool[] = [
-  // Comments
+  // Comments (nested under document type)
   {
     name: "list_comments",
-    description: "List all comments",
-    annotations: { readOnlyHint: true },
-    inputSchema: {
-      type: "object",
-      properties: {},
-    },
-  },
-  {
-    name: "get_comment",
-    description: "Get a specific comment by ID",
+    description: "List all comments for a specific document (quote, order, invoice, or delivery)",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
+        document_type: {
+          type: "string",
+          enum: ["kb_offer", "kb_order", "kb_invoice", "kb_delivery"],
+          description: "The document type (kb_offer=quote, kb_order=order, kb_invoice=invoice, kb_delivery=delivery)",
+        },
+        document_id: {
+          type: "integer",
+          description: "The ID of the document",
+        },
+      },
+      required: ["document_type", "document_id"],
+    },
+  },
+  {
+    name: "get_comment",
+    description: "Get a specific comment by ID from a document",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        document_type: {
+          type: "string",
+          enum: ["kb_offer", "kb_order", "kb_invoice", "kb_delivery"],
+          description: "The document type (kb_offer=quote, kb_order=order, kb_invoice=invoice, kb_delivery=delivery)",
+        },
+        document_id: {
+          type: "integer",
+          description: "The ID of the document",
+        },
         comment_id: {
           type: "integer",
           description: "The ID of the comment to retrieve",
         },
       },
-      required: ["comment_id"],
+      required: ["document_type", "document_id", "comment_id"],
     },
   },
   {
     name: "create_comment",
-    description: "Create a new comment",
+    description: "Create a new comment on a document",
     annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
+        document_type: {
+          type: "string",
+          enum: ["kb_offer", "kb_order", "kb_invoice", "kb_delivery"],
+          description: "The document type (kb_offer=quote, kb_order=order, kb_invoice=invoice, kb_delivery=delivery)",
+        },
+        document_id: {
+          type: "integer",
+          description: "The ID of the document",
+        },
         comment_data: {
           type: "object",
           description: "Comment data to create",
         },
       },
-      required: ["comment_data"],
+      required: ["document_type", "document_id", "comment_data"],
     },
   },
   // Contact Relations
@@ -122,17 +151,24 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "search_contact_relations",
-    description: "Search contact relations with filters",
+    description: "Search contact relations via the Bexio search endpoint. Use query for simple text search, or filters for advanced criteria.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
       properties: {
-        search_params: {
-          type: "object",
-          description: "Search parameters for contact relations",
+        query: { type: "string", description: "Free-text value matched with LIKE" },
+        field: { type: "string", description: "Field to search (default: contact_id)", default: "contact_id" },
+        operator: { type: "string", description: "Comparison operator (LIKE, =, >)", default: "=" },
+        filters: {
+          type: "array", description: "Explicit Bexio search filters",
+          items: {
+            type: "object",
+            properties: { field: { type: "string" }, operator: { type: "string" }, value: {} },
+            required: ["field", "operator", "value"],
+          },
         },
+        limit: { type: "integer", description: "Maximum results" },
       },
-      required: ["search_params"],
     },
   },
 ];

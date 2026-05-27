@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "bexio-mcp-server",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 300+ more tools through natural conversation.",
   "author": {
     "name": "Lukas Hertig",
@@ -22,7 +22,8 @@
       "args": ["${__dirname}/dist/index.js"],
       "env": {
         "BEXIO_API_TOKEN": "${user_config.api_token}",
-        "BEXIO_BASE_URL": "${user_config.base_url}"
+        "BEXIO_BASE_URL": "${user_config.base_url}",
+        "BEXIO_ENABLED_CATEGORIES": "${user_config.enabled_categories}"
       }
     }
   },
@@ -39,6 +40,13 @@
       "description": "Bexio API endpoint. Change only if using a custom endpoint.",
       "required": false,
       "default": "https://api.bexio.com/2.0"
+    },
+    "enabled_categories": {
+      "type": "string",
+      "title": "Enabled Tool Categories (optional)",
+      "description": "Comma-separated whitelist to reduce token usage. Example: contacts,invoices,purchase,banking. Leave empty to register all tools. Available: reference, company, banking, projects, timetracking, accounting, purchase, files, payroll, contacts, invoices, orders, quotes, payments, reminders, deliveries, items, reports, users, misc, notes, tasks, stock, docs, positions.",
+      "required": false,
+      "default": ""
     }
   },
   "compatibility": {

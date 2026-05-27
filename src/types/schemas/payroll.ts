@@ -19,7 +19,8 @@ export const ListEmployeesParamsSchema = z.object({
 export type ListEmployeesParams = z.infer<typeof ListEmployeesParamsSchema>;
 
 export const GetEmployeeParamsSchema = z.object({
-  employee_id: z.number().int().positive(),
+  // v4.0 payroll employee IDs are UUID strings.
+  employee_id: z.string().min(1),
 });
 
 export type GetEmployeeParams = z.infer<typeof GetEmployeeParamsSchema>;
@@ -39,7 +40,7 @@ export const CreateEmployeeParamsSchema = z.object({
 export type CreateEmployeeParams = z.infer<typeof CreateEmployeeParamsSchema>;
 
 export const UpdateEmployeeParamsSchema = z.object({
-  employee_id: z.number().int().positive(),
+  employee_id: z.string().min(1),
   employee_data: z.record(z.unknown()),
 });
 
@@ -48,7 +49,8 @@ export type UpdateEmployeeParams = z.infer<typeof UpdateEmployeeParamsSchema>;
 // ===== ABSENCES (PAY-02) =====
 
 export const ListAbsencesParamsSchema = z.object({
-  year: z.number().int().positive().optional().describe("Filter by year (e.g., 2024)"),
+  employee_id: z.string().min(1).describe("UUID of the employee whose absences to list"),
+  business_year: z.number().int().positive().describe("Business year (required by Bexio, e.g. 2025)"),
   limit: z.number().int().positive().default(50),
   offset: z.number().int().min(0).default(0),
 });
@@ -56,14 +58,15 @@ export const ListAbsencesParamsSchema = z.object({
 export type ListAbsencesParams = z.infer<typeof ListAbsencesParamsSchema>;
 
 export const GetAbsenceParamsSchema = z.object({
-  absence_id: z.number().int().positive(),
+  employee_id: z.string().min(1),
+  absence_id: z.string().min(1),
 });
 
 export type GetAbsenceParams = z.infer<typeof GetAbsenceParamsSchema>;
 
 export const CreateAbsenceParamsSchema = z.object({
   // Required fields
-  user_id: z.number().int().positive({ message: "User ID is required" }),
+  employee_id: z.string().min(1, "Employee ID is required"),
   absence_type_id: z.number().int().positive({ message: "Absence type ID is required" }),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
@@ -76,14 +79,16 @@ export const CreateAbsenceParamsSchema = z.object({
 export type CreateAbsenceParams = z.infer<typeof CreateAbsenceParamsSchema>;
 
 export const UpdateAbsenceParamsSchema = z.object({
-  absence_id: z.number().int().positive(),
+  employee_id: z.string().min(1),
+  absence_id: z.string().min(1),
   absence_data: z.record(z.unknown()),
 });
 
 export type UpdateAbsenceParams = z.infer<typeof UpdateAbsenceParamsSchema>;
 
 export const DeleteAbsenceParamsSchema = z.object({
-  absence_id: z.number().int().positive(),
+  employee_id: z.string().min(1),
+  absence_id: z.string().min(1),
 });
 
 export type DeleteAbsenceParams = z.infer<typeof DeleteAbsenceParamsSchema>;

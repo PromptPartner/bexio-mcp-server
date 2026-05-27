@@ -118,17 +118,11 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "search_reminders",
-    description: "Search reminders with filters",
+    description: "Search reminders across recent invoices. Fetches all reminders and returns them (no native Bexio search endpoint for reminders).",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
-      properties: {
-        search_params: {
-          type: "object",
-          description: "Search parameters for reminders",
-        },
-      },
-      required: ["search_params"],
+      properties: {},
     },
   },
   {

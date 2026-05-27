@@ -60,7 +60,7 @@ export const toolDefinitions: Tool[] = [
         },
         contact_id: {
           type: "integer",
-          description: "Optional: The ID of the associated contact/customer",
+          description: "The ID of the associated contact/customer (required by Bexio)",
         },
         pr_state_id: {
           type: "integer",
@@ -83,7 +83,7 @@ export const toolDefinitions: Tool[] = [
           description: "Optional: Additional comments/notes about the project",
         },
       },
-      required: ["user_id", "name"],
+      required: ["user_id", "name", "contact_id", "pr_state_id", "pr_project_type_id"],
     },
   },
   {

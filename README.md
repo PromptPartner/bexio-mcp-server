@@ -14,7 +14,6 @@ Manage invoices, contacts, projects, time tracking, and 300+ more tools through 
 |--------|-----------|--------|
 | [Claude Desktop](https://claude.ai/download) | stdio | ✅ Fully supported |
 | [n8n](https://n8n.io/) | HTTP | ✅ Fully supported |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | stdio | ✅ Fully supported |
 | Other MCP clients | stdio/HTTP | ✅ Should work |
 
 ## Quick Start
@@ -229,6 +228,24 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 |----------|----------|---------|-------------|
 | `BEXIO_API_TOKEN` | Yes | - | Your Bexio API token |
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
+| `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
+
+### Reducing Token Budget — Category Whitelist
+
+All tools are registered by default. For focused workflows or smaller models,
+registering only a subset reduces the system-prompt token cost. Set
+`BEXIO_ENABLED_CATEGORIES` to a comma-separated list:
+
+```bash
+BEXIO_ENABLED_CATEGORIES=contacts,invoices,purchase,banking,quotes,projects
+```
+
+Available categories: `reference`, `company`, `banking`, `projects`,
+`timetracking`, `accounting`, `purchase`, `files`, `payroll`, `contacts`,
+`invoices`, `orders`, `quotes`, `payments`, `reminders`, `deliveries`,
+`items`, `reports`, `users`, `misc`, `notes`, `tasks`, `stock`, `docs`,
+`positions`. Unknown names are ignored (logged to stderr); empty/unset = all
+enabled (backward compatible).
 
 ## Command Line Options
 
@@ -292,7 +309,6 @@ This project builds upon the original Bexio MCP server created by [Sebastian Bry
 
 The expansion from 83 to 310 tools was developed using:
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** - Anthropic's AI-powered development environment that enabled rapid iteration and comprehensive API coverage
 - **[GSD Framework](https://github.com/casualjim/get-shit-done)** - The "Get Shit Done" planning framework for structured AI-assisted development workflows
 
 These tools helped transform a 4-weeks estimated project into a 2-days reality, demonstrating the potential of AI-augmented software development.

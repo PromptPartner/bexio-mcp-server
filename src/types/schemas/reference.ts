@@ -180,7 +180,8 @@ export type GetCountryParams = z.infer<typeof GetCountryParamsSchema>;
 
 export const CreateCountryParamsSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  iso_3166_alpha2: z.string().length(2, "ISO 3166 alpha-2 code must be exactly 2 characters"),
+  name_short: z.string().min(1, "Short name is required"),
+  iso3166_alpha2: z.string().length(2, "ISO 3166 alpha-2 code must be exactly 2 characters"),
 });
 
 export type CreateCountryParams = z.infer<typeof CreateCountryParamsSchema>;

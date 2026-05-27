@@ -145,17 +145,17 @@ export const handlers: Record<string, HandlerFn> = {
     return client.updateEmployee(employee_id, employee_data);
   },
 
-  // ===== ABSENCES (PAY-02) =====
+  // ===== ABSENCES (PAY-02, nested under employee in v4.0) =====
   list_absences: async (client, args) => {
     await ensurePayrollAvailable(client);
-    const params = ListAbsencesParamsSchema.parse(args);
-    return client.listAbsences(params);
+    const { employee_id, business_year, limit, offset } = ListAbsencesParamsSchema.parse(args);
+    return client.listAbsences(employee_id, { businessYear: business_year, limit, offset });
   },
 
   get_absence: async (client, args) => {
     await ensurePayrollAvailable(client);
-    const { absence_id } = GetAbsenceParamsSchema.parse(args);
-    const absence = await client.getAbsence(absence_id);
+    const { employee_id, absence_id } = GetAbsenceParamsSchema.parse(args);
+    const absence = await client.getAbsence(employee_id, absence_id);
     if (!absence) {
       throw McpError.notFound("Absence", absence_id);
     }
@@ -164,20 +164,20 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_absence: async (client, args) => {
     await ensurePayrollAvailable(client);
-    const params = CreateAbsenceParamsSchema.parse(args);
-    return client.createAbsence(params);
+    const { employee_id, ...absenceData } = CreateAbsenceParamsSchema.parse(args);
+    return client.createAbsence(employee_id, absenceData);
   },
 
   update_absence: async (client, args) => {
     await ensurePayrollAvailable(client);
-    const { absence_id, absence_data } = UpdateAbsenceParamsSchema.parse(args);
-    return client.updateAbsence(absence_id, absence_data);
+    const { employee_id, absence_id, absence_data } = UpdateAbsenceParamsSchema.parse(args);
+    return client.updateAbsence(employee_id, absence_id, absence_data);
   },
 
   delete_absence: async (client, args) => {
     await ensurePayrollAvailable(client);
-    const { absence_id } = DeleteAbsenceParamsSchema.parse(args);
-    return client.deleteAbsence(absence_id);
+    const { employee_id, absence_id } = DeleteAbsenceParamsSchema.parse(args);
+    return client.deleteAbsence(employee_id, absence_id);
   },
 
   // ===== PAYROLL DOCUMENTS (PAY-03) =====
