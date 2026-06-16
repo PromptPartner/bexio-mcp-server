@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-06-16
+
+### Fixed (critical — server crashed on startup for everyone)
+- **Server no longer crashes during the `initialize` handshake.** v2.3.0 registered the MCP Apps UI panels using `path.join(import.meta.dirname, "ui/ui")`. `import.meta.dirname` only exists on Node ≥ 20.11; on the older Node bundled by some Claude Desktop / claude.ai runtimes it is `undefined`, so `path.join(undefined, …)` threw synchronously inside `initialize()` (before the transport connected), which propagated to the top-level handler and called `process.exit(1)` — killing the process ~50 ms after receiving `initialize`, so **no tools ever appeared**. The UI base path is now resolved via a Node-version-safe helper (`import.meta.url` → `cwd` fallback) that can never throw at registration time.
+- Global `uncaughtException` / `unhandledRejection` handlers now log the full stack to stderr (and keep the server alive), so a future peripheral failure is diagnosable instead of a silent exit.
+
+### Changed
+- **Interactive UI panels (MCP Apps: `preview_invoice`, `show_contact_card`, `show_dashboard`) are now opt-in.** They register only when `BEXIO_ENABLE_UI=true`, and registration is wrapped in try/catch so a UI failure can never take down the 310 core data tools. Default behaviour: all data tools, no UI.
+- `.env` loading is now awaited before environment variables are read (the previous fire-and-forget `import("dotenv")` raced the reads, leaving npm/.env users with an undefined token). MCPB / claude.ai users — whose env is injected by the host — are unaffected. The tool registry is imported after env load so `BEXIO_ENABLED_CATEGORIES` is honoured from `.env` too.
+- `serverInfo.version` reported over MCP now matches the package version (was hardcoded `2.0.0`).
+
 ## [2.3.0] - 2026-05-28
 
 ### Added

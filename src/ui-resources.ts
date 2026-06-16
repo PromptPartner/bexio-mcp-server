@@ -16,6 +16,7 @@ import {
 import { z } from "zod";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { BexioClient } from "./bexio-client.js";
 import { logger } from "./logger.js";
 
@@ -25,14 +26,38 @@ const CONTACT_CARD_URI = "ui://bexio/contact-card.html";
 const DASHBOARD_URI = "ui://bexio/dashboard.html";
 
 /**
+ * Resolve the base path to the built UI files (vite outputs to dist/ui/ui/<name>/<name>.html).
+ *
+ * `import.meta.dirname` only exists on Node >= 20.11. On older runtimes — e.g. the
+ * Node bundled with some Claude Desktop / claude.ai builds — it is `undefined`, and
+ * `path.join(undefined, ...)` throws `TypeError [ERR_INVALID_ARG_TYPE]` synchronously.
+ * Because this ran during initialize() (before the transport connected), that throw
+ * propagated to main().catch() → process.exit(1) and killed the entire server right
+ * after the `initialize` handshake — the v2.3.0 crash. Fall back to deriving the dir
+ * from `import.meta.url` (available on every ESM-capable Node), then cwd.
+ */
+function resolveUiBasePath(): string {
+  let dir: string | undefined = import.meta.dirname;
+  if (!dir) {
+    try {
+      dir = path.dirname(fileURLToPath(import.meta.url));
+    } catch {
+      dir = process.cwd();
+    }
+  }
+  return path.join(dir, "ui/ui");
+}
+
+/**
  * Register MCP Apps UI resources and tools.
  *
  * @param server - McpServer instance
  * @param client - BexioClient for API calls
  */
 export function registerUIResources(server: McpServer, client: BexioClient): void {
-  // Path to built UI files (vite outputs to src/dist/ui/ui/<name>/<name>.html)
-  const uiBasePath = path.join(import.meta.dirname, "ui/ui");
+  // Path to built UI files. Computed via a Node-version-safe resolver so a missing
+  // `import.meta.dirname` can never throw at registration time (see resolveUiBasePath).
+  const uiBasePath = resolveUiBasePath();
 
   // ===== INVOICE PREVIEW =====
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -14,23 +14,25 @@
  * stdout is reserved for MCP JSON-RPC protocol messages (stdio mode only).
  */
 
-import { BexioMcpServer } from "./server.js";
 import { BexioClient } from "./bexio-client.js";
 import { logger } from "./logger.js";
-import { createHttpServer } from "./transports/http.js";
 
-// Load environment variables from .env file (optional - for development)
-// In MCPB bundles, env vars are already set by Claude Desktop
-import("dotenv")
-  .then((dotenv) => dotenv.config())
-  .catch(() => {
-    // dotenv not available - that's fine for MCPB bundles
-  });
-
-// Configuration from environment
-const BEXIO_API_TOKEN = process.env["BEXIO_API_TOKEN"];
-const BEXIO_BASE_URL =
-  process.env["BEXIO_BASE_URL"] ?? "https://api.bexio.com/2.0";
+// Surface otherwise-silent failures. A peripheral throw or rejection must never
+// vanish without a trace: the v2.3.0 startup crash exited the process during the
+// `initialize` handshake with no stderr the user could see. Log the full stack;
+// do NOT exit here — a non-fatal background error should not kill a running server.
+process.on("uncaughtException", (err) => {
+  logger.error(
+    "[FATAL] uncaughtException:",
+    err instanceof Error ? (err.stack ?? err.message) : String(err)
+  );
+});
+process.on("unhandledRejection", (reason) => {
+  logger.error(
+    "[FATAL] unhandledRejection:",
+    reason instanceof Error ? (reason.stack ?? reason.message) : String(reason)
+  );
+});
 
 interface ParsedArgs {
   mode: "stdio" | "http";
@@ -58,39 +60,57 @@ function parseArgs(): ParsedArgs {
   return { mode, host, port };
 }
 
-function validateEnvironment(): void {
+/**
+ * Load environment variables from a .env file (optional - for local/npm usage).
+ * MCPB bundles and claude.ai inject env vars before the process starts, so a
+ * missing dotenv is fine. This is AWAITED so process.env is populated BEFORE we
+ * read it — the previous fire-and-forget `import("dotenv")` raced the reads and
+ * left .env-reliant users (npm installs) with an undefined token.
+ */
+async function loadEnv(): Promise<void> {
+  try {
+    const dotenv = await import("dotenv");
+    dotenv.config();
+  } catch {
+    // dotenv not available (e.g. inside the MCPB bundle) — env already provided by host.
+  }
+}
+
+async function main(): Promise<void> {
+  await loadEnv();
+
+  // Read configuration only after dotenv has loaded.
+  const BEXIO_API_TOKEN = process.env["BEXIO_API_TOKEN"];
+  const BEXIO_BASE_URL =
+    process.env["BEXIO_BASE_URL"] ?? "https://api.bexio.com/2.0";
+
+  const { mode, host, port } = parseArgs();
+
   if (!BEXIO_API_TOKEN) {
     logger.error("BEXIO_API_TOKEN environment variable is required");
     logger.error("Set it in your .env file or environment");
     process.exit(1);
   }
-
   logger.info(`Using Bexio API base URL: ${BEXIO_BASE_URL}`);
-}
 
-async function main(): Promise<void> {
-  const { mode, host, port } = parseArgs();
-
-  // Validate environment
-  validateEnvironment();
-
-  // Create Bexio client
   const client = new BexioClient({
     baseUrl: BEXIO_BASE_URL,
-    apiToken: BEXIO_API_TOKEN!,
+    apiToken: BEXIO_API_TOKEN,
   });
 
   if (mode === "stdio") {
     logger.info("Starting in stdio mode (for Claude Desktop)");
 
-    // Create and initialize server with client
+    // Imported dynamically AFTER loadEnv() so the tool registry's module-load
+    // env reads (e.g. BEXIO_ENABLED_CATEGORIES in tools/index.ts) also see .env values.
+    const { BexioMcpServer } = await import("./server.js");
     const server = new BexioMcpServer();
     server.initialize(client);
     await server.run();
   } else if (mode === "http") {
     logger.info(`Starting in HTTP mode on ${host}:${port} (for n8n/remote access)`);
 
-    // Create HTTP server
+    const { createHttpServer } = await import("./transports/http.js");
     await createHttpServer(client, { host, port });
 
     // Keep the process alive

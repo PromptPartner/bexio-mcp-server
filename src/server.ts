@@ -18,7 +18,10 @@ import { registerUIResources } from "./ui-resources.js";
 import { jsonSchemaToZodShape } from "./schema-converter.js";
 
 const SERVER_NAME = "bexio-mcp-server";
-const SERVER_VERSION = "2.0.0";
+// Keep in lockstep with package.json / manifest.json / server.json on every release.
+// (The MCPB bundle's dist/package.json is minimal and has no version field, so this
+// is inlined rather than read back from package.json.)
+const SERVER_VERSION = "2.3.1";
 
 export class BexioMcpServer {
   private server: McpServer;
@@ -35,8 +38,26 @@ export class BexioMcpServer {
   initialize(client: BexioClient): void {
     this.client = client;
     this.registerTools();
-    registerUIResources(this.server, client);
-    logger.info(`Initialized with ${getAllToolDefinitions().length} tools + 3 UI tools`);
+
+    // Interactive UI panels (MCP Apps) are OPT-IN. They are non-essential for the
+    // core data tools, and a UI registration failure must NEVER take down the 310
+    // data tools — so registration is both gated behind BEXIO_ENABLE_UI and wrapped
+    // in try/catch as belt-and-suspenders. This is what makes a peripheral UI bug
+    // (like the v2.3.0 import.meta.dirname crash) unable to break the whole server.
+    const toolCount = getAllToolDefinitions().length;
+    if (process.env["BEXIO_ENABLE_UI"] === "true") {
+      try {
+        registerUIResources(this.server, client);
+        logger.info(`Initialized with ${toolCount} tools + 3 UI tools (MCP Apps enabled)`);
+      } catch (error) {
+        logger.error(
+          "UI registration failed (non-fatal); core tools remain available:",
+          error instanceof Error ? (error.stack ?? error.message) : String(error)
+        );
+      }
+    } else {
+      logger.info(`Initialized with ${toolCount} tools (UI disabled; set BEXIO_ENABLE_UI=true to enable MCP Apps panels)`);
+    }
   }
 
   private registerTools(): void {
