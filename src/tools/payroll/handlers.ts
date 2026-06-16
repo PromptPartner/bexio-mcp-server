@@ -26,6 +26,7 @@ import {
   DeleteAbsenceParamsSchema,
   // Payroll Documents
   ListPayrollDocumentsParamsSchema,
+  GetEmployeePayslipPdfParamsSchema,
 } from "../../types/index.js";
 import { logger } from "../../logger.js";
 
@@ -185,5 +186,11 @@ export const handlers: Record<string, HandlerFn> = {
     await ensurePayrollAvailable(client);
     const params = ListPayrollDocumentsParamsSchema.parse(args);
     return client.listPayrollDocuments(params);
+  },
+
+  get_employee_payslip_pdf: async (client, args) => {
+    await ensurePayrollAvailable(client);
+    const { employee_id, year, month } = GetEmployeePayslipPdfParamsSchema.parse(args);
+    return client.getEmployeePayslipPdf(employee_id, year, month);
   },
 };

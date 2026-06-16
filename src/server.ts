@@ -21,7 +21,7 @@ const SERVER_NAME = "bexio-mcp-server";
 // Keep in lockstep with package.json / manifest.json / server.json on every release.
 // (The MCPB bundle's dist/package.json is minimal and has no version field, so this
 // is inlined rather than read back from package.json.)
-const SERVER_VERSION = "2.3.1";
+const SERVER_VERSION = "2.4.0";
 
 export class BexioMcpServer {
   private server: McpServer;

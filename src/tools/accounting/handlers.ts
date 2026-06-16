@@ -31,6 +31,8 @@ import {
   ListVatPeriodsParamsSchema,
   // Journal
   GetJournalParamsSchema,
+  // Account Balances
+  GetAccountBalancesParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -150,5 +152,11 @@ export const handlers: Record<string, HandlerFn> = {
   get_journal: async (client, args) => {
     const params = GetJournalParamsSchema.parse(args);
     return client.getJournal(params);
+  },
+
+  // ===== ACCOUNT BALANCES / SALDENLISTE (ACCT-08) =====
+  get_account_balances: async (client, args) => {
+    const params = GetAccountBalancesParamsSchema.parse(args);
+    return client.getAccountBalances(params);
   },
 };

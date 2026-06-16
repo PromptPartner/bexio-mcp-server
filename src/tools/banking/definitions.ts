@@ -141,6 +141,35 @@ export const toolDefinitions: Tool[] = [
       required: ["currency_id"],
     },
   },
+  {
+    name: "get_currency_exchange_rates",
+    description:
+      "Get exchange rates for a specific currency (by ID, from list_currencies), optionally for a historical date. Useful for multi-currency reporting and conversions.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        currency_id: {
+          type: "integer",
+          description: "The currency ID whose exchange rates to fetch (use list_currencies to find IDs)",
+        },
+        date: {
+          type: "string",
+          description: "Optional date (YYYY-MM-DD) for historical rates; defaults to the latest rates.",
+        },
+      },
+      required: ["currency_id"],
+    },
+  },
+  {
+    name: "list_currency_codes",
+    description: "List all ISO currency codes Bexio supports (for use when creating currencies).",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
 
   // ===== IBAN PAYMENTS (Swiss ISO 20022) =====
   {

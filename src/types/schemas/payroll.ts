@@ -102,3 +102,12 @@ export const ListPayrollDocumentsParamsSchema = z.object({
 });
 
 export type ListPayrollDocumentsParams = z.infer<typeof ListPayrollDocumentsParamsSchema>;
+
+export const GetEmployeePayslipPdfParamsSchema = z.object({
+  // v4.0 payroll employee IDs are UUID strings.
+  employee_id: z.string().min(1, "Employee ID is required"),
+  year: z.number().int().min(2000).max(2100).describe("Payslip year, e.g. 2026"),
+  month: z.number().int().min(1).max(12).describe("Payslip month, 1-12"),
+});
+
+export type GetEmployeePayslipPdfParams = z.infer<typeof GetEmployeePayslipPdfParamsSchema>;

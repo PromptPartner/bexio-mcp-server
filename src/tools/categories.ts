@@ -1,7 +1,7 @@
 /**
  * Tool category filtering.
  *
- * By default all tool categories are registered (~310 tools). For contexts
+ * By default all tool categories are registered (~314 tools). For contexts
  * where token budget matters (e.g. smaller models, focused workflows),
  * categories can be whitelisted via env var:
  *

@@ -15,6 +15,8 @@ import {
   CreateCurrencyParamsSchema,
   UpdateCurrencyParamsSchema,
   DeleteCurrencyParamsSchema,
+  GetCurrencyExchangeRatesParamsSchema,
+  ListCurrencyCodesParamsSchema,
   CreateIbanPaymentParamsSchema,
   GetIbanPaymentParamsSchema,
   UpdateIbanPaymentParamsSchema,
@@ -72,6 +74,16 @@ export const handlers: Record<string, HandlerFn> = {
   delete_currency: async (client, args) => {
     const { currency_id } = DeleteCurrencyParamsSchema.parse(args);
     return client.deleteCurrency(currency_id);
+  },
+
+  get_currency_exchange_rates: async (client, args) => {
+    const { currency_id, date } = GetCurrencyExchangeRatesParamsSchema.parse(args);
+    return client.getCurrencyExchangeRates(currency_id, date ? { date } : {});
+  },
+
+  list_currency_codes: async (client, args) => {
+    ListCurrencyCodesParamsSchema.parse(args);
+    return client.listCurrencyCodes();
   },
 
   // ===== IBAN PAYMENTS (Swiss ISO 20022) =====

@@ -268,4 +268,29 @@ export const toolDefinitions: Tool[] = [
       },
     },
   },
+
+  {
+    name: "get_employee_payslip_pdf",
+    description:
+      "Fetch a single employee's payslip (Lohnabrechnung) as a base64-encoded PDF for a given year and month. Requires Bexio Payroll module. Returns { content (base64), content_type, filename }.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        employee_id: {
+          type: "string",
+          description: "The employee's UUID (from list_employees)",
+        },
+        year: {
+          type: "integer",
+          description: "Payslip year, e.g. 2026",
+        },
+        month: {
+          type: "integer",
+          description: "Payslip month, 1-12",
+        },
+      },
+      required: ["employee_id", "year", "month"],
+    },
+  },
 ];

@@ -87,7 +87,7 @@ BEXIO_API_TOKEN=your-token node dist/index.js
 
 ## Features
 
-This MCP server provides **310 tools** across all Bexio domains:
+This MCP server provides **314 tools** across all Bexio domains:
 
 ### Contacts & CRM
 - Create, update, search contacts
@@ -307,7 +307,7 @@ This project builds upon the original Bexio MCP server created by [Sebastian Bry
 
 ### Development Tools
 
-The expansion from 83 to 310 tools was developed using:
+The expansion from 83 to 314 tools was developed using:
 
 - **[GSD Framework](https://github.com/casualjim/get-shit-done)** - The "Get Shit Done" planning framework for structured AI-assisted development workflows
 

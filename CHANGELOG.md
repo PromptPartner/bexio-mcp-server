@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-06-16
+
+### Added (314 tools, +4)
+- **`get_account_balances` (Saldenliste)** — account balances computed from the accounting journal, since Bexio's API has no native balance endpoint. `balance = sum(debits) − sum(credits)` per account over a date range, enriched with `account_no`/`name`. Defaults to the current business year (includes opening/carry-forward entries, so it reflects the current balance). Optional `account_id` filter and `start_date`/`end_date` override. Paginates the journal with a logged safety cap.
+- **`get_currency_exchange_rates`** and **`list_currency_codes`** — wrap the Bexio v3.0 currency exchange-rate and ISO-code endpoints (added by Bexio in 2024) for multi-currency reporting.
+- **`get_employee_payslip_pdf`** — fetch one employee's payslip (Lohnabrechnung) as a base64 PDF for a given year/month (`/4.0/payroll/employees/{id}/paystub-pdf/{year}/{month}`), replacing the non-functional `list_payroll_documents` stub (which Bexio's API never supported). Requires the Payroll module.
+
+### Notes
+- Account balances are **computed, not authoritative**: the figure equals the live balance when the date range covers the full business year (the default); for partial ranges it is the period movement. Validate against Bexio's own Saldenliste/Kontenblatt.
+
 ## [2.3.1] - 2026-06-16
 
 ### Fixed (critical — server crashed on startup for everyone)

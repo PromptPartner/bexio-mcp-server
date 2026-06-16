@@ -126,6 +126,8 @@ export function getDataKey(toolName: string): string {
     create_quote: "quote",
     search_quotes: "quotes",
     search_quotes_by_customer: "quotes",
+    // Accounting
+    get_account_balances: "account_balances",
   };
 
   return mapping[toolName] || "data";

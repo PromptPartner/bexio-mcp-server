@@ -151,3 +151,13 @@ export const GetJournalParamsSchema = z.object({
 });
 
 export type GetJournalParams = z.infer<typeof GetJournalParamsSchema>;
+
+// ===== ACCOUNT BALANCES / SALDENLISTE (ACCT-08, computed from journal) =====
+
+export const GetAccountBalancesParamsSchema = z.object({
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
+  account_id: z.number().int().positive().optional(),
+});
+
+export type GetAccountBalancesParams = z.infer<typeof GetAccountBalancesParamsSchema>;

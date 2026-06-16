@@ -60,6 +60,25 @@ export const DeleteCurrencyParamsSchema = z.object({
 
 export type DeleteCurrencyParams = z.infer<typeof DeleteCurrencyParamsSchema>;
 
+export const GetCurrencyExchangeRatesParamsSchema = z.object({
+  currency_id: z
+    .number()
+    .int()
+    .positive()
+    .describe("The currency ID whose exchange rates to fetch (from list_currencies)"),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
+    .optional()
+    .describe("Optional date for historical exchange rates (YYYY-MM-DD)"),
+});
+
+export type GetCurrencyExchangeRatesParams = z.infer<typeof GetCurrencyExchangeRatesParamsSchema>;
+
+export const ListCurrencyCodesParamsSchema = z.object({});
+
+export type ListCurrencyCodesParams = z.infer<typeof ListCurrencyCodesParamsSchema>;
+
 // ===== IBAN PAYMENTS (BANK-03) - Swiss ISO 20022 =====
 
 // Flat params schema for MCP tool interface

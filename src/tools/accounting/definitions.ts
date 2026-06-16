@@ -366,4 +366,29 @@ export const toolDefinitions: Tool[] = [
       },
     },
   },
+
+  // ===== ACCOUNT BALANCES / SALDENLISTE (ACCT-08, computed from journal) =====
+  {
+    name: "get_account_balances",
+    description:
+      "Get account balances (Saldenliste) computed from the accounting journal. Bexio has no native balance endpoint, so balances are derived: balance = sum(debits) - sum(credits) per account over the date range. Defaults to the current business year, which includes opening/carry-forward entries and therefore reflects the current balance. Returns each account with account_no, name, debit/credit totals and balance.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        start_date: {
+          type: "string",
+          description: "Range start in YYYY-MM-DD. Defaults to the start of the current business year.",
+        },
+        end_date: {
+          type: "string",
+          description: "Range end in YYYY-MM-DD. Defaults to the end of the current business year.",
+        },
+        account_id: {
+          type: "integer",
+          description: "Optional: return the balance for a single account ID only.",
+        },
+      },
+    },
+  },
 ];

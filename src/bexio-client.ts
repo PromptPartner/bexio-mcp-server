@@ -319,6 +319,25 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "DELETE", `currencies/${currencyId}`);
   }
 
+  // Exchange rates + ISO currency codes (added by Bexio in 2024). Verified live:
+  // exchange rates are nested PER currency (/3.0/currencies/{id}/exchange_rates);
+  // codes are a flat list (/3.0/currencies/codes).
+  async getCurrencyExchangeRates(
+    currencyId: number,
+    params: { date?: string } = {}
+  ): Promise<unknown[]> {
+    return this.makeVersionedRequest(
+      "3.0",
+      "GET",
+      `currencies/${currencyId}/exchange_rates`,
+      params
+    );
+  }
+
+  async listCurrencyCodes(): Promise<unknown[]> {
+    return this.makeVersionedRequest("3.0", "GET", "currencies/codes");
+  }
+
   // ===== IBAN PAYMENTS (Swiss ISO 20022) =====
   async createIbanPayment(data: {
     bank_account_id: number;
@@ -1560,6 +1579,161 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "GET", "accounting/journal", params);
   }
 
+  // ===== ACCOUNT BALANCES / SALDENLISTE (computed, ACCT-08) =====
+  // Bexio has no native balance/trial-balance endpoint, so balances are DERIVED by
+  // aggregating the journal (/3.0/accounting/journal). Each posting carries a
+  // debit_account_id and credit_account_id; an account's balance over the range is
+  // sum(amounts debited to it) - sum(amounts credited from it). When the range covers
+  // the full business year (the default), Bexio's opening/carry-forward (Saldovortrag)
+  // entries are included, so the figure equals the account's current balance.
+  async getAccountBalances(params: {
+    start_date?: string;
+    end_date?: string;
+    account_id?: number;
+  } = {}): Promise<unknown> {
+    type JournalRow = {
+      debit_account_id?: number;
+      credit_account_id?: number;
+      amount?: number | string;
+      base_currency_amount?: number | string;
+    };
+
+    // 1. Resolve the date range. Default to the current business year so opening
+    //    balances are included (yields true balances, not just period movement).
+    let startDate = params.start_date;
+    let endDate = params.end_date;
+    if (!startDate || !endDate) {
+      const range = await this.resolveCurrentBusinessYearRange();
+      startDate = startDate ?? range.start;
+      endDate = endDate ?? range.end;
+    }
+
+    // 2. Page through the journal until exhausted (with a logged safety cap).
+    const PAGE = 2000;
+    const MAX_PAGES = 25;
+    const rows: JournalRow[] = [];
+    let offset = 0;
+    let truncated = false;
+    for (let page = 0; ; page++) {
+      if (page >= MAX_PAGES) {
+        truncated = true;
+        break;
+      }
+      const batch = (await this.getJournal({
+        start_date: startDate,
+        end_date: endDate,
+        limit: PAGE,
+        offset,
+      })) as JournalRow[];
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      rows.push(...batch);
+      if (batch.length < PAGE) break;
+      offset += PAGE;
+    }
+    if (truncated) {
+      logger.warn(
+        `getAccountBalances: journal exceeded ${MAX_PAGES * PAGE} rows for ${startDate}..${endDate}; balances may be incomplete.`
+      );
+    }
+
+    // 3. Aggregate per account (double-entry). Prefer the base-currency amount.
+    const agg = new Map<number, { debit_total: number; credit_total: number }>();
+    const bump = (id: number | undefined, field: "debit_total" | "credit_total", amt: number) => {
+      if (!id || !Number.isFinite(amt)) return;
+      const entry = agg.get(id) ?? { debit_total: 0, credit_total: 0 };
+      entry[field] += amt;
+      agg.set(id, entry);
+    };
+    for (const row of rows) {
+      const amt = Number(row.base_currency_amount ?? row.amount ?? 0);
+      bump(row.debit_account_id, "debit_total", amt);
+      bump(row.credit_account_id, "credit_total", amt);
+    }
+
+    // 4. Enrich with account_no + name from the chart of accounts.
+    const accountMeta = await this.fetchAllAccounts();
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    let accounts = Array.from(agg.entries()).map(([account_id, totals]) => {
+      const meta = accountMeta.get(account_id);
+      return {
+        account_id,
+        account_no: meta?.account_no ?? null,
+        name: meta?.name ?? null,
+        account_group_id: meta?.account_group_id ?? null,
+        debit_total: round2(totals.debit_total),
+        credit_total: round2(totals.credit_total),
+        balance: round2(totals.debit_total - totals.credit_total),
+      };
+    });
+    if (params.account_id) {
+      accounts = accounts.filter((a) => a.account_id === params.account_id);
+    }
+    accounts.sort((a, b) => Number(a.account_no ?? 0) - Number(b.account_no ?? 0));
+
+    return {
+      start_date: startDate,
+      end_date: endDate,
+      source: "computed from /3.0/accounting/journal (Bexio has no native balance endpoint)",
+      note:
+        "balance = sum(debits) - sum(credits) over the date range. When the range covers the full business year (the default), Bexio's opening/carry-forward entries are included, so this equals the account's current balance; for partial ranges it is the period movement only.",
+      account_count: accounts.length,
+      truncated,
+      accounts,
+    };
+  }
+
+  /** Resolve the date range of the business year containing today (fallback: calendar year). */
+  private async resolveCurrentBusinessYearRange(): Promise<{ start: string; end: string }> {
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      const years = (await this.listBusinessYears({ limit: 100 })) as Array<Record<string, unknown>>;
+      if (Array.isArray(years)) {
+        const ranges = years
+          .map((y) => {
+            const start = (y["start"] ?? y["from"] ?? y["start_date"]) as string | undefined;
+            const end = (y["end"] ?? y["to"] ?? y["end_date"]) as string | undefined;
+            return start && end ? { start, end } : null;
+          })
+          .filter((r): r is { start: string; end: string } => r !== null);
+        const containing = ranges.find((r) => r.start <= today && today <= r.end);
+        if (containing) return containing;
+        if (ranges.length > 0) {
+          return ranges.sort((a, b) => (a.end < b.end ? 1 : -1))[0]!;
+        }
+      }
+    } catch {
+      // fall through to the calendar-year default
+    }
+    const year = today.slice(0, 4);
+    return { start: `${year}-01-01`, end: `${year}-12-31` };
+  }
+
+  /** Fetch the full chart of accounts as an id -> {account_no, name, account_group_id} map. */
+  private async fetchAllAccounts(): Promise<
+    Map<number, { account_no: number | string; name: string; account_group_id?: number }>
+  > {
+    const map = new Map<number, { account_no: number | string; name: string; account_group_id?: number }>();
+    const PAGE = 2000;
+    let offset = 0;
+    for (let page = 0; page < 10; page++) {
+      const batch = (await this.listAccounts({ limit: PAGE, offset })) as Array<Record<string, unknown>>;
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      for (const a of batch) {
+        const id = Number(a["id"]);
+        if (Number.isFinite(id)) {
+          map.set(id, {
+            account_no: (a["account_no"] as number | string) ?? "",
+            name: (a["name"] as string) ?? "",
+            account_group_id: a["account_group_id"] as number | undefined,
+          });
+        }
+      }
+      if (batch.length < PAGE) break;
+      offset += PAGE;
+    }
+    return map;
+  }
+
   // ===== BILLS (Creditor Invoices - PURCH-01, v4.0 API) =====
   async listBills(params: PaginationParams = {}): Promise<unknown[]> {
     return this.makeVersionedRequest("4.0", "GET", "purchase/bills", params);
@@ -1708,8 +1882,40 @@ export class BexioClient {
   // retrieved per employee/period via /4.0/payroll/employees/{id}/paystub-pdf/{year}/{month}.
   async listPayrollDocuments(_params: PaginationParams & { employee_id?: number } = {}): Promise<unknown[]> {
     throw McpError.validation(
-      "Bexio's v4.0 payroll API has no payroll-documents list endpoint. Payslips are retrieved per employee and period (paystub-pdf by year/month)."
+      "Bexio's v4.0 payroll API has no payroll-documents list endpoint. Use get_employee_payslip_pdf (employee_id + year + month) to fetch a specific employee's payslip PDF."
     );
+  }
+
+  // Payslip PDF for one employee + period. Binary endpoint, so bypass the JSON
+  // helper and request an arraybuffer directly (mirrors downloadFile), then base64.
+  async getEmployeePayslipPdf(employeeId: string, year: number, month: number): Promise<unknown> {
+    const url = `https://api.bexio.com/4.0/payroll/employees/${employeeId}/paystub-pdf/${year}/${month}`;
+    try {
+      const response = await axios.get(url, {
+        responseType: "arraybuffer",
+        headers: { Authorization: `Bearer ${this.config.apiToken}`, Accept: "application/pdf" },
+      });
+      const base64 = Buffer.from(response.data).toString("base64");
+      return {
+        content: base64,
+        content_type: "application/pdf",
+        filename: `payslip_${employeeId}_${year}_${String(month).padStart(2, "0")}.pdf`,
+      };
+    } catch (error) {
+      // arraybuffer error bodies arrive as buffers; decode for a useful message.
+      if (axios.isAxiosError(error) && error.response) {
+        let message = error.response.statusText;
+        try {
+          message =
+            (JSON.parse(Buffer.from(error.response.data).toString("utf-8")) as { message?: string })
+              .message ?? message;
+        } catch {
+          // not JSON — keep statusText
+        }
+        throw McpError.bexioApi(message, error.response.status, { url, method: "get" });
+      }
+      throw McpError.internal(error instanceof Error ? error.message : String(error));
+    }
   }
 
   // ===== FILES (FILE-01, v3.0 API; v2.0 /file returns 404) =====
