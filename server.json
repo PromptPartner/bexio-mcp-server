@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.PromptPartner/bexio-mcp-server",
-  "description": "Swiss accounting integration for Bexio. 314 tools for invoices, contacts, projects, account balances.",
+  "description": "Swiss accounting integration for Bexio. 314 tools: invoices, contacts, projects, account balances",
   "repository": {
     "url": "https://github.com/promptpartner/bexio-mcp-server",
     "source": "github"
