@@ -1767,11 +1767,21 @@ export class BexioClient {
   }
 
   async issueBill(billId: string): Promise<unknown> {
-    return this.makeVersionedRequest("4.0", "POST", `purchase/bills/${billId}/issue`);
+    // #6: v4 has no POST /issue sub-path (it 404s). "Issuing" a creditor bill =
+    // booking it (DRAFT -> BOOKED) via the bookings endpoint, which takes no body.
+    return this.makeVersionedRequest("4.0", "PUT", `purchase/bills/${billId}/bookings/BOOKED`);
   }
 
   async markBillAsPaid(billId: string): Promise<unknown> {
-    return this.makeVersionedRequest("4.0", "POST", `purchase/bills/${billId}/mark_as_paid`);
+    // #6: Bexio v4 has no mark-as-paid endpoint (the old POST /mark_as_paid 404s).
+    // A bill is marked paid by recording a payment against it, so steer the caller
+    // to the working path instead of firing a request that always fails.
+    throw McpError.validation(
+      `Bexio has no dedicated 'mark bill as paid' endpoint. To mark bill ${billId} as paid, ` +
+        `create an outgoing payment linked to it: call create_outgoing_payment with ` +
+        `payment_data.bill_id="${billId}" (payment_type IBAN, QR, or MANUAL). That records the ` +
+        `payment and flips the bill's status to PAID.`
+    );
   }
 
   // ===== EXPENSES (PURCH-02, v4.0 API) =====
@@ -1829,8 +1839,25 @@ export class BexioClient {
     return this.makeVersionedRequest("4.0", "POST", "purchase/outgoing-payments", undefined, paymentData);
   }
 
+  // #8: the only fields the v4 update accepts (everything else — currency_code,
+  // exchange_rate, status, id, … — is rejected as "Unrecognized property").
+  private static readonly OUTGOING_PAYMENT_UPDATE_FIELDS = [
+    "execution_date", "amount", "fee_type", "is_salary_payment", "reference_no",
+    "message", "receiver_iban", "receiver_name", "receiver_street",
+    "receiver_house_no", "receiver_city", "receiver_postcode", "receiver_country_code",
+  ];
+
   async updateOutgoingPayment(paymentId: string, paymentData: Record<string, unknown>): Promise<unknown> {
-    return this.makeVersionedRequest("4.0", "PUT", `purchase/outgoing-payments/${paymentId}`, undefined, paymentData);
+    // #8: update is a PUT to the COLLECTION path with payment_id in the BODY
+    // (PUT and PATCH on /{id} both 405). Reduce to the writable update fields so
+    // passing back a full payment object (with create-only/computed fields)
+    // doesn't get rejected. The API still requires execution_date, amount and
+    // is_salary_payment — surfaced loudly if omitted.
+    const body: Record<string, unknown> = { payment_id: paymentId };
+    for (const k of BexioClient.OUTGOING_PAYMENT_UPDATE_FIELDS) {
+      if (paymentData[k] !== undefined && paymentData[k] !== null) body[k] = paymentData[k];
+    }
+    return this.makeVersionedRequest("4.0", "PUT", "purchase/outgoing-payments", undefined, body);
   }
 
   async deleteOutgoingPayment(paymentId: string): Promise<unknown> {

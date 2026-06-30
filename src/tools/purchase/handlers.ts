@@ -5,6 +5,7 @@
 
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
+import { mergeBillData } from "../../shared/merge.js";
 import {
   ListBillsParamsSchema,
   GetBillParamsSchema,
@@ -59,7 +60,19 @@ export const handlers: Record<string, HandlerFn> = {
 
   update_bill: async (client, args) => {
     const { bill_id, bill_data } = UpdateBillParamsSchema.parse(args);
-    return client.updateBill(bill_id, bill_data);
+    // #7: the v4 PUT replaces the whole bill and rejects the raw GET body, so a
+    // naive update nulls every omitted field (notably document_no, which then
+    // breaks booking). Read-modify-write: fetch current, deep-merge the patch,
+    // PUT back only the writable fields (mergeBillData carries document_no).
+    const current = await client.getBill(bill_id);
+    if (!current || typeof current !== "object") {
+      throw McpError.notFound("Bill", bill_id);
+    }
+    const merged = mergeBillData(
+      current as Record<string, unknown>,
+      (bill_data ?? {}) as Record<string, unknown>
+    );
+    return client.updateBill(bill_id, merged);
   },
 
   delete_bill: async (client, args) => {
