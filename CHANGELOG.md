@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-07-01
+
+### Added — Multiple Bexio companies (mandates) from one server
+Bexio binds each API token to a single company, so multi-company users previously had
+to run one server instance per company (≈314 tools each in the system prompt). Now **one
+instance can hold several companies' tokens and switch between them**, adding just two
+tools.
+- **`BEXIO_API_TOKENS`** env var configures multiple companies, as JSON
+  (`{"Acme":"<token>","Globex":"<token>"}`) or a delimited list
+  (`Acme:<token>,Globex:<token>`). **`BEXIO_DEFAULT_COMPANY`** picks the company active at
+  startup. The existing single **`BEXIO_API_TOKEN`** still works unchanged.
+- **`list_companies`** — shows each configured company's label, real company name, and
+  which is active. **`select_company`** — switches the active company; every other tool
+  then operates on it ("in Globex, list open invoices"). These two tools are registered
+  only when `BEXIO_API_TOKENS` is set, so single-company setups are byte-for-byte
+  unchanged (still 314 tools; 316 in multi-company mode).
+- In multi-company mode, successful responses include `active_company` in their `meta`
+  block so it's always clear which company a result came from.
+- The Claude Desktop extension (`.mcpb`) gained optional **Additional companies** and
+  **Default company label** config fields.
+- Tokens are never logged or returned; `list_companies` exposes labels + company names
+  only.
+
+### Notes
+- The active company is **process-global** — ideal for the Claude Desktop (stdio) use
+  case. For concurrent multi-tenant HTTP/n8n deployments, continue running one instance
+  per company.
+
 ## [2.4.1] - 2026-06-30
 
 ### Fixed (7 issues reported against the bill/payment lifecycle — #6–#12, all live-verified)
