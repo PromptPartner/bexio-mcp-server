@@ -11,7 +11,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { logger } from "./logger.js";
-import { BexioClient } from "./bexio-client.js";
+import { companyManager } from "./company-manager.js";
 import { getAllToolDefinitions, getHandler } from "./tools/index.js";
 import { formatSuccessResponse, formatErrorResponse, McpError } from "./shared/index.js";
 import { registerUIResources } from "./ui-resources.js";
@@ -21,11 +21,10 @@ const SERVER_NAME = "bexio-mcp-server";
 // Keep in lockstep with package.json / manifest.json / server.json on every release.
 // (The MCPB bundle's dist/package.json is minimal and has no version field, so this
 // is inlined rather than read back from package.json.)
-const SERVER_VERSION = "2.4.1";
+const SERVER_VERSION = "2.5.0";
 
 export class BexioMcpServer {
   private server: McpServer;
-  private client: BexioClient | null = null;
 
   constructor() {
     this.server = new McpServer({
@@ -34,9 +33,9 @@ export class BexioMcpServer {
     });
   }
 
-  /** Initialize with Bexio client and register tools */
-  initialize(client: BexioClient): void {
-    this.client = client;
+  /** Register tools. The active Bexio company is resolved per call via
+   * companyManager (initialized in index.ts before this runs). */
+  initialize(): void {
     this.registerTools();
 
     // Interactive UI panels (MCP Apps) are OPT-IN. They are non-essential for the
@@ -47,7 +46,7 @@ export class BexioMcpServer {
     const toolCount = getAllToolDefinitions().length;
     if (process.env["BEXIO_ENABLE_UI"] === "true") {
       try {
-        registerUIResources(this.server, client);
+        registerUIResources(this.server, companyManager.getActiveClient());
         logger.info(`Initialized with ${toolCount} tools + 3 UI tools (MCP Apps enabled)`);
       } catch (error) {
         logger.error(
@@ -108,15 +107,15 @@ export class BexioMcpServer {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         inputShape as any,
         async (args: unknown) => {
-          if (!this.client) {
-            return formatErrorResponse(
-              McpError.internal("Bexio client not initialized")
-            );
-          }
-
           try {
-            const result = await handler(this.client, args);
-            return formatSuccessResponse(def.name, result);
+            // Resolve the currently-active company's client per call so
+            // select_company switches take effect immediately.
+            const client = companyManager.getActiveClient();
+            const result = await handler(client, args);
+            const meta = companyManager.hasMultiple()
+              ? { active_company: companyManager.getActiveLabel() }
+              : undefined;
+            return formatSuccessResponse(def.name, result, meta);
           } catch (error) {
             if (error instanceof McpError) {
               return formatErrorResponse(error);
