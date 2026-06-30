@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-06-30
+
+### Fixed (7 issues reported against the bill/payment lifecycle — #6–#12, all live-verified)
+- **`update_bill` no longer silently destroys data (#7).** Bexio's v4 `PUT /purchase/bills/{id}` replaces the whole bill and drops every field you don't resend — most damagingly `document_no`, whose loss then blocks booking. `update_bill` is now a safe partial update: it fetches the current bill, deep-merges your changes, and writes back only the writable fields (preserving `document_no`). Send the full `line_items` array to change a line; omit it to leave lines untouched.
+- **`issue_bill` works (#6).** The old `POST /purchase/bills/{id}/issue` returned 404 (no such sub-path). Booking a DRAFT bill now uses `PUT /purchase/bills/{id}/bookings/BOOKED`.
+- **`mark_bill_as_paid` returns actionable guidance instead of a 404 (#6).** Bexio has no mark-as-paid endpoint; a bill is marked paid by recording a payment. The tool now points you to `create_outgoing_payment` with the bill's `bill_id` (which flips the bill to PAID) rather than firing a request that always fails.
+- **`update_outgoing_payment` works (#8).** The old `PUT /purchase/outgoing-payments/{id}` returned 405. The update now uses the collection path with `payment_id` in the body and is reduced to the fields Bexio actually accepts (so passing back a full payment object no longer fails). Note: Bexio only allows updating IBAN/QR payments, not MANUAL ones.
+- **`create_bill` / `create_outgoing_payment` now document the real fields (#9).** Schemas were corrected from the wrong `contact_id`/`positions` to the actual `supplier_id`, `line_items` (with `booking_account_id`, not `account_id`), structured `address`, `contact_partner_id`, `manual_amount`/`amount_calc`; and for payments `payment_type` (IBAN/QR/MANUAL), `sender_bank_account_id`, `reference_no` (QR) vs `message` (IBAN), `fee_type`.
+- **`download_file` no longer overflows context on large files (#10).** Files above a threshold (default 64 KB decoded, override via `BEXIO_DOWNLOAD_INLINE_MAX_BYTES`) are written to disk and the tool returns `file_path` instead of inline base64. Small files still inline (backward-compatible). New optional `output_path` chooses the destination. In HTTP/n8n mode the path is on the server host.
+- **stdio server no longer orphans (#11).** When the MCP client disconnects (stdin closes) or sends SIGINT/SIGTERM, the process now shuts down and exits instead of lingering with the API token. HTTP mode is unaffected.
+- **`create_iban_payment` / `create_qr_payment` warn that they are NOT bill-linked (#12).** Their descriptions now steer you to `create_outgoing_payment` (with `bill_id`) when you actually mean to pay a supplier bill, and a `_hint` is attached to the response. `update_iban_payment` notes a bill cannot be attached afterward.
+
+### Added
+- Unit tests (vitest) for the new `mergeBillData` (#7) and `shouldInline`/`writeDownloadToTemp` (#10) logic, plus test infra (`vitest.config.ts`).
+
 ## [2.4.0] - 2026-06-16
 
 ### Added (314 tools, +4)

@@ -21,7 +21,7 @@ const SERVER_NAME = "bexio-mcp-server";
 // Keep in lockstep with package.json / manifest.json / server.json on every release.
 // (The MCPB bundle's dist/package.json is minimal and has no version field, so this
 // is inlined rather than read back from package.json.)
-const SERVER_VERSION = "2.4.0";
+const SERVER_VERSION = "2.4.1";
 
 export class BexioMcpServer {
   private server: McpServer;
@@ -146,5 +146,34 @@ export class BexioMcpServer {
     await this.server.connect(transport);
 
     logger.info("Server connected to stdio transport");
+
+    // #11: in stdio mode the parent MCP client owns our lifecycle. When it
+    // disconnects it closes our stdin; if it doesn't, the process used to linger
+    // forever as an orphan still holding the API token. Exit on stdin
+    // end/close and on termination signals. `closing` makes this idempotent so
+    // several triggers (e.g. stdin 'end' then SIGTERM) can't double-close.
+    // This path is stdio-only — HTTP mode never calls run() (see index.ts).
+    let closing = false;
+    const shutdown = async (reason: string): Promise<void> => {
+      if (closing) return;
+      closing = true;
+      logger.info(`Shutting down (${reason})`);
+      try {
+        await this.server.close();
+      } catch (error) {
+        logger.error(
+          "Error during shutdown:",
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+      process.exit(0);
+    };
+
+    process.stdin.on("end", () => void shutdown("stdin end"));
+    process.stdin.on("close", () => void shutdown("stdin close"));
+    process.on("SIGINT", () => void shutdown("SIGINT"));
+    process.on("SIGTERM", () => void shutdown("SIGTERM"));
+    // Ensure stdin is flowing so 'end'/'close' actually fire on client disconnect.
+    process.stdin.resume();
   }
 }

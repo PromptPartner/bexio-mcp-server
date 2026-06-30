@@ -175,6 +175,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_iban_payment",
     description:
+      "⚠️ Creates a STANDALONE bank payment that is NOT linked to any supplier bill. To pay a supplier bill (and have it marked paid), use `create_outgoing_payment` with a `bill_id` instead — that works for both IBAN and QR and records the payment against the bill. A standalone payment created here CANNOT be attached to a bill afterward. Use this tool only for ad-hoc payments that have no underlying bill. " +
       "Create an IBAN payment (Swiss ISO 20022 standard). First use list_bank_accounts to get a valid bank_account_id. Only CHF and EUR currencies are supported. Recipient address must use structured format (street, house_number, zip, city, country_code).",
     annotations: { destructiveHint: false },
     inputSchema: {
@@ -275,7 +276,8 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "update_iban_payment",
-    description: "Update a pending IBAN payment. Only pending payments can be modified.",
+    description:
+      "Update a pending IBAN payment. Only pending payments can be modified. Note: this cannot attach the payment to a supplier bill — Bexio returns 403. To pay a bill, create the payment via `create_outgoing_payment` with a `bill_id`.",
     annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
@@ -301,6 +303,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_qr_payment",
     description:
+      "⚠️ Creates a STANDALONE bank payment that is NOT linked to any supplier bill. To pay a supplier bill (and have it marked paid), use `create_outgoing_payment` with a `bill_id` instead — that works for both IBAN and QR and records the payment against the bill. A standalone payment created here CANNOT be attached to a bill afterward. Use this tool only for ad-hoc payments that have no underlying bill. " +
       "Create a QR payment (Swiss QR-invoice standard per SIX Group spec v2.3). First use list_bank_accounts to get a valid bank_account_id. Only CHF and EUR currencies are supported. QR reference must be exactly 27 digits if provided. Recipient address must use structured format.",
     annotations: { destructiveHint: false },
     inputSchema: {

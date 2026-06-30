@@ -30,6 +30,19 @@ export type HandlerFn = (
   args: unknown
 ) => Promise<unknown>;
 
+// #12: standalone IBAN/QR payments are NOT linked to a bill and cannot be linked
+// afterward. Attach a steering hint to the success response so the model
+// self-corrects toward create_outgoing_payment when a bill was actually meant.
+const STANDALONE_PAYMENT_HINT =
+  "This is a STANDALONE bank payment and is NOT linked to any supplier bill; it cannot be attached to a bill afterward. If you meant to pay a supplier bill, use create_outgoing_payment with a bill_id instead (works for IBAN and QR) — that records the payment against the bill and marks it paid.";
+
+function withStandaloneHint(result: unknown): unknown {
+  if (result && typeof result === "object" && !Array.isArray(result)) {
+    return { ...(result as Record<string, unknown>), _hint: STANDALONE_PAYMENT_HINT };
+  }
+  return result;
+}
+
 export const handlers: Record<string, HandlerFn> = {
   // ===== BANK ACCOUNTS (Read-Only) =====
   list_bank_accounts: async (client, args) => {
@@ -112,7 +125,7 @@ export const handlers: Record<string, HandlerFn> = {
       allowance_type: params.allowance_type,
     };
 
-    return client.createIbanPayment(paymentData);
+    return withStandaloneHint(await client.createIbanPayment(paymentData));
   },
 
   get_iban_payment: async (client, args) => {
@@ -154,7 +167,7 @@ export const handlers: Record<string, HandlerFn> = {
       additional_information: params.additional_information,
     };
 
-    return client.createQrPayment(paymentData);
+    return withStandaloneHint(await client.createQrPayment(paymentData));
   },
 
   get_qr_payment: async (client, args) => {
