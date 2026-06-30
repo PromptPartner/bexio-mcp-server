@@ -67,7 +67,8 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "download_file",
-    description: "Download a file's content from Bexio. Returns the file content as base64 encoded string for MCP JSON transport.",
+    description:
+      "Download a file's content from Bexio. Small files (<= 64 KB by default) are returned inline as a base64 string (`content_base64`). Larger files are written to a file on the server and the tool returns `file_path` instead of the base64 (this prevents context overflow). Pass `output_path` to control where the file is written, or set the BEXIO_DOWNLOAD_INLINE_MAX_BYTES env var to change the inline threshold. NOTE: in HTTP/n8n mode the returned path is on the SERVER host, not the MCP client machine.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
@@ -75,6 +76,11 @@ export const toolDefinitions: Tool[] = [
         file_id: {
           type: "integer",
           description: "The ID of the file to download",
+        },
+        output_path: {
+          type: "string",
+          description:
+            "Optional absolute path to write the file to (on the server host). When omitted, large files go to a temp file and small files are returned inline as base64.",
         },
       },
       required: ["file_id"],

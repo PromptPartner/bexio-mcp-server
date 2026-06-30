@@ -5,6 +5,7 @@
 
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
+import { shouldInline, writeDownloadToTemp, resolveInlineThreshold } from "../../shared/tempfile.js";
 import {
   ListFilesParamsSchema,
   GetFileParamsSchema,
@@ -47,12 +48,49 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   download_file: async (client, args) => {
-    const { file_id } = DownloadFileParamsSchema.parse(args);
+    const { file_id, output_path } = DownloadFileParamsSchema.parse(args);
     const content_base64 = await client.downloadFile(file_id);
+    const bytes = Buffer.from(content_base64, "base64");
+    const size_bytes = bytes.length;
+    const threshold = resolveInlineThreshold();
+
+    // Best-effort real filename + mime; never let metadata failure break download.
+    let filename = `file-${file_id}`;
+    let content_type: string | undefined;
+    try {
+      const meta = (await client.getFile(file_id)) as Record<string, unknown> | null;
+      if (meta) {
+        if (typeof meta["name"] === "string" && meta["name"]) filename = meta["name"];
+        if (typeof meta["mime_type"] === "string") content_type = meta["mime_type"];
+      }
+    } catch {
+      /* metadata is optional */
+    }
+
+    // Small file with no explicit destination → keep the backward-compatible
+    // inline shape so existing callers still get content_base64.
+    if (!output_path && shouldInline(size_bytes, threshold)) {
+      return {
+        file_id,
+        content_base64,
+        size_bytes,
+        content_type,
+        filename,
+        message: `File content returned inline as base64 (${size_bytes} bytes; inline threshold ${threshold} bytes).`,
+      };
+    }
+
+    // Otherwise spill to disk and return a path instead of the base64 blob.
+    const file_path = await writeDownloadToTemp(bytes, filename, output_path);
     return {
       file_id,
-      content_base64,
-      message: "File content returned as base64 encoded string",
+      file_path,
+      size_bytes,
+      content_type,
+      filename,
+      message: output_path
+        ? `File written to the requested path (${size_bytes} bytes). In HTTP/n8n mode this path is on the SERVER host, not the MCP client.`
+        : `File (${size_bytes} bytes) exceeded the inline threshold (${threshold} bytes) and was written to a temp file. In HTTP/n8n mode this path is on the SERVER host. Pass output_path to choose a location, or raise BEXIO_DOWNLOAD_INLINE_MAX_BYTES to inline larger files.`,
     };
   },
 

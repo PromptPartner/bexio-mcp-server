@@ -35,6 +35,10 @@ export type UploadFileParams = z.infer<typeof UploadFileParamsSchema>;
 // Download file
 export const DownloadFileParamsSchema = z.object({
   file_id: z.number().int().positive(),
+  // #10: large files are written to disk instead of returned inline. Optionally
+  // choose where; otherwise a temp file is used. In HTTP/n8n mode the path is on
+  // the server host, not the MCP client.
+  output_path: z.string().min(1).optional(),
 });
 
 export type DownloadFileParams = z.infer<typeof DownloadFileParamsSchema>;
