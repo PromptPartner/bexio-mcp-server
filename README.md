@@ -226,9 +226,13 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `BEXIO_API_TOKEN` | Yes | - | Your Bexio API token |
+| `BEXIO_API_TOKEN` | Yes* | - | Your Bexio API token (single company) |
+| `BEXIO_API_TOKENS` | Yes* | - | Multiple companies — see [Multiple Companies](#multiple-companies-mandates) |
+| `BEXIO_DEFAULT_COMPANY` | No | first | Which company is active at startup |
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
 | `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
+
+\* Provide either `BEXIO_API_TOKEN` (one company) or `BEXIO_API_TOKENS` (several).
 
 ### Reducing Token Budget — Category Whitelist
 
@@ -246,6 +250,43 @@ Available categories: `reference`, `company`, `banking`, `projects`,
 `items`, `reports`, `users`, `misc`, `notes`, `tasks`, `stock`, `docs`,
 `positions`. Unknown names are ignored (logged to stderr); empty/unset = all
 enabled (backward compatible).
+
+## Multiple Companies (Mandates)
+
+Bexio binds each API token to a **single company (mandate)** — there is no token that
+spans companies. To work with several companies, generate one token per company (switch
+to that company in Bexio first, then Settings → API Tokens), and configure them all on a
+**single** server instance. Two new tools — `list_companies` and `select_company` — let
+you switch the active company in conversation ("in Globex, list open invoices"). This
+avoids running one server per company and the duplicated tool-context that comes with it.
+
+Set `BEXIO_API_TOKENS` instead of (or alongside) `BEXIO_API_TOKEN`, as a comma-separated
+list of `label:token` pairs (or a JSON object). `BEXIO_DEFAULT_COMPANY` picks the company
+active at startup (defaults to the first):
+
+```json
+{
+  "mcpServers": {
+    "bexio": {
+      "command": "npx",
+      "args": ["@promptpartner/bexio-mcp-server"],
+      "env": {
+        "BEXIO_API_TOKENS": "Acme:token-for-acme,Globex:token-for-globex",
+        "BEXIO_DEFAULT_COMPANY": "Acme"
+      }
+    }
+  }
+}
+```
+
+Then just ask Claude things like *"switch to Globex and show this month's invoices."*
+`list_companies` shows the configured companies and which one is active; in
+multi-company mode each response also notes the `active_company` so it's always clear
+which company a result came from. Tokens are never logged or returned. The two control
+tools appear only when `BEXIO_API_TOKENS` is set, so single-company setups are unchanged.
+
+> **HTTP/n8n note:** the active company is process-global. For concurrent multi-tenant
+> HTTP deployments, run one instance per company instead.
 
 ## Command Line Options
 

@@ -8,7 +8,6 @@
 import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import { logger } from "../logger.js";
-import { BexioClient } from "../bexio-client.js";
 import { getAllToolDefinitions, createHandlerRegistry } from "../tools/index.js";
 
 export interface HttpServerOptions {
@@ -21,13 +20,12 @@ export interface HttpServerOptions {
  * This enables n8n and other HTTP clients to interact with the Bexio API.
  */
 export async function createHttpServer(
-  client: BexioClient,
   options: HttpServerOptions
 ): Promise<FastifyInstance> {
   const { host, port } = options;
 
-  // Create handler registry
-  const handlerRegistry = createHandlerRegistry(client);
+  // Handler registry resolves the active company's client per call (multi-company).
+  const handlerRegistry = createHandlerRegistry();
 
   const app: FastifyInstance = Fastify({
     logger: false, // We use our own logger

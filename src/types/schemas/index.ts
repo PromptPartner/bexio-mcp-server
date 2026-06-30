@@ -77,3 +77,6 @@ export * from "./docs.js";
 
 // Positions (Default, Item, Text, Subtotal, Discount, Pagebreak, Sub positions on sales documents)
 export * from "./positions.js";
+
+// Companies (multi-company / mandate switching — v2.5.0)
+export * from "./companies.js";

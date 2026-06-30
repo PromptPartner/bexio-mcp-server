@@ -14,8 +14,8 @@
  * stdout is reserved for MCP JSON-RPC protocol messages (stdio mode only).
  */
 
-import { BexioClient } from "./bexio-client.js";
 import { logger } from "./logger.js";
+import { parseCompanyTokens, companyManager } from "./company-manager.js";
 
 // Surface otherwise-silent failures. A peripheral throw or rejection must never
 // vanish without a trace: the v2.3.0 startup crash exited the process during the
@@ -80,22 +80,25 @@ async function main(): Promise<void> {
   await loadEnv();
 
   // Read configuration only after dotenv has loaded.
-  const BEXIO_API_TOKEN = process.env["BEXIO_API_TOKEN"];
   const BEXIO_BASE_URL =
     process.env["BEXIO_BASE_URL"] ?? "https://api.bexio.com/2.0";
 
   const { mode, host, port } = parseArgs();
 
-  if (!BEXIO_API_TOKEN) {
-    logger.error("BEXIO_API_TOKEN environment variable is required");
+  // v2.5.0: one or many companies. Single BEXIO_API_TOKEN → one company ("default");
+  // BEXIO_API_TOKENS → multiple, switchable via the select_company tool.
+  const tokens = parseCompanyTokens(process.env);
+  if (tokens.length === 0) {
+    logger.error("BEXIO_API_TOKEN (or BEXIO_API_TOKENS) environment variable is required");
     logger.error("Set it in your .env file or environment");
     process.exit(1);
   }
   logger.info(`Using Bexio API base URL: ${BEXIO_BASE_URL}`);
 
-  const client = new BexioClient({
+  companyManager.init({
     baseUrl: BEXIO_BASE_URL,
-    apiToken: BEXIO_API_TOKEN,
+    tokens,
+    defaultCompany: process.env["BEXIO_DEFAULT_COMPANY"],
   });
 
   if (mode === "stdio") {
@@ -105,13 +108,13 @@ async function main(): Promise<void> {
     // env reads (e.g. BEXIO_ENABLED_CATEGORIES in tools/index.ts) also see .env values.
     const { BexioMcpServer } = await import("./server.js");
     const server = new BexioMcpServer();
-    server.initialize(client);
+    server.initialize();
     await server.run();
   } else if (mode === "http") {
     logger.info(`Starting in HTTP mode on ${host}:${port} (for n8n/remote access)`);
 
     const { createHttpServer } = await import("./transports/http.js");
-    await createHttpServer(client, { host, port });
+    await createHttpServer({ host, port });
 
     // Keep the process alive
     logger.info("HTTP server running. Press Ctrl+C to stop.");

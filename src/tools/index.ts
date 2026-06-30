@@ -11,7 +11,9 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { BexioClient } from "../bexio-client.js";
+import { companyManager } from "../company-manager.js";
 import { getEnabledCategories, type ToolCategory } from "./categories.js";
+import * as companies from "./companies/index.js";
 
 // Domain imports
 import * as reference from "./reference/index.js";
@@ -93,6 +95,15 @@ for (const [name, mod] of Object.entries(CATEGORY_MODULES)) {
   Object.assign(allHandlers, mod.handlers);
 }
 
+// Multi-company control tools (list_companies / select_company) are registered
+// only when BEXIO_API_TOKENS configures more than one company, and are NOT subject
+// to the category whitelist — you always need to switch company. Single-company
+// setups (BEXIO_API_TOKEN only) are unchanged.
+if (process.env["BEXIO_API_TOKENS"]) {
+  allDefinitions.push(...companies.toolDefinitions);
+  Object.assign(allHandlers, companies.handlers);
+}
+
 if (enabledCategories.size < Object.keys(CATEGORY_MODULES).length) {
   // stderr only — keeps the stdio MCP channel clean.
   console.error(
@@ -110,14 +121,16 @@ export function getHandler(toolName: string): HandlerFn | undefined {
   return allHandlers[toolName];
 }
 
-/** Create handler registry bound to a client */
-export function createHandlerRegistry(
-  client: BexioClient
-): Map<string, (args: unknown) => Promise<unknown>> {
+/**
+ * Create a handler registry. Each call resolves the CURRENTLY-active company's
+ * client via companyManager, so select_company switches affect HTTP calls too
+ * (the active company is process-global — see the multi-company caveat).
+ */
+export function createHandlerRegistry(): Map<string, (args: unknown) => Promise<unknown>> {
   const registry = new Map<string, (args: unknown) => Promise<unknown>>();
 
   for (const [name, handler] of Object.entries(allHandlers)) {
-    registry.set(name, (args: unknown) => handler(client, args));
+    registry.set(name, (args: unknown) => handler(companyManager.getActiveClient(), args));
   }
 
   return registry;

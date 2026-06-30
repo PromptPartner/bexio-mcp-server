@@ -34,6 +34,13 @@ src
 tsconfig.json
 vite.config.ts
 
+# Repo tooling / operating-agreement harness — never ship in the extension
+.harness
+scripts
+hooks
+.github
+docs
+
 # This file
 .mcpbignore
 

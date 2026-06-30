@@ -1,8 +1,8 @@
 {
   "manifest_version": "0.3",
   "name": "bexio-mcp-server",
-  "version": "2.4.1",
-  "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 300+ more tools through natural conversation.",
+  "version": "2.5.0",
+  "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 300+ more tools through natural conversation. Supports multiple Bexio companies (mandates) from one install.",
   "author": {
     "name": "Lukas Hertig",
     "email": "lukas@promptpartner.ai"
@@ -22,6 +22,8 @@
       "args": ["${__dirname}/dist/index.js"],
       "env": {
         "BEXIO_API_TOKEN": "${user_config.api_token}",
+        "BEXIO_API_TOKENS": "${user_config.additional_tokens}",
+        "BEXIO_DEFAULT_COMPANY": "${user_config.default_company}",
         "BEXIO_BASE_URL": "${user_config.base_url}",
         "BEXIO_ENABLED_CATEGORIES": "${user_config.enabled_categories}"
       }
@@ -31,8 +33,22 @@
     "api_token": {
       "type": "string",
       "title": "Bexio API Token",
-      "description": "Your Bexio API token. Get it from Bexio > Settings > API Tokens. Required for authentication.",
+      "description": "Your Bexio API token (the primary company). Get it from Bexio > Settings > API Tokens. Required for authentication.",
       "required": true
+    },
+    "additional_tokens": {
+      "type": "string",
+      "title": "Additional companies (optional)",
+      "description": "For multiple Bexio companies (mandates): a comma-separated list of label:token pairs, e.g. 'Acme:token1,Globex:token2'. Generate each token while logged into that company. Then ask Claude to 'switch to Acme'. Leave empty for a single company.",
+      "required": false,
+      "default": ""
+    },
+    "default_company": {
+      "type": "string",
+      "title": "Default/primary company label (optional)",
+      "description": "A name for the primary company above (e.g. 'HeadOffice') — it becomes the active company at startup and the label you switch back to. Leave empty to use 'default'.",
+      "required": false,
+      "default": ""
     },
     "base_url": {
       "type": "string",
