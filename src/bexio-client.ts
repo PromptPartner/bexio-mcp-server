@@ -1968,6 +1968,9 @@ export class BexioClient {
       headers: {
         ...formData.getHeaders(),
         Authorization: `Bearer ${this.config.apiToken}`,
+        // Bexio validates Accept strictly on POST /3.0/files and rejects the
+        // axios default ("application/json, text/plain, */*") with HTTP 415.
+        Accept: "application/json",
       },
     });
     return response.data;
