@@ -113,11 +113,37 @@ export const CreateManualEntryParamsSchema = z.object({
   reference_nr: z.string().optional(),
   tax_id: z.number().int().positive().optional(),
   tax_account_id: z.number().int().positive().optional(),
-  currency_id: z.number().int().positive().optional(),
+  // bexio answers 422 "validation failed" when a posting line carries no currency, even
+  // though the API docs mark these optional. Default them so the common case just works.
+  currency_id: z.number().int().positive().default(1),
   currency_factor: z.number().positive().default(1),
 });
 
 export type CreateManualEntryParams = z.infer<typeof CreateManualEntryParamsSchema>;
+
+// ===== MANUAL GROUP ENTRIES (Sammelbuchung) =====
+
+export const ManualEntryLineSchema = z.object({
+  debit_account_id: z.number().int().positive({ message: "Debit account ID is required" }),
+  credit_account_id: z.number().int().positive({ message: "Credit account ID is required" }),
+  amount: z.number().positive({ message: "Amount must be positive" }),
+  description: z.string().min(1, "Description is required"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional(),
+  tax_id: z.number().int().positive().optional(),
+  tax_account_id: z.number().int().positive().optional(),
+  currency_id: z.number().int().positive().optional(),
+  currency_factor: z.number().positive().optional(),
+});
+
+export const CreateManualGroupEntryParamsSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  entries: z.array(ManualEntryLineSchema).min(1, "At least one entry line is required"),
+  reference_nr: z.string().optional(),
+  currency_id: z.number().int().positive().default(1),
+  currency_factor: z.number().positive().default(1),
+});
+
+export type CreateManualGroupEntryParams = z.infer<typeof CreateManualGroupEntryParamsSchema>;
 
 export const UpdateManualEntryParamsSchema = z.object({
   entry_id: z.number().int().positive(),
@@ -146,6 +172,7 @@ export type ListVatPeriodsParams = z.infer<typeof ListVatPeriodsParamsSchema>;
 export const GetJournalParamsSchema = z.object({
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
+  account_uuid: z.string().optional(),
   limit: z.number().int().positive().default(100),
   offset: z.number().int().min(0).default(0),
 });

@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Journal date filter used the wrong parameter names
+`GET /3.0/accounting/journal` filters by **`from`** and **`to`** (YYYY-MM-DD), plus an
+optional **`account_uuid`**. The client sent `start_date`/`end_date` instead. Bexio
+ignores unknown query parameters silently, so nothing failed — the endpoint simply
+returned the journal from its very first entry, every time:
+- `get_journal` answered with the oldest entries no matter which period was asked for.
+- `get_account_balances` aggregates that journal and paged it with a 25-page × 2000-row
+  cap (50 000 rows). On a longer history the scan never reached recent years, so an
+  account posted to only recently came back **absent from the result** —
+  `account_count: 0`, indistinguishable from "no movement" — while `truncated: true`
+  was the only, easily missed, hint that the figures were unusable.
+
+Both now send `from`/`to` and get the period straight from bexio. The returned rows are
+re-checked against the range locally and the response reports `server_side_filter`,
+`scanned_rows`, `matched_rows` and `truncated`, so if the filter ever stops taking
+effect the range still holds and it is visible rather than silent. Aggregation is
+streamed per row instead of buffering the journal, the page cap is 500 pages, and
+`get_journal`'s `limit`/`offset` now page the **filtered** result. The scan never exits
+early on a date, so backdated postings are not lost.
+
+### Added — `account_uuid` filter on `get_journal`
+Restricts the journal to a single account, as the API supports. `get_account_balances`
+uses it automatically when called with `account_id`, so a single-account balance no
+longer pulls the entire journal.
+
+### Added — `create_manual_group_entry` (Sammelbuchung)
+One voucher holding many postings, e.g. a whole payroll run booked as a single document.
+Previously only `create_manual_entry` existed, so a 130-line payroll journal meant 130
+API round-trips and 130 separate vouchers to correct or delete one by one. Each line
+carries its own debit account, credit account, amount and description; `date`,
+`currency_id` and `currency_factor` are inherited from the document unless the line sets
+its own.
+
+### Fixed — `create_manual_entry` failed with an undiagnosable 422
+Bexio rejects a posting line that carries no currency with a bare
+`422 validation failed` and no field information, even though the API documents
+`currency_id` as optional. `currency_id` and `currency_factor` now default to `1` (the
+company currency), which is what the call needs in the overwhelmingly common case.
+
 ## [2.5.0] - 2026-07-01
 
 ### Added — Multiple Bexio companies (mandates) from one server

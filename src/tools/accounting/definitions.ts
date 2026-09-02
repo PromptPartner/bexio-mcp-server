@@ -269,15 +269,65 @@ export const toolDefinitions: Tool[] = [
         },
         currency_id: {
           type: "integer",
-          description: "Optional currency ID (defaults to company currency)",
+          description: "Currency ID (default: 1, the company currency). bexio rejects postings without a currency.",
+          default: 1,
         },
         currency_factor: {
           type: "number",
-          description: "Optional currency exchange factor (default: 1)",
+          description: "Currency exchange factor (default: 1)",
           default: 1,
         },
       },
       required: ["date", "debit_account_id", "credit_account_id", "amount", "description"],
+    },
+  },
+  {
+    name: "create_manual_group_entry",
+    description:
+      "Create a manual GROUP entry (Sammelbuchung): one document holding many postings, e.g. a whole payroll run booked as a single voucher. Each line keeps its own debit account, credit account, amount and description; date and currency are inherited from the document unless the line overrides them. Prefer this over repeated create_manual_entry calls: it is one API round-trip instead of one per line, and the result is a single voucher that can be corrected or deleted as a unit. Bexio validates that debits equal credits.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        date: {
+          type: "string",
+          description: "Document date in YYYY-MM-DD format. Used for any line that omits its own date.",
+        },
+        entries: {
+          type: "array",
+          description: "The postings of this voucher. At least one.",
+          items: {
+            type: "object",
+            properties: {
+              debit_account_id: { type: "integer", description: "The account ID to debit" },
+              credit_account_id: { type: "integer", description: "The account ID to credit" },
+              amount: { type: "number", description: "The amount for this line (must be positive)" },
+              description: { type: "string", description: "Description of this posting" },
+              date: { type: "string", description: "Optional line date in YYYY-MM-DD; defaults to the document date" },
+              tax_id: { type: "integer", description: "Optional tax ID to apply" },
+              tax_account_id: { type: "integer", description: "Optional tax account ID" },
+              currency_id: { type: "integer", description: "Optional currency ID; defaults to the document currency" },
+              currency_factor: { type: "number", description: "Optional currency exchange factor; defaults to the document factor" },
+            },
+            required: ["debit_account_id", "credit_account_id", "amount", "description"],
+          },
+        },
+        reference_nr: {
+          type: "string",
+          description: "Optional reference number for the voucher (useful as an idempotency key when re-importing)",
+        },
+        currency_id: {
+          type: "integer",
+          description: "Currency ID for all lines that do not set their own (default: 1, the company currency)",
+          default: 1,
+        },
+        currency_factor: {
+          type: "number",
+          description: "Currency exchange factor for all lines that do not set their own (default: 1)",
+          default: 1,
+        },
+      },
+      required: ["date", "entries"],
     },
   },
   {
@@ -340,7 +390,8 @@ export const toolDefinitions: Tool[] = [
   // ===== ACCOUNTING JOURNAL (ACCT-07) =====
   {
     name: "get_journal",
-    description: "Query the accounting journal with optional date range. Returns journal entries for the specified period.",
+    description:
+      "Query the accounting journal for a date range, optionally narrowed to one account. The range is filtered server-side by bexio and re-checked locally, so a period is never silently wrong; the response reports total_matched, scanned_rows and server_side_filter. Without a date range this returns a raw journal page. limit/offset apply to the filtered result.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
@@ -352,6 +403,10 @@ export const toolDefinitions: Tool[] = [
         end_date: {
           type: "string",
           description: "End date filter in YYYY-MM-DD format",
+        },
+        account_uuid: {
+          type: "string",
+          description: "Optional: restrict the journal to a single account, by the account's uuid (from list_accounts).",
         },
         limit: {
           type: "integer",
@@ -371,7 +426,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "get_account_balances",
     description:
-      "Get account balances (Saldenliste) computed from the accounting journal. Bexio has no native balance endpoint, so balances are derived: balance = sum(debits) - sum(credits) per account over the date range. Defaults to the current business year, which includes opening/carry-forward entries and therefore reflects the current balance. Returns each account with account_no, name, debit/credit totals and balance.",
+      "Get account balances (Saldenliste) computed from the accounting journal. Bexio has no native balance endpoint, so balances are derived: balance = sum(debits) - sum(credits) per account over the date range. The range is filtered server-side and re-checked locally; the response reports scanned_rows, matched_rows, server_side_filter and truncated, so an incomplete scan is visible rather than silently wrong. Passing account_id also narrows the journal query itself to that account. Defaults to the current business year, which includes opening/carry-forward entries and therefore reflects the current balance. Returns each account with account_no, name, debit/credit totals and balance.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
