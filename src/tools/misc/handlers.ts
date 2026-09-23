@@ -9,6 +9,7 @@ import {
   ListCommentsParamsSchema,
   GetCommentParamsSchema,
   CreateCommentParamsSchema,
+  ListContactRelationsParamsSchema,
   GetContactRelationParamsSchema,
   CreateContactRelationParamsSchema,
   UpdateContactRelationParamsSchema,
@@ -43,8 +44,9 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   // Contact Relations
-  list_contact_relations: async (client) => {
-    return client.listContactRelations();
+  list_contact_relations: async (client, args) => {
+    const params = ListContactRelationsParamsSchema.parse(args);
+    return client.listContactRelations(params);
   },
 
   get_contact_relation: async (client, args) => {

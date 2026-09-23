@@ -931,8 +931,8 @@ export class BexioClient {
   }
 
   // ===== CONTACT RELATIONS =====
-  async listContactRelations(): Promise<unknown[]> {
-    return this.makeRequest("GET", "/contact_relation");
+  async listContactRelations(params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeRequest("GET", "/contact_relation", params);
   }
 
   async createContactRelation(

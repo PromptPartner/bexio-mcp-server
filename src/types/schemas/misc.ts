@@ -5,6 +5,14 @@
 
 import { z } from "zod";
 
+// List contact relations with pagination
+export const ListContactRelationsParamsSchema = z.object({
+  limit: z.number().int().positive().default(50),
+  offset: z.number().int().min(0).default(0),
+});
+
+export type ListContactRelationsParams = z.infer<typeof ListContactRelationsParamsSchema>;
+
 // ===== COMMENTS =====
 // Comments are nested under document types: kb_offer, kb_order, kb_invoice, kb_delivery
 

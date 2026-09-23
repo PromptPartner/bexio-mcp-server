@@ -78,11 +78,22 @@ export const toolDefinitions: Tool[] = [
   // Contact Relations
   {
     name: "list_contact_relations",
-    description: "List all contact relations",
+    description: "List contact relations with optional pagination",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        limit: {
+          type: "integer",
+          description: "Maximum number of contact relations to return (default: 50)",
+          default: 50,
+        },
+        offset: {
+          type: "integer",
+          description: "Number of contact relations to skip (default: 0)",
+          default: 0,
+        },
+      },
     },
   },
   {

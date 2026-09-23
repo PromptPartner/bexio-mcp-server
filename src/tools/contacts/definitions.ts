@@ -29,7 +29,7 @@ export const toolDefinitions: Tool[] = [
         },
         contact_type_id: {
           type: "integer",
-          description: "Filter by contact type ID (1=Person, 2=Company)",
+          description: "Filter by contact type ID (1=Company/Firma, 2=Person)",
         },
       },
     },

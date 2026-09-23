@@ -14,42 +14,45 @@ const POSITION_TYPES = [
     key: "default",
     label: "default (custom)",
     createHint:
-      "custom free-text line item. Fields: text (string), amount (number), unit_price (number), tax_id (integer)",
+      "Custom free-text line item. Required fields: text (string), amount (string, e.g. '2'), unit_price (string, e.g. '160'), tax_id (integer), account_id (integer — MUST be looked up via search_accounts or list_accounts, do NOT guess). Optional: discount_in_percent (string), unit_id (integer), parent_id (integer — set to a sub_position ID to nest this item inside a Sammelposition/group).",
   },
   {
     key: "item",
     label: "item (article/product)",
     createHint:
-      "article/product reference. Fields: article_id (integer), amount (number), unit_price (number), discount_in_percent (number), tax_id (integer)",
+      "Article/product from catalog. Required fields: article_id (integer), amount (string), unit_price (string), tax_id (integer), account_id (integer — MUST be looked up via search_accounts or list_accounts, do NOT guess). Optional: discount_in_percent (string), text (string override), parent_id (integer — to nest inside a sub_position group).",
   },
   {
     key: "text",
     label: "text",
-    createHint: "descriptive text block. Fields: text (string), show_pos_nr (boolean)",
+    createHint:
+      "Descriptive text block (no price). Fields: text (string, required), show_pos_nr (boolean, optional). Use for section headers, notes, or descriptions.",
   },
   {
     key: "subtotal",
     label: "subtotal",
-    createHint: "running subtotal at this position in the document. No fields needed — just provide document_type and document_id",
+    createHint:
+      "Running subtotal at this position. Sums all preceding positions since the last subtotal. No fields needed — just provide document_type and document_id.",
     noBody: true,
   },
   {
     key: "discount",
     label: "discount",
     createHint:
-      "discount line. Fields: text (string), is_percentual (boolean), value (number), discount_total (number)",
+      "Discount line. Required fields: text (string), is_percentual (boolean), value (string — percentage or absolute amount). Optional: discount_total (string).",
   },
   {
     key: "pagebreak",
     label: "pagebreak",
-    createHint: "page break for PDF generation. No fields needed — just provide document_type and document_id",
+    createHint:
+      "Page break for PDF generation. No fields needed — just provide document_type and document_id.",
     noBody: true,
   },
   {
     key: "sub",
-    label: "sub (nested)",
+    label: "sub (Sammelposition/group header)",
     createHint:
-      "nested sub-position group. Fields: text (string, required), show_pos_nr (boolean)",
+      "Group header (Sammelposition) that groups child positions. Fields: text (string, required — group title), show_pos_nr (boolean, optional). Does NOT accept price fields (amount, unit_price, tax_id). Prices come from child positions created with create_default_position using parent_id set to this position's ID.",
   },
 ] as const;
 
