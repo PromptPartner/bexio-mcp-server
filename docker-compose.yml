@@ -1,0 +1,66 @@
+# bexio-mcp-gateway with automatic HTTPS (Caddy).
+#
+# Setup (details in docs/docker.md):
+#   cp gateway.env.example .env        # fill in domain and Bexio client id
+#   ./scripts/init-secrets.sh          # creates secrets/ and config/clients.json
+#   docker compose up -d --build
+#   open https://<GATEWAY_DOMAIN>/admin and connect "backoffice"
+
+services:
+  bexio-mcp:
+    build: .
+    image: ghcr.io/monswyk/bexio-mcp-gateway:latest
+    restart: unless-stopped
+    environment:
+      PUBLIC_BASE_URL: https://${GATEWAY_DOMAIN:?set GATEWAY_DOMAIN in .env}
+      BEXIO_CLIENT_ID: ${BEXIO_CLIENT_ID:?set BEXIO_CLIENT_ID in .env}
+      BEXIO_CLIENT_SECRET_FILE: /run/secrets/bexio_client_secret
+      TOKEN_ENCRYPTION_KEY_FILE: /run/secrets/token_encryption_key
+      GATEWAY_ADMIN_KEY_FILE: /run/secrets/gateway_admin_key
+      # Optional: narrow the Bexio permissions or the tool set.
+      BEXIO_SCOPES: ${BEXIO_SCOPES:-}
+      BEXIO_ENABLED_CATEGORIES: ${BEXIO_ENABLED_CATEGORIES:-}
+      MCP_SESSION_TTL_MINUTES: ${MCP_SESSION_TTL_MINUTES:-60}
+    secrets:
+      - bexio_client_secret
+      - token_encryption_key
+      - gateway_admin_key
+    volumes:
+      - bexio-data:/data
+      # Directory mount (not a single file) so edits to clients.json are picked up live.
+      - ./config:/config
+    expose:
+      - "8000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - bexio-mcp
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      GATEWAY_DOMAIN: ${GATEWAY_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+secrets:
+  bexio_client_secret:
+    file: ./secrets/bexio_client_secret
+  token_encryption_key:
+    file: ./secrets/token_encryption_key
+  gateway_admin_key:
+    file: ./secrets/gateway_admin_key
+
+volumes:
+  bexio-data:
+  caddy-data:
+  caddy-config:

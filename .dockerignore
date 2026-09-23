@@ -1,0 +1,11 @@
+.git
+.github
+.planning
+**/node_modules
+**/dist
+**/.env
+.env*
+secrets
+config
+docs
+*.mcpb

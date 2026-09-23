@@ -1,3 +1,18 @@
+# bexio-mcp-gateway
+
+> **This is a fork of [promptpartner/bexio-mcp-server](https://github.com/promptpartner/bexio-mcp-server)** that adds a **gateway mode** for teams: one Docker container that several Claude Desktop users connect to.
+>
+> - Logs in to Bexio via **OpenID Connect** once (admin consent in the browser) and refreshes the token in the background. No Personal Access Tokens, which expire after 60 days.
+> - Each MCP client gets its **own access key**, mapped to a Bexio connection (for example the shared `backoffice` user, or later one connection per Bexio user). Keys can be added or revoked without a restart.
+> - MCP **Streamable HTTP** on `/mcp`, admin page on `/admin`, audit log of every tool call.
+> - Includes API fixes from the forks by [abteilung](https://github.com/abteilung/bexio-mcp-server) and [Fabrik4](https://github.com/Fabrik4/bexio-mcp-server). The OAuth design follows [asig/bexio-mcp-server](https://github.com/asig/bexio-mcp-server).
+>
+> **Setup: [docs/docker.md](docs/docker.md).** The stdio and HTTP modes described below still work unchanged.
+>
+> Not affiliated with bexio AG.
+
+---
+
 # @promptpartner/bexio-mcp-server
 
 Complete Swiss accounting integration for [Bexio](https://www.bexio.com/) via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Works with **Claude Desktop**, **n8n**, and any MCP-compatible client.

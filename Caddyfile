@@ -1,0 +1,4 @@
+{$GATEWAY_DOMAIN} {
+	encode gzip
+	reverse_proxy bexio-mcp:8000
+}

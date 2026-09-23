@@ -18,3 +18,7 @@ src/.env
 
 # Build artifacts (committed separately)
 *.mcpb
+
+# Gateway deployment (secrets and client key hashes)
+/secrets/
+/config/

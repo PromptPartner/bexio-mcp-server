@@ -20,6 +20,8 @@
     "dev": "tsx watch src/index.ts",
     "dev:ui": "vite build --watch",
     "start": "node dist/index.js",
+    "start:gateway": "node dist/index.js --mode gateway",
+    "client:add": "node dist/cli/client-add.js",
     "test": "vitest",
     "type-check": "tsc --noEmit",
     "clean": "node -e \"const fs=require('fs'); if(fs.existsSync('dist')){fs.rmSync('dist',{recursive:true}); console.log('Cleaned dist/')}\"",

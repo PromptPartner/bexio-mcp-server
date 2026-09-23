@@ -327,6 +327,6 @@ ${connRows || '<tr><td colspan="7">No connection yet.</td></tr>'}</table>
 <h2>Clients</h2>
 <table><tr><th>Name</th><th>Connection</th><th>State</th></tr>
 ${clientRows || '<tr><td colspan="3">No clients in clients.json.</td></tr>'}</table>
-<p>Add clients with <code>node dist/cli/client-add.js &lt;name&gt; &lt;connection&gt;</code>; changes to clients.json apply without restart.</p>`
+<p>Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;connection&gt;</code> on the Docker host; changes to clients.json apply without restart.</p>`
   );
 }
