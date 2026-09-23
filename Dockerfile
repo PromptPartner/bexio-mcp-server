@@ -36,7 +36,9 @@ ENV NODE_ENV=production \
 
 RUN groupadd --gid 1001 mcp && \
     useradd --uid 1001 --gid mcp --shell /bin/false --create-home mcp && \
-    mkdir -p /data /config && chown mcp:mcp /data /config
+    mkdir -p /data /config && \
+    printf '%s\n' '{}' > /config/clients.json && \
+    chown -R mcp:mcp /data /config
 
 COPY --from=build --chown=mcp:mcp /app/dist ./dist
 COPY --from=build --chown=mcp:mcp /app/node_modules ./node_modules

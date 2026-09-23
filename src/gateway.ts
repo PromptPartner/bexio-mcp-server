@@ -21,6 +21,14 @@ export interface GatewayArgs {
   bexioBaseUrl: string;
 }
 
+/** An empty list is valid: the admin page works, and clients are added afterwards. */
+function ensureClientsFile(filePath: string): void {
+  if (fs.existsSync(filePath)) return;
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, "{}\n", { encoding: "utf8", mode: 0o644 });
+  logger.warn(`${filePath} did not exist; created an empty client list.`);
+}
+
 function readSetting(name: string, env: NodeJS.ProcessEnv): string | undefined {
   const file = env[`${name}_FILE`]?.trim();
   if (file) {
@@ -58,9 +66,7 @@ export async function startGateway(args: GatewayArgs, env: NodeJS.ProcessEnv = p
   const clientsFile = readSetting("MCP_CLIENTS_FILE", env) ?? "/config/clients.json";
   const sessionTtlMinutes = Number(readSetting("MCP_SESSION_TTL_MINUTES", env) ?? "60");
 
-  if (!fs.existsSync(clientsFile)) {
-    throw new Error(`${clientsFile} does not exist. Create it (it may be just {}) and add clients with client-add.`);
-  }
+  ensureClientsFile(clientsFile);
 
   const store = new ConnectionStore(path.join(dataDir, "connections.enc"), encryptionKey);
   const connections = new ConnectionManager({
