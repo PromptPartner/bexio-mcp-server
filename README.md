@@ -1,396 +1,111 @@
 # bexio-mcp-gateway
 
-> **This is a fork of [promptpartner/bexio-mcp-server](https://github.com/promptpartner/bexio-mcp-server)** that adds a **gateway mode** for teams: one Docker container that several Claude Desktop users connect to.
->
-> - Logs in to Bexio via **OpenID Connect** once (admin consent in the browser) and refreshes the token in the background. No Personal Access Tokens, which expire after 60 days.
-> - Each MCP client gets its **own access key**, mapped to a Bexio connection (for example the shared `backoffice` user, or later one connection per Bexio user). Keys can be added or revoked without a restart.
-> - MCP **Streamable HTTP** on `/mcp`, admin page on `/admin`, audit log of every tool call.
-> - Includes API fixes from the forks by [abteilung](https://github.com/abteilung/bexio-mcp-server) and [Fabrik4](https://github.com/Fabrik4/bexio-mcp-server). The OAuth design follows [asig/bexio-mcp-server](https://github.com/asig/bexio-mcp-server).
->
-> **Setup: [docs/docker.md](docs/docker.md).** The stdio and HTTP modes described below still work unchanged.
->
-> Not affiliated with bexio AG.
+One container that lets several Claude Desktop users work with [Bexio](https://www.bexio.com/) through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
----
+An admin signs in to Bexio once in the browser. After that the gateway refreshes the login in the background. Each person gets their own access key. Personal Access Tokens are not used: they expire after 60 days, must not be shared, and always have full rights.
 
-# @promptpartner/bexio-mcp-server
+This is a fork of [promptpartner/bexio-mcp-server](https://github.com/promptpartner/bexio-mcp-server). It is not affiliated with bexio AG.
 
-Complete Swiss accounting integration for [Bexio](https://www.bexio.com/) via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Works with **Claude Desktop**, **n8n**, and any MCP-compatible client.
+```
+Claude Desktop (anna) ─┐                         ┌──────────────────────────┐
+Claude Desktop (beat) ─┼─ HTTPS + access key ──▶ │  /mcp                    │── OAuth ──▶ Bexio API
+                       │                         │  connection "backoffice" │
+                       └                         └──────────────────────────┘
+```
 
-Manage invoices, contacts, projects, time tracking, and 300+ more tools through AI conversation or workflow automation.
+- A **connection** is one Bexio login, for example the shared `backoffice` user. Several clients can share it. A later Bexio user is another connection.
+- A **client** is one Claude Desktop installation. Its access key is stored only as a SHA-256 hash. Adding or revoking a client does not need a restart.
 
-> ⚠️ **Early Release Software**
->
-> This project is under active development. While it's functional and tested, you may encounter bugs or unexpected behavior. Features will continue to be added and improved over time. Please [report any issues](https://github.com/promptpartner/bexio-mcp-server/issues) you find!
+## Deploy with Coolify
 
-## Compatibility
+Coolify builds the `Dockerfile` on `master` and terminates HTTPS. Point a domain at the Coolify proxy, then:
 
-| Client | Transport | Status |
-|--------|-----------|--------|
-| [Claude Desktop](https://claude.ai/download) | stdio | ✅ Fully supported |
-| [n8n](https://n8n.io/) | HTTP | ✅ Fully supported |
-| Other MCP clients | stdio/HTTP | ✅ Should work |
+1. Create an app on [developer.bexio.com](https://developer.bexio.com). Set the redirect URL to `https://<your-domain>/oauth/callback`. Copy the client ID and client secret.
+2. In Coolify, set the build pack to **Dockerfile**, the branch to `master`, and **Ports Exposes** to a free port on that server (for example `3091`).
+3. Add persistent storage mounted at `/data`. The Bexio login and the client list live there. Without this volume a redeploy forgets both.
+4. Set these variables and mark them **Available at Runtime**:
 
-## Quick Start
+| Variable | Value |
+|----------|--------|
+| `PUBLIC_BASE_URL` | `https://<your-domain>` |
+| `BEXIO_CLIENT_ID` | from the Bexio app |
+| `BEXIO_CLIENT_SECRET` | from the Bexio app |
+| `TOKEN_ENCRYPTION_KEY` | `openssl rand -hex 32` — back this up |
+| `GATEWAY_ADMIN_KEY` | password for `/admin`, at least 16 characters |
+| `PORT` | the same port as **Ports Exposes** |
+| `MCP_CLIENTS_FILE` | `/data/clients.json` |
 
-### For Claude Desktop
+`TOKEN_ENCRYPTION_KEY` encrypts the stored Bexio login. Lose it and the connection has to be created again.
 
-**Option A: MCPB Bundle (Easiest)**
+5. Deploy. `https://<your-domain>/health` answers `{"status":"degraded"}` until a Bexio connection exists, then `{"status":"ok"}`.
 
-1. Download the latest `.mcpb` file from [GitHub Releases](https://github.com/promptpartner/bexio-mcp-server/releases/latest)
-2. In Claude Desktop, go to **Settings → Extensions**
-3. Install the extension using one of these methods:
-   - **Double-click** the downloaded `.mcpb` file, or
-   - **Drag and drop** the file onto the Extensions window, or
-   - Click **Advanced Settings → Install Extension** and select the file
-4. Enter your Bexio API token when prompted
+A Docker Compose file with its own Caddy proxy is also in the repo. See [docs/docker.md](docs/docker.md) if you are not using Coolify.
 
-**Option B: npm**
+## Connect Bexio
 
-Add to `claude_desktop_config.json`:
+Open `https://<your-domain>/admin`. The user name can be anything; the password is `GATEWAY_ADMIN_KEY`.
+
+Enter a label (`backoffice` is filled in when nothing is connected yet) and choose **Connect with Bexio**. Sign in as the Bexio user whose permissions the tools should have, then approve the consent screen. The row shows `active` together with the company and the user.
+
+The gateway requests the scopes the tools need. Payroll scopes are read-only. Narrow them with `BEXIO_SCOPES` (the list must contain `offline_access`). Bexio still enforces what that user is allowed to do.
+
+## Add a Claude Desktop user
+
+In the Coolify terminal of the running container:
+
+```bash
+node dist/cli/client-add.js anna backoffice --file /data/clients.json
+```
+
+The command prints the access key (`bmg_…`) once. Running it again for the same name replaces the key. To revoke someone, delete their entry in `/data/clients.json` or set `"disabled": true`.
+
+On the user's machine, [Node.js](https://nodejs.org/) must be installed. Claude Desktop reaches the gateway through [`mcp-remote`](https://www.npmjs.com/package/mcp-remote). Edit `claude_desktop_config.json`:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "bexio": {
       "command": "npx",
-      "args": ["@promptpartner/bexio-mcp-server"],
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://<your-domain>/mcp",
+        "--header",
+        "Authorization:${BEXIO_AUTH}"
+      ],
       "env": {
-        "BEXIO_API_TOKEN": "your-token-here"
+        "BEXIO_AUTH": "Bearer bmg_the-access-key"
       }
     }
   }
 }
 ```
 
-Config location:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+The key is passed through `BEXIO_AUTH` because Claude Desktop on Windows breaks spaces inside `args`. Restart Claude Desktop after saving.
 
-### For n8n and Other HTTP Clients
+## Operations
 
-Start the server in HTTP mode:
+Every tool call is written to the container log as one JSON line, with client, connection, tool, duration and outcome. Arguments and results are not logged.
 
-```bash
-BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --port 8000
-```
+If `/admin` shows `reconnect required`, use **Reconnect** on that row. Client keys stay valid. This happens when consent was revoked in Bexio, or when the gateway was offline for more than a year (the refresh token then expires).
 
-The server exposes MCP over HTTP at `http://localhost:8000`. Configure your MCP client to connect to this endpoint.
+Back up the `/data` volume and `TOKEN_ENCRYPTION_KEY`.
 
-### For Other stdio Clients
+`BEXIO_ENABLED_CATEGORIES` limits which tool groups are registered, which keeps Claude faster. Example: `contacts,invoices,quotes,orders,projects,timetracking`. Known groups: `reference`, `company`, `banking`, `projects`, `timetracking`, `accounting`, `purchase`, `files`, `payroll`, `contacts`, `invoices`, `orders`, `quotes`, `payments`, `reminders`, `deliveries`, `items`, `reports`, `users`, `misc`, `notes`, `tasks`, `stock`, `docs`, `positions`.
 
-```bash
-BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server
-```
+## Single-user mode
 
-Or build from source:
+`stdio` and `http` from the original project still start when `MCP_MODE` is not `gateway`. They use `BEXIO_API_TOKEN` instead of OAuth. The company-switch tools are available only in that mode.
 
-```bash
-git clone https://github.com/promptpartner/bexio-mcp-server
-cd bexio-mcp-server/src
-npm install && npm run build
-BEXIO_API_TOKEN=your-token node dist/index.js
-```
+## Credits
 
-## Getting Your Bexio API Token
-
-1. Go to [developer.bexio.com](https://developer.bexio.com/)
-2. Log in with your regular Bexio account
-3. Navigate to **Personal Access Tokens**
-4. Click **Create New Token**
-5. Copy the token and use it in your configuration
-
-## Features
-
-This MCP server provides **314 tools** across all Bexio domains:
-
-### Contacts & CRM
-- Create, update, search contacts
-- Contact groups, sectors, salutations, titles
-- Contact relations management
-
-### Invoices & Sales
-- Full invoice lifecycle (create, issue, send, cancel)
-- Quotes with accept/decline workflows
-- Orders with delivery management
-- Incoming payments tracking
-- Interactive invoice preview (Claude Desktop)
-
-### Banking & Payments
-- Swiss QR-bill payment support (QR-IBAN)
-- Standard IBAN payments (ISO 20022)
-- Currency management (CHF, EUR)
-- Bank account management
-
-### Projects & Time Tracking
-- Project management with types and statuses
-- Milestones and work packages
-- Timesheet entries with duration tracking
-- Business activities and communication types
-
-### Accounting
-- Chart of accounts
-- Manual journal entries
-- Business years and VAT periods
-- Account groups
-
-### Purchase & Expenses
-- Bills (creditor invoices)
-- Expenses and purchase orders
-- Outgoing payments
-
-### Files & Documents
-- Document upload/download
-- File management
-
-### Payroll (requires Bexio Payroll module)
-- Employee management
-- Absence tracking
-- Payroll documents
-
-## Examples
-
-Here are some real-world examples of using the Bexio MCP server with Claude:
-
-### Example 1: Finding Overdue Invoices
-
-**Prompt:**
-> "Show me all overdue invoices"
-
-**What happens:**
-Claude uses the `get_overdue_invoices` tool to query Bexio for all invoices past their due date.
-
-**Response:**
-> Found 3 overdue invoices:
->
-> | Invoice # | Customer | Amount | Due Date | Days Overdue |
-> |-----------|----------|--------|----------|--------------|
-> | INV-2024-001 | Acme AG | CHF 2,450.00 | 2024-01-15 | 18 days |
-> | INV-2024-003 | Tech GmbH | CHF 890.50 | 2024-01-20 | 13 days |
-> | INV-2024-007 | Swiss Corp | CHF 5,200.00 | 2024-01-25 | 8 days |
->
-> Total overdue: CHF 8,540.50
-
----
-
-### Example 2: Creating an Invoice
-
-**Prompt:**
-> "Create an invoice for contact 'Sunrise AG' with two items: 10 hours of consulting at CHF 150/hour and a software license for CHF 500"
-
-**What happens:**
-Claude uses `find_contact_by_name` to locate the customer, then `create_invoice` with the specified line items.
-
-**Response:**
-> Created Invoice INV-2024-015 for Sunrise AG:
->
-> - 10x Consulting Hours @ CHF 150.00 = CHF 1,500.00
-> - 1x Software License @ CHF 500.00 = CHF 500.00
->
-> Subtotal: CHF 2,000.00
-> VAT (8.1%): CHF 162.00
-> **Total: CHF 2,162.00**
->
-> Invoice is in draft status. Say "issue invoice INV-2024-015" to finalize it.
-
----
-
-### Example 3: Project Time Summary
-
-**Prompt:**
-> "How much time was logged on project 'Website Redesign' this month?"
-
-**What happens:**
-Claude uses `search_projects` to find the project, then `search_timesheets` to get time entries filtered by project and date range.
-
-**Response:**
-> Time logged on "Website Redesign" (January 2024):
->
-> | Team Member | Hours | Activities |
-> |-------------|-------|------------|
-> | Anna M. | 24:30 | Design, Meetings |
-> | Marco K. | 18:15 | Development |
-> | Lisa B. | 8:00 | Content Writing |
->
-> **Total: 50 hours 45 minutes**
->
-> Budget used: 50.75 of 80 hours (63%)
-
----
-
-### Example 4: Customer Revenue Report
-
-**Prompt:**
-> "What's my revenue from 'Tech Solutions GmbH' this year?"
-
-**What happens:**
-Claude uses `find_contact_by_name` to identify the customer, then `get_customer_revenue_report` to calculate total revenue from paid invoices.
-
-**Response:**
-> Revenue from Tech Solutions GmbH (2024):
->
-> - Q1: CHF 12,450.00 (3 invoices)
-> - Q2: CHF 8,200.00 (2 invoices)
-> - Q3: CHF 15,800.00 (4 invoices)
-> - Q4: CHF 6,500.00 (2 invoices, 1 pending)
->
-> **Total paid: CHF 42,950.00**
-> **Pending: CHF 3,200.00**
-
-## Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `BEXIO_API_TOKEN` | Yes* | - | Your Bexio API token (single company) |
-| `BEXIO_API_TOKENS` | Yes* | - | Multiple companies — see [Multiple Companies](#multiple-companies-mandates) |
-| `BEXIO_DEFAULT_COMPANY` | No | first | Which company is active at startup |
-| `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
-| `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
-
-\* Provide either `BEXIO_API_TOKEN` (one company) or `BEXIO_API_TOKENS` (several).
-
-### Reducing Token Budget — Category Whitelist
-
-All tools are registered by default. For focused workflows or smaller models,
-registering only a subset reduces the system-prompt token cost. Set
-`BEXIO_ENABLED_CATEGORIES` to a comma-separated list:
-
-```bash
-BEXIO_ENABLED_CATEGORIES=contacts,invoices,purchase,banking,quotes,projects
-```
-
-Available categories: `reference`, `company`, `banking`, `projects`,
-`timetracking`, `accounting`, `purchase`, `files`, `payroll`, `contacts`,
-`invoices`, `orders`, `quotes`, `payments`, `reminders`, `deliveries`,
-`items`, `reports`, `users`, `misc`, `notes`, `tasks`, `stock`, `docs`,
-`positions`. Unknown names are ignored (logged to stderr); empty/unset = all
-enabled (backward compatible).
-
-## Multiple Companies (Mandates)
-
-Bexio binds each API token to a **single company (mandate)** — there is no token that
-spans companies. To work with several companies, generate one token per company (switch
-to that company in Bexio first, then Settings → API Tokens), and configure them all on a
-**single** server instance. Two new tools — `list_companies` and `select_company` — let
-you switch the active company in conversation ("in Globex, list open invoices"). This
-avoids running one server per company and the duplicated tool-context that comes with it.
-
-Set `BEXIO_API_TOKENS` instead of (or alongside) `BEXIO_API_TOKEN`, as a comma-separated
-list of `label:token` pairs (or a JSON object). `BEXIO_DEFAULT_COMPANY` picks the company
-active at startup (defaults to the first):
-
-```json
-{
-  "mcpServers": {
-    "bexio": {
-      "command": "npx",
-      "args": ["@promptpartner/bexio-mcp-server"],
-      "env": {
-        "BEXIO_API_TOKENS": "Acme:token-for-acme,Globex:token-for-globex",
-        "BEXIO_DEFAULT_COMPANY": "Acme"
-      }
-    }
-  }
-}
-```
-
-Then just ask Claude things like *"switch to Globex and show this month's invoices."*
-`list_companies` shows the configured companies and which one is active; in
-multi-company mode each response also notes the `active_company` so it's always clear
-which company a result came from. Tokens are never logged or returned. The two control
-tools appear only when `BEXIO_API_TOKENS` is set, so single-company setups are unchanged.
-
-> **HTTP/n8n note:** the active company is process-global. For concurrent multi-tenant
-> HTTP deployments, run one instance per company instead.
-
-## Command Line Options
-
-```bash
-npx @promptpartner/bexio-mcp-server [options]
-
-Options:
-  --mode <stdio|http>  Transport mode (default: stdio)
-  --host <address>     HTTP host (default: 0.0.0.0)
-  --port <number>      HTTP port (default: 8000)
-```
-
-## Troubleshooting
-
-### "Invalid API token" error
-- Verify your token at [developer.bexio.com](https://developer.bexio.com/) > Personal Access Tokens
-- Ensure the token has not expired
-- Check that the token has the required permissions
-
-### "Connection refused" error
-- Check your internet connection
-- Verify BEXIO_BASE_URL is correct (default: https://api.bexio.com/2.0)
-
-### Payroll tools return "module not available"
-- Payroll tools require the Bexio Payroll module subscription
-- Contact Bexio support to enable the module
-
-### Claude Desktop doesn't see the server
-- Restart Claude Desktop after configuration changes
-- Verify the config file path is correct for your OS
-- Check Claude Desktop logs for error messages
-
-## Privacy Policy
-
-This MCP server acts as a pass-through to the Bexio API and does not store any data. For full details, see our [Privacy Policy](PRIVACY.md).
-
-Your data is processed according to [Bexio's Privacy Policy](https://www.bexio.com/en-CH/privacy-policy).
-
-## Support
-
-- **Issues & Bug Reports:** [GitHub Issues](https://github.com/promptpartner/bexio-mcp-server/issues)
-- **Email:** lukas@promptpartner.ai
-
-## Support the Project
-
-If this project saves you time or helps your business, consider buying me a coffee! ☕
-
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/lukashertig)
-
-Your support helps keep this project maintained and improved!
-
-## Author
-
-Created by [Lukas Hertig](https://linkedin.com/in/lukashertig) from [PromptPartner.ai](https://promptpartner.ai)
-
-## Acknowledgments
-
-This project builds upon the original Bexio MCP server created by [Sebastian Bryner](https://www.linkedin.com/in/sebastian-bryner/) of [bryner.tech](https://bryner.tech/). His v1.0 implementation provided the foundational architecture and initial 83 tools that made this expanded v2.0 possible.
-
-### Development Tools
-
-The expansion from 83 to 314 tools was developed using:
-
-- **[GSD Framework](https://github.com/casualjim/get-shit-done)** - The "Get Shit Done" planning framework for structured AI-assisted development workflows
-
-These tools helped transform a 4-weeks estimated project into a 2-days reality, demonstrating the potential of AI-augmented software development.
-
-## Disclaimer
-
-This is an independent, community-driven project and is **not affiliated with, endorsed by, or officially connected to Bexio AG** in any way. "Bexio" is a trademark of Bexio AG. This project simply provides an integration layer to the publicly available Bexio API.
-
-Use of this software is at your own risk. The authors are not responsible for any issues arising from its use with your Bexio account.
+- Original server: [promptpartner/bexio-mcp-server](https://github.com/promptpartner/bexio-mcp-server) by [Lukas Hertig](https://promptpartner.ai), building on [Sebastian Bryner](https://bryner.tech/).
+- API fixes carried over from [abteilung/bexio-mcp-server](https://github.com/abteilung/bexio-mcp-server) and [Fabrik4/bexio-mcp](https://github.com/Fabrik4/bexio-mcp).
+- OAuth design adapted from [asig/bexio-mcp-server](https://github.com/asig/bexio-mcp-server) (MIT).
 
 ## License
 
-MIT - See [LICENSE](LICENSE) for details.
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=promptpartner%2Fbexio-mcp-server&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=promptpartner/bexio-mcp-server&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=promptpartner/bexio-mcp-server&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=promptpartner/bexio-mcp-server&type=date&legend=top-left" />
- </picture>
-</a>
-
-## Links
-
-- [Bexio API Documentation](https://docs.bexio.com/)
-- [MCP Protocol Specification](https://modelcontextprotocol.io/)
-- [PromptPartner.ai](https://promptpartner.ai)
+[MIT](LICENSE). Use of this software is at your own risk. The authors are not responsible for issues arising from its use with a Bexio account. "Bexio" is a trademark of Bexio AG.
