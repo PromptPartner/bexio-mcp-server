@@ -9,9 +9,12 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { z } from "zod";
 import { logger } from "./logger.js";
 import { companyManager } from "./company-manager.js";
+import type { BexioClient } from "./bexio-client.js";
+import { auditToolCall } from "./audit.js";
 import { getAllToolDefinitions, getHandler } from "./tools/index.js";
 import { formatSuccessResponse, formatErrorResponse, McpError } from "./shared/index.js";
 import { registerUIResources } from "./ui-resources.js";
@@ -23,14 +26,36 @@ const SERVER_NAME = "bexio-mcp-server";
 // is inlined rather than read back from package.json.)
 const SERVER_VERSION = "2.5.0";
 
+/** Identifies the caller in gateway mode; enables the audit log. */
+export interface SessionContext {
+  clientName: string;
+  connection: string;
+}
+
+export interface BexioMcpServerOptions {
+  /** Resolves the Bexio client per tool call. Defaults to the active company (stdio/n8n). */
+  getClient?: () => BexioClient;
+  context?: SessionContext;
+}
+
+// Converting 314 JSON schemas is not free; gateway mode builds one McpServer per session.
+const inputShapeCache = new Map<string, z.ZodRawShape>();
+
+// Tools that switch the process-global company; a gateway session is bound to one connection.
+const COMPANY_SWITCH_TOOLS = new Set(["list_companies", "select_company"]);
+
 export class BexioMcpServer {
   private server: McpServer;
+  private getClient: () => BexioClient;
+  private context: SessionContext | undefined;
 
-  constructor() {
+  constructor(options: BexioMcpServerOptions = {}) {
     this.server = new McpServer({
       name: SERVER_NAME,
       version: SERVER_VERSION,
     });
+    this.getClient = options.getClient ?? (() => companyManager.getActiveClient());
+    this.context = options.context;
   }
 
   /** Register tools. The active Bexio company is resolved per call via
@@ -46,7 +71,7 @@ export class BexioMcpServer {
     const toolCount = getAllToolDefinitions().length;
     if (process.env["BEXIO_ENABLE_UI"] === "true") {
       try {
-        registerUIResources(this.server, companyManager.getActiveClient());
+        registerUIResources(this.server, this.getClient());
         logger.info(`Initialized with ${toolCount} tools + 3 UI tools (MCP Apps enabled)`);
       } catch (error) {
         logger.error(
@@ -54,7 +79,7 @@ export class BexioMcpServer {
           error instanceof Error ? (error.stack ?? error.message) : String(error)
         );
       }
-    } else {
+    } else if (!this.context) {
       logger.info(`Initialized with ${toolCount} tools (UI disabled; set BEXIO_ENABLE_UI=true to enable MCP Apps panels)`);
     }
   }
@@ -76,7 +101,9 @@ export class BexioMcpServer {
     // Register all domain tools
     const definitions = getAllToolDefinitions();
 
+    let registered = 0;
     for (const def of definitions) {
+      if (this.context && COMPANY_SWITCH_TOOLS.has(def.name)) continue;
       const handler = getHandler(def.name);
       if (!handler) {
         logger.warn(`No handler found for tool: ${def.name}`);
@@ -89,12 +116,15 @@ export class BexioMcpServer {
       // an empty shape here is what previously caused every parametrized tool to
       // receive `undefined` (see schema-converter.ts). Handlers still re-validate
       // with their domain Zod schema.
-      let inputShape: z.ZodRawShape;
-      try {
-        inputShape = jsonSchemaToZodShape(def.inputSchema);
-      } catch (error) {
-        logger.warn(`Failed to convert inputSchema for tool ${def.name}; registering with empty shape`, error);
-        inputShape = {};
+      let inputShape = inputShapeCache.get(def.name);
+      if (!inputShape) {
+        try {
+          inputShape = jsonSchemaToZodShape(def.inputSchema);
+        } catch (error) {
+          logger.warn(`Failed to convert inputSchema for tool ${def.name}; registering with empty shape`, error);
+          inputShape = {};
+        }
+        inputShapeCache.set(def.name, inputShape);
       }
 
       // Cast the dynamically-built shape to `any` for the SDK call: with a
@@ -107,16 +137,19 @@ export class BexioMcpServer {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         inputShape as any,
         async (args: unknown) => {
+          const startedAt = Date.now();
           try {
-            // Resolve the currently-active company's client per call so
-            // select_company switches take effect immediately.
-            const client = companyManager.getActiveClient();
+            // Resolve the client per call so select_company switches (stdio)
+            // and connection refreshes (gateway) take effect immediately.
+            const client = this.getClient();
             const result = await handler(client, args);
-            const meta = companyManager.hasMultiple()
+            const meta = !this.context && companyManager.hasMultiple()
               ? { active_company: companyManager.getActiveLabel() }
               : undefined;
+            if (this.context) auditToolCall(this.context, def.name, startedAt);
             return formatSuccessResponse(def.name, result, meta);
           } catch (error) {
+            if (this.context) auditToolCall(this.context, def.name, startedAt, error);
             if (error instanceof McpError) {
               return formatErrorResponse(error);
             }
@@ -133,9 +166,21 @@ export class BexioMcpServer {
           }
         }
       );
+      registered++;
     }
 
-    logger.info(`Registered ${definitions.length + 1} tools (including ping)`);
+    const message = `Registered ${registered + 1} tools (including ping)`;
+    if (this.context) logger.debug(message);
+    else logger.info(message);
+  }
+
+  /** Attach a transport managed by the caller (gateway mode). */
+  async connect(transport: Transport): Promise<void> {
+    await this.server.connect(transport);
+  }
+
+  async close(): Promise<void> {
+    await this.server.close();
   }
 
   async run(): Promise<void> {

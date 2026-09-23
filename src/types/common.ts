@@ -8,7 +8,12 @@ import { z } from "zod";
 // Configuration
 export interface BexioConfig {
   baseUrl: string;
-  apiToken: string;
+  /** Static token (Personal Access Token). Either this or getToken is required. */
+  apiToken?: string;
+  /** Resolves a current access token per request (OAuth connections). */
+  getToken?: () => Promise<string>;
+  /** Called once on HTTP 401 before the request is retried. */
+  onUnauthorized?: () => Promise<void>;
 }
 
 // Pagination

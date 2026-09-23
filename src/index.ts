@@ -35,7 +35,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 interface ParsedArgs {
-  mode: "stdio" | "http";
+  mode: "stdio" | "http" | "gateway";
   host: string;
   port: number;
 }
@@ -43,18 +43,19 @@ interface ParsedArgs {
 function parseArgs(): ParsedArgs {
   const args = process.argv.slice(2);
 
-  // Parse --mode
+  // Parse --mode (MCP_MODE as fallback, e.g. in Docker)
   const modeIndex = args.indexOf("--mode");
-  const modeArg = modeIndex !== -1 ? args[modeIndex + 1] : "stdio";
-  const mode = modeArg === "http" ? "http" : "stdio";
+  const modeArg = modeIndex !== -1 ? args[modeIndex + 1] : process.env["MCP_MODE"] ?? "stdio";
+  const mode =
+    modeArg === "http" ? "http" : modeArg === "gateway" || modeArg === "streamable-http" ? "gateway" : "stdio";
 
-  // Parse --host (for HTTP mode)
+  // Parse --host (for HTTP modes)
   const hostIndex = args.indexOf("--host");
-  const host = hostIndex !== -1 ? args[hostIndex + 1] ?? "0.0.0.0" : "0.0.0.0";
+  const host = (hostIndex !== -1 ? args[hostIndex + 1] : process.env["HOST"]) ?? "0.0.0.0";
 
-  // Parse --port (for HTTP mode)
+  // Parse --port (for HTTP modes)
   const portIndex = args.indexOf("--port");
-  const portStr = portIndex !== -1 ? args[portIndex + 1] : "8000";
+  const portStr = (portIndex !== -1 ? args[portIndex + 1] : process.env["PORT"]) ?? "8000";
   const port = parseInt(portStr, 10) || 8000;
 
   return { mode, host, port };
@@ -84,6 +85,14 @@ async function main(): Promise<void> {
     process.env["BEXIO_BASE_URL"] ?? "https://api.bexio.com/2.0";
 
   const { mode, host, port } = parseArgs();
+
+  if (mode === "gateway") {
+    // OAuth connections replace BEXIO_API_TOKEN(S) in this mode.
+    logger.info(`Starting in gateway mode on ${host}:${port}`);
+    const { startGateway } = await import("./gateway.js");
+    await startGateway({ host, port, bexioBaseUrl: BEXIO_BASE_URL });
+    return;
+  }
 
   // v2.5.0: one or many companies. Single BEXIO_API_TOKEN → one company ("default");
   // BEXIO_API_TOKENS → multiple, switchable via the select_company tool.

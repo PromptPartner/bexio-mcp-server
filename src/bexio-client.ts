@@ -35,21 +35,35 @@ export class BexioClient {
   private config: BexioConfig;
 
   constructor(config: BexioConfig) {
+    if (!config.apiToken && !config.getToken) {
+      throw new Error("BexioClient requires either apiToken or getToken");
+    }
     this.config = config;
     this.client = axios.create({
       baseURL: config.baseUrl,
       headers: {
-        Authorization: `Bearer ${config.apiToken}`,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
       timeout: 30000,
     });
 
+    this.client.interceptors.request.use(async (request) => {
+      request.headers.set("Authorization", `Bearer ${await this.getToken()}`);
+      return request;
+    });
+
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
+      async (error) => {
+        // OAuth access tokens can be revoked or expire early: refresh once and retry.
+        const original = error.config as (typeof error.config & { _bexioRetried?: boolean }) | undefined;
+        if (error.response?.status === 401 && this.config.onUnauthorized && original && !original._bexioRetried) {
+          original._bexioRetried = true;
+          await this.config.onUnauthorized();
+          return this.client.request(original);
+        }
         if (error.response) {
           const status = error.response.status;
           const data = error.response.data;
@@ -83,6 +97,10 @@ export class BexioClient {
         }
       }
     );
+  }
+
+  private async getToken(): Promise<string> {
+    return this.config.getToken ? this.config.getToken() : this.config.apiToken!;
   }
 
   private async makeRequest<T = unknown>(
@@ -119,7 +137,7 @@ export class BexioClient {
         method,
         url,
         headers: {
-          Authorization: `Bearer ${this.config.apiToken}`,
+          Authorization: `Bearer ${await this.getToken()}`,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
@@ -1964,7 +1982,7 @@ export class BexioClient {
     try {
       const response = await axios.get(url, {
         responseType: "arraybuffer",
-        headers: { Authorization: `Bearer ${this.config.apiToken}`, Accept: "application/pdf" },
+        headers: { Authorization: `Bearer ${await this.getToken()}`, Accept: "application/pdf" },
       });
       const base64 = Buffer.from(response.data).toString("base64");
       return {
@@ -2011,7 +2029,7 @@ export class BexioClient {
     const response = await axios.post("https://api.bexio.com/3.0/files", formData, {
       headers: {
         ...formData.getHeaders(),
-        Authorization: `Bearer ${this.config.apiToken}`,
+        Authorization: `Bearer ${await this.getToken()}`,
       },
     });
     return response.data;
@@ -2020,7 +2038,7 @@ export class BexioClient {
   async downloadFile(fileId: number): Promise<string> {
     const response = await axios.get(`https://api.bexio.com/3.0/files/${fileId}/download`, {
       responseType: "arraybuffer",
-      headers: { Authorization: `Bearer ${this.config.apiToken}` },
+      headers: { Authorization: `Bearer ${await this.getToken()}` },
     });
     return Buffer.from(response.data).toString("base64");
   }
