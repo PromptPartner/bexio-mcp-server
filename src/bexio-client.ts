@@ -17,6 +17,19 @@ import {
   SearchCriteria,
 } from "./types/index.js";
 
+/**
+ * Bexio expects numeric position fields (amount, unit_price, discount_in_percent)
+ * as strings (e.g. "5.000000"), while MCP clients usually send numbers.
+ */
+function convertPositionNumbers(positions: Record<string, unknown>[]): Record<string, unknown>[] {
+  return positions.map((pos) => ({
+    ...pos,
+    amount: pos.amount != null ? String(pos.amount) : pos.amount,
+    unit_price: pos.unit_price != null ? String(pos.unit_price) : pos.unit_price,
+    discount_in_percent: pos.discount_in_percent != null ? String(pos.discount_in_percent) : pos.discount_in_percent,
+  }));
+}
+
 export class BexioClient {
   private client: AxiosInstance;
   private config: BexioConfig;
@@ -39,9 +52,24 @@ export class BexioClient {
       (error) => {
         if (error.response) {
           const status = error.response.status;
-          const message =
-            error.response.data?.message || error.response.statusText;
-          throw McpError.bexioApi(message, status, {
+          const data = error.response.data;
+          const baseMessage = data?.message || error.response.statusText;
+          // Flatten Bexio's errors[] / errors{} into the message so the LLM sees the
+          // field-level complaints instead of only "The form could not be saved".
+          let errorsDetail = "";
+          if (Array.isArray(data?.errors) && data.errors.length > 0) {
+            errorsDetail = " " + data.errors
+              .map((e: unknown) => (typeof e === "string" ? e : JSON.stringify(e)))
+              .join(" | ");
+          } else if (data?.errors && typeof data.errors === "object") {
+            errorsDetail = " " + Object.entries(data.errors as Record<string, unknown>)
+              .map(([field, msg]) => `${field}: ${Array.isArray(msg) ? msg.join(", ") : String(msg)}`)
+              .join(" | ");
+          }
+          const method = (error.config?.method || "").toUpperCase();
+          const url = error.config?.url || "";
+          const context = url ? ` [${method} ${url}]` : "";
+          throw McpError.bexioApi(`${baseMessage}${errorsDetail}${context}`, status, {
             url: error.config?.url,
             method: error.config?.method,
             responseData: error.response.data,
@@ -408,6 +436,9 @@ export class BexioClient {
   }
 
   async createOrder(orderData: OrderCreate): Promise<unknown> {
+    if (Array.isArray(orderData.positions)) {
+      (orderData as Record<string, unknown>).positions = convertPositionNumbers(orderData.positions as Record<string, unknown>[]);
+    }
     return this.makeRequest("POST", "/kb_order", undefined, orderData);
   }
 
@@ -558,6 +589,9 @@ export class BexioClient {
 
   // ===== QUOTES =====
   async createQuote(quoteData: Record<string, unknown>): Promise<unknown> {
+    if (Array.isArray(quoteData.positions)) {
+      quoteData.positions = convertPositionNumbers(quoteData.positions as Record<string, unknown>[]);
+    }
     return this.makeRequest("POST", "/kb_offer", undefined, quoteData);
   }
 
@@ -653,6 +687,9 @@ export class BexioClient {
     // Set current date if not provided
     if (!invoiceData.is_valid_from) {
       invoiceData.is_valid_from = new Date().toISOString().split("T")[0];
+    }
+    if (Array.isArray(invoiceData.positions)) {
+      (invoiceData as Record<string, unknown>).positions = convertPositionNumbers(invoiceData.positions as Record<string, unknown>[]);
     }
     return this.makeRequest("POST", "/kb_invoice", undefined, invoiceData);
   }
@@ -1204,13 +1241,13 @@ export class BexioClient {
     return invoices.filter((inv) => {
       const invoice = inv as {
         kb_item_status_id?: number;
-        is_valid_until?: string;
+        is_valid_to?: string;
       };
       // Status 8 = Sent but not paid, and due date passed
       return (
         invoice.kb_item_status_id === 8 &&
-        invoice.is_valid_until &&
-        invoice.is_valid_until < today
+        invoice.is_valid_to &&
+        invoice.is_valid_to < today
       );
     });
   }
@@ -1228,11 +1265,11 @@ export class BexioClient {
     return invoices.filter((inv) => {
       const invoice = inv as {
         kb_item_status_id?: number;
-        is_valid_until?: string;
+        is_valid_to?: string;
       };
       // Open or sent invoices with due date this week
       const isOpen = invoice.kb_item_status_id === 7 || invoice.kb_item_status_id === 8;
-      const dueDate = invoice.is_valid_until;
+      const dueDate = invoice.is_valid_to;
       return isOpen && dueDate && dueDate >= today && dueDate <= weekEnd;
     });
   }
