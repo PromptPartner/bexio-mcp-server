@@ -14,6 +14,7 @@ import {
   CreateTimesheetParamsSchema,
   DeleteTimesheetParamsSchema,
   SearchTimesheetsParamsSchema,
+  GetProjectTimesheetsParamsSchema,
   // Timesheet Statuses
   ListTimesheetStatusesParamsSchema,
   // Business Activities
@@ -77,6 +78,11 @@ export const handlers: Record<string, HandlerFn> = {
   search_timesheets: async (client, args) => {
     const { search_criteria } = SearchTimesheetsParamsSchema.parse(args);
     return client.searchTimesheets(search_criteria);
+  },
+
+  get_project_timesheets: async (client, args) => {
+    const { project_id } = GetProjectTimesheetsParamsSchema.parse(args);
+    return client.getProjectTimesheets(project_id);
   },
 
   // ===== TIMESHEET STATUSES (PROJ-07) =====

@@ -47,8 +47,8 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   create_quote: async (client, args) => {
-    const { contact_id, quote_data } = CreateQuoteParamsSchema.parse(args);
-    const payload = { ...quote_data, contact_id };
+    const { contact_id, user_id, quote_data } = CreateQuoteParamsSchema.parse(args);
+    const payload = { ...quote_data, contact_id, user_id };
     return client.createQuote(payload);
   },
 

@@ -44,6 +44,7 @@ export class BexioClient {
           throw McpError.bexioApi(message, status, {
             url: error.config?.url,
             method: error.config?.method,
+            responseData: error.response.data,
           });
         } else if (error.request) {
           throw McpError.bexioApi("No response received from server", undefined, {
@@ -1411,7 +1412,7 @@ export class BexioClient {
 
   // ===== TIMESHEETS (PROJ-06) =====
   // Note: Duration format is "HH:MM" (e.g., "02:30" for 2.5 hours)
-  async listTimesheets(params: PaginationParams = {}): Promise<unknown[]> {
+  async listTimesheets(params: PaginationParams & { order_by?: string } = {}): Promise<unknown[]> {
     return this.makeRequest("GET", "/timesheet", params);
   }
 
@@ -1441,6 +1442,12 @@ export class BexioClient {
 
   async searchTimesheets(searchParams: Record<string, unknown>[]): Promise<unknown[]> {
     return this.makeRequest("POST", "/timesheet/search", undefined, searchParams);
+  }
+
+  async getProjectTimesheets(projectId: number): Promise<unknown[]> {
+    return this.searchTimesheets([
+      { field: "pr_project_id", value: String(projectId), criteria: "=" },
+    ]);
   }
 
   // ===== TIMESHEET STATUSES (PROJ-07) =====

@@ -43,7 +43,7 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "create_quote",
-    description: "Create a new quote (offer) for an existing contact",
+    description: "Create a new quote (offer) for an existing contact. Use get_current_user to obtain user_id first.",
     annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
@@ -52,13 +52,17 @@ export const toolDefinitions: Tool[] = [
           type: "integer",
           description: "The contact ID the quote should be created for",
         },
+        user_id: {
+          type: "integer",
+          description: "The Bexio user ID (owner of the quote). Get via get_current_user.",
+        },
         quote_data: {
           type: "object",
           description:
-            "Quote payload according to Bexio's /kb_offer schema. The contact_id is merged automatically.",
+            "Quote payload according to Bexio's /kb_offer schema. contact_id and user_id are merged automatically.",
         },
       },
-      required: ["contact_id", "quote_data"],
+      required: ["contact_id", "user_id", "quote_data"],
     },
   },
   {

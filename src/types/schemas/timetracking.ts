@@ -12,6 +12,7 @@ import { z } from "zod";
 export const ListTimesheetsParamsSchema = z.object({
   limit: z.number().int().positive().default(100),
   offset: z.number().int().min(0).default(0),
+  order_by: z.string().optional(),
 });
 
 export type ListTimesheetsParams = z.infer<typeof ListTimesheetsParamsSchema>;

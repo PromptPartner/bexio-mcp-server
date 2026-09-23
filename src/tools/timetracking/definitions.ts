@@ -12,7 +12,7 @@ export const toolDefinitions: Tool[] = [
   // ===== TIMESHEETS (PROJ-06) =====
   {
     name: "list_timesheets",
-    description: "List all timesheet entries with pagination",
+    description: "List all timesheet entries with pagination and sorting. Use order_by='id_desc' to get newest entries first.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
@@ -26,6 +26,10 @@ export const toolDefinitions: Tool[] = [
           type: "integer",
           description: "Number of results to skip (default: 0)",
           default: 0,
+        },
+        order_by: {
+          type: "string",
+          description: "Sort order. Use 'id_desc' for newest first, 'id_asc' for oldest first (default: id_asc)",
         },
       },
     },

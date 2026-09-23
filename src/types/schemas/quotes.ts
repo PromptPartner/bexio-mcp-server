@@ -23,6 +23,7 @@ export type GetQuoteParams = z.infer<typeof GetQuoteParamsSchema>;
 // Create quote
 export const CreateQuoteParamsSchema = z.object({
   contact_id: z.number().int().positive(),
+  user_id: z.number().int().positive(),
   quote_data: z.record(z.unknown()),
 });
 
