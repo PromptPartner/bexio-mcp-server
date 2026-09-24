@@ -14,14 +14,37 @@
  * stdout is reserved for MCP JSON-RPC protocol messages (stdio mode only).
  */
 
-import { logger } from "./logger.js";
+import { logger, silenceLogger } from "./logger.js";
 import { parseCompanyTokens, companyManager } from "./company-manager.js";
+
+// #18: when a stdio stream's reader is gone, writes fail with EPIPE (EIO on a dead
+// TTY). Logging that error goes to the same dead stderr and fails again, forever.
+// - stderr dead: stop logging. A client may drop stderr and still talk over stdout.
+// - stdout dead in stdio mode: the MCP client is gone, so exit, as #11 does on
+//   stdin close. HTTP mode does not use stdout and never exits here.
+const BROKEN_PIPE_CODES = new Set(["EPIPE", "EIO", "ERR_STREAM_DESTROYED"]);
+const isBrokenPipe = (err: unknown): boolean =>
+  BROKEN_PIPE_CODES.has((err as NodeJS.ErrnoException | undefined)?.code ?? "");
+const stdioMode = parseArgs().mode === "stdio";
+
+process.stderr.on("error", (err) => {
+  if (isBrokenPipe(err)) silenceLogger();
+});
+process.stdout.on("error", (err) => {
+  if (isBrokenPipe(err) && stdioMode) process.exit(0);
+});
 
 // Surface otherwise-silent failures. A peripheral throw or rejection must never
 // vanish without a trace: the v2.3.0 startup crash exited the process during the
 // `initialize` handshake with no stderr the user could see. Log the full stack;
 // do NOT exit here — a non-fatal background error should not kill a running server.
 process.on("uncaughtException", (err) => {
+  // A broken pipe cannot be logged (the log stream may be the broken one) - that
+  // attempt is what used to recurse (#18). Stop logging instead.
+  if (isBrokenPipe(err)) {
+    silenceLogger();
+    return;
+  }
   logger.error(
     "[FATAL] uncaughtException:",
     err instanceof Error ? (err.stack ?? err.message) : String(err)
