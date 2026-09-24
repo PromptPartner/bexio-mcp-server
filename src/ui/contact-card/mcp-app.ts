@@ -11,6 +11,8 @@ interface Contact {
   title_id: number | null;
   birthday: string | null;
   address: string | null;
+  street_name?: string | null;
+  house_number?: string | null;
   postcode: string | null;
   city: string | null;
   country_id: number | null;
@@ -74,8 +76,11 @@ function renderContact(contact: Contact) {
   const typeBadge = isCompany ? "Company" : "Person";
   const typeClass = isCompany ? "type-company" : "type-person";
 
+  // bexio's read-only `address` is built from street_name + house_number; compose it
+  // ourselves when it is missing.
+  const street = contact.address || [contact.street_name, contact.house_number].filter(Boolean).join(" ");
   const addressParts = [
-    contact.address,
+    street,
     [contact.postcode, contact.city].filter(Boolean).join(" "),
     getCountryName(contact.country_id),
   ].filter(Boolean);
