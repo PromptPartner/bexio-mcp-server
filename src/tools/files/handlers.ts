@@ -44,6 +44,7 @@ import {
   UpdateAdditionalAddressParamsSchema,
   SearchAdditionalAddressesParamsSchema,
   DeleteAdditionalAddressParamsSchema,
+  normalizeContactAddress,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -161,12 +162,12 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_additional_address: async (client, args) => {
     const { contact_id, address_data } = CreateAdditionalAddressParamsSchema.parse(args);
-    return client.createAdditionalAddress(contact_id, address_data);
+    return client.createAdditionalAddress(contact_id, normalizeContactAddress(address_data));
   },
 
   update_additional_address: async (client, args) => {
     const { contact_id, address_id, address_data } = UpdateAdditionalAddressParamsSchema.parse(args);
-    return client.updateAdditionalAddress(contact_id, address_id, address_data);
+    return client.updateAdditionalAddress(contact_id, address_id, normalizeContactAddress(address_data));
   },
 
   search_additional_addresses: async (client, args) => {

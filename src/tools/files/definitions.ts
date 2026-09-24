@@ -198,6 +198,14 @@ export const toolDefinitions: Tool[] = [
               type: "string",
               description: "House/building number",
             },
+            address_addition: {
+              type: "string",
+              description: "Address addition, e.g. 'Rampe B' or 'Postfach 12'",
+            },
+            name_addition: {
+              type: "string",
+              description: "Second name line",
+            },
             postcode: {
               type: "string",
               description: "Postal code",
@@ -241,16 +249,29 @@ export const toolDefinitions: Tool[] = [
         },
         address_data: {
           type: "object",
-          description: "The address data to update",
+          description: "The address data to update. The street is street_name + house_number; bexio's 'address' is read-only (a given 'address' string is split into those two).",
           properties: {
             name: {
               type: "string",
               description: "Name/label for the address",
             },
-            address: {
+            street_name: {
               type: "string",
-              description: "Street address",
+              description: "Street name without the number",
             },
+            house_number: {
+              type: "string",
+              description: "House/building number",
+            },
+            address_addition: {
+              type: "string",
+              description: "Address addition, e.g. 'Rampe B' or 'Postfach 12'",
+            },
+            name_addition: {
+              type: "string",
+              description: "Second name line",
+            },
+
             postcode: {
               type: "string",
               description: "Postal code",
