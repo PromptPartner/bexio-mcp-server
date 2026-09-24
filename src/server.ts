@@ -16,12 +16,9 @@ import { getAllToolDefinitions, getHandler } from "./tools/index.js";
 import { formatSuccessResponse, formatErrorResponse, McpError } from "./shared/index.js";
 import { registerUIResources } from "./ui-resources.js";
 import { jsonSchemaToZodShape } from "./schema-converter.js";
+import { SERVER_VERSION } from "./version.js";
 
 const SERVER_NAME = "bexio-mcp-server";
-// Keep in lockstep with package.json / manifest.json / server.json on every release.
-// (The MCPB bundle's dist/package.json is minimal and has no version field, so this
-// is inlined rather than read back from package.json.)
-const SERVER_VERSION = "2.5.0";
 
 export class BexioMcpServer {
   private server: McpServer;

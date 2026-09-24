@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { createHttpServer } from "./http.js";
 import * as log from "../logger.js";
+import { SERVER_VERSION } from "../version.js";
 
 /**
  * HTTP mode serves every bexio tool. Without authentication, anyone who can reach
@@ -54,7 +55,9 @@ describe("HTTP bearer auth (BEXIO_HTTP_TOKEN)", () => {
 
   it("leaves the health check and CORS preflight open", async () => {
     app = await createHttpServer({ host: "127.0.0.1", port: 0, authToken: TOKEN });
-    expect((await app.inject({ method: "GET", url: "/" })).statusCode).toBe(200);
+    const health = await app.inject({ method: "GET", url: "/" });
+    expect(health.statusCode).toBe(200);
+    expect(health.json().version).toBe(SERVER_VERSION); // was hard-coded "2.0.0"
     const preflight = await app.inject({
       method: "OPTIONS",
       url: "/mcp",

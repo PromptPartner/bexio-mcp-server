@@ -9,6 +9,7 @@ import { timingSafeEqual } from "node:crypto";
 import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import { logger } from "../logger.js";
+import { SERVER_VERSION } from "../version.js";
 import { getAllToolDefinitions, createHandlerRegistry } from "../tools/index.js";
 
 export interface HttpServerOptions {
@@ -76,7 +77,7 @@ export async function createHttpServer(
     return {
       status: "running",
       server: "bexio-mcp-server",
-      version: "2.0.0",
+      version: SERVER_VERSION,
       mode: "http",
     };
   });
@@ -233,7 +234,7 @@ async function handleJsonRpcRequest(
           capabilities: { tools: {} },
           serverInfo: {
             name: "bexio-mcp-server",
-            version: "2.0.0",
+            version: SERVER_VERSION,
           },
         },
       };
