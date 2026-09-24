@@ -114,8 +114,9 @@ export const CreateManualEntryParamsSchema = z.object({
   tax_id: z.number().int().positive().optional(),
   tax_account_id: z.number().int().positive().optional(),
   // bexio answers 422 "validation failed" when a posting line carries no currency, even
-  // though the API docs mark these optional. Default them so the common case just works.
-  currency_id: z.number().int().positive().default(1),
+  // though the API docs mark these optional. The handler defaults currency_id to the
+  // mandate's base currency (company_profile.base_currency_id) when it is omitted.
+  currency_id: z.number().int().positive().optional(),
   currency_factor: z.number().positive().default(1),
 });
 
@@ -139,7 +140,7 @@ export const CreateManualGroupEntryParamsSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   entries: z.array(ManualEntryLineSchema).min(1, "At least one entry line is required"),
   reference_nr: z.string().optional(),
-  currency_id: z.number().int().positive().default(1),
+  currency_id: z.number().int().positive().optional(), // default: base currency, resolved in the handler
   currency_factor: z.number().positive().default(1),
 });
 

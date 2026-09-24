@@ -125,7 +125,9 @@ export const handlers: Record<string, HandlerFn> = {
         tax_account_id: params.tax_account_id,
         description: params.description,
         amount: params.amount,
-        currency_id: params.currency_id,
+        // bexio answers a bare 422 when a line has no currency; default to the
+        // mandate's base currency rather than assuming id 1.
+        currency_id: params.currency_id ?? (await client.getBaseCurrencyId()),
         currency_factor: params.currency_factor,
       }],
     };
@@ -137,7 +139,11 @@ export const handlers: Record<string, HandlerFn> = {
     const params = CreateManualGroupEntryParamsSchema.parse(args);
 
     // bexio rejects lines without their own date/currency with a bare 422, so inherit
-    // the document-level values wherever a line does not set its own.
+    // the document-level values wherever a line does not set its own. The document
+    // currency defaults to the mandate's base currency, looked up only when needed.
+    const needsDefault =
+      params.currency_id === undefined && params.entries.some((l) => l.currency_id === undefined);
+    const documentCurrency = params.currency_id ?? (needsDefault ? await client.getBaseCurrencyId() : undefined);
     const entries = params.entries.map((line) => ({
       date: line.date ?? params.date,
       debit_account_id: line.debit_account_id,
@@ -146,7 +152,7 @@ export const handlers: Record<string, HandlerFn> = {
       tax_account_id: line.tax_account_id,
       description: line.description,
       amount: line.amount,
-      currency_id: line.currency_id ?? params.currency_id,
+      currency_id: line.currency_id ?? documentCurrency,
       currency_factor: line.currency_factor ?? params.currency_factor,
     }));
 

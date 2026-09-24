@@ -269,8 +269,7 @@ export const toolDefinitions: Tool[] = [
         },
         currency_id: {
           type: "integer",
-          description: "Currency ID (default: 1, the company currency). bexio rejects postings without a currency.",
-          default: 1,
+          description: "Currency ID (default: the company's base currency, from the company profile). bexio rejects postings without a currency.",
         },
         currency_factor: {
           type: "number",
@@ -318,8 +317,7 @@ export const toolDefinitions: Tool[] = [
         },
         currency_id: {
           type: "integer",
-          description: "Currency ID for all lines that do not set their own (default: 1, the company currency)",
-          default: 1,
+          description: "Currency ID for all lines that do not set their own (default: the company's base currency, from the company profile)",
         },
         currency_factor: {
           type: "number",

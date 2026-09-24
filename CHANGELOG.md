@@ -43,8 +43,11 @@ its own.
 ### Fixed — `create_manual_entry` failed with an undiagnosable 422
 Bexio rejects a posting line that carries no currency with a bare
 `422 validation failed` and no field information, even though the API documents
-`currency_id` as optional. `currency_id` and `currency_factor` now default to `1` (the
-company currency), which is what the call needs in the overwhelmingly common case.
+`currency_id` as optional. `currency_id` now defaults to the company's **base currency**
+(read once from the company profile's `base_currency_id`) and `currency_factor` to `1`.
+The base currency is looked up rather than assumed to be id `1`, because in a mandate
+whose base currency is EUR, id `1` can be CHF, and the entry would silently be booked in
+the wrong currency. The same default applies to `create_manual_group_entry`.
 
 ## [2.5.0] - 2026-07-01
 

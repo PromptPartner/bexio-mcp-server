@@ -20,6 +20,7 @@ import {
 export class BexioClient {
   private client: AxiosInstance;
   private config: BexioConfig;
+  private baseCurrencyId?: Promise<number>;
 
   constructor(config: BexioConfig) {
     this.config = config;
@@ -269,6 +270,31 @@ export class BexioClient {
 
   async updateCompanyProfile(data: Record<string, unknown>): Promise<unknown> {
     return this.makeRequest("POST", "/company_profile", undefined, data);
+  }
+
+  /**
+   * The mandate's base currency id, from company_profile.base_currency_id. Used as the
+   * default currency for manual entries: bexio rejects a posting line without one, and
+   * a hard-coded 1 is only right where id 1 happens to be the base currency (in an EUR
+   * mandate it can be CHF). Asked once per client; falls back to 1 if absent.
+   */
+  async getBaseCurrencyId(): Promise<number> {
+    this.baseCurrencyId ??= (async () => {
+      const raw = await this.makeRequest<unknown>("GET", "/company_profile");
+      const profile = (Array.isArray(raw) ? raw[0] : raw) as
+        | { base_currency_id?: unknown; base_currency?: { id?: unknown } }
+        | undefined;
+      const id = Number(profile?.base_currency_id ?? profile?.base_currency?.id);
+      if (Number.isInteger(id) && id > 0) return id;
+      logger.warn("getBaseCurrencyId: company profile has no base_currency_id; defaulting to currency 1.");
+      return 1;
+    })();
+    try {
+      return await this.baseCurrencyId;
+    } catch (err) {
+      this.baseCurrencyId = undefined; // don't cache a failed lookup
+      throw err;
+    }
   }
 
   // ===== PERMISSIONS (v3.0 API; v2.0 /permission returns 404) =====
