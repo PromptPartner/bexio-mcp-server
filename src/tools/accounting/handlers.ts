@@ -25,6 +25,7 @@ import {
   ListManualEntriesParamsSchema,
   GetManualEntryParamsSchema,
   CreateManualEntryParamsSchema,
+  CreateManualGroupEntryParamsSchema,
   UpdateManualEntryParamsSchema,
   DeleteManualEntryParamsSchema,
   // VAT Periods
@@ -130,6 +131,30 @@ export const handlers: Record<string, HandlerFn> = {
     };
 
     return client.createManualEntry(entryData);
+  },
+
+  create_manual_group_entry: async (client, args) => {
+    const params = CreateManualGroupEntryParamsSchema.parse(args);
+
+    // bexio rejects lines without their own date/currency with a bare 422, so inherit
+    // the document-level values wherever a line does not set its own.
+    const entries = params.entries.map((line) => ({
+      date: line.date ?? params.date,
+      debit_account_id: line.debit_account_id,
+      credit_account_id: line.credit_account_id,
+      tax_id: line.tax_id,
+      tax_account_id: line.tax_account_id,
+      description: line.description,
+      amount: line.amount,
+      currency_id: line.currency_id ?? params.currency_id,
+      currency_factor: line.currency_factor ?? params.currency_factor,
+    }));
+
+    return client.createManualGroupEntry({
+      date: params.date,
+      reference_nr: params.reference_nr,
+      entries,
+    });
   },
 
   update_manual_entry: async (client, args) => {

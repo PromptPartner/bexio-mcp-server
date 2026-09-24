@@ -1554,6 +1554,35 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "POST", "accounting/manual_entries", undefined, data);
   }
 
+  /**
+   * Create a manual GROUP entry: one document (Sammelbuchung) carrying many postings.
+   *
+   * Bexio accepts this on the same endpoint as a single entry, with type
+   * "manual_group_entry" and an entries array of arbitrary length. Every line needs its
+   * own date/currency_id/currency_factor - omitting them makes bexio answer 422 with a
+   * bare "validation failed", so the caller-side handler fills them in.
+   */
+  async createManualGroupEntry(data: {
+    date: string;
+    reference_nr?: string;
+    entries: Array<{
+      date?: string;
+      debit_account_id: number;
+      credit_account_id: number;
+      tax_id?: number;
+      tax_account_id?: number;
+      description: string;
+      amount: number;
+      currency_id?: number;
+      currency_factor?: number;
+    }>;
+  }): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "POST", "accounting/manual_entries", undefined, {
+      ...data,
+      type: "manual_group_entry",
+    });
+  }
+
   async updateManualEntry(entryId: number, data: Record<string, unknown>): Promise<unknown> {
     return this.makeVersionedRequest("3.0", "PUT", `accounting/manual_entries/${entryId}`, undefined, data);
   }
@@ -1570,13 +1599,154 @@ export class BexioClient {
   // ===== ACCOUNTING JOURNAL (ACCT-07) =====
   // Journal is a v3.0 reporting endpoint under /accounting. The old v2.0 /journal
   // path returns 404.
-  async getJournal(params: {
+  //
+  // The date filter parameters are named `from` and `to` (YYYY-MM-DD), NOT
+  // start_date/end_date. Bexio ignores unknown query parameters silently, so sending
+  // the wrong names does not fail - it just returns the entire journal from the first
+  // entry, which then gets truncated by paging caps and silently yields wrong answers.
+  // `account_uuid` additionally narrows the journal to a single account.
+
+  /** One raw journal page. Maps the caller's date range onto bexio's `from`/`to`. */
+  async getJournalPage(params: {
     start_date?: string;
     end_date?: string;
+    account_uuid?: string;
     limit?: number;
     offset?: number;
   }): Promise<unknown[]> {
-    return this.makeVersionedRequest("3.0", "GET", "accounting/journal", params);
+    const query: Record<string, unknown> = {
+      limit: params.limit,
+      offset: params.offset,
+    };
+    if (params.start_date) query["from"] = params.start_date;
+    if (params.end_date) query["to"] = params.end_date;
+    if (params.account_uuid) query["account_uuid"] = params.account_uuid;
+    return this.makeVersionedRequest("3.0", "GET", "accounting/journal", query);
+  }
+
+  /** Normalise a journal row's date ("2026-01-23T00:00:00+01:00") to "2026-01-23". */
+  private static journalRowDate(row: { date?: unknown }): string | null {
+    const raw = row?.date;
+    if (typeof raw !== "string" || raw.length < 10) return null;
+    return raw.slice(0, 10);
+  }
+
+  /**
+   * Page through the journal for [startDate, endDate] and hand each row to `onRow`.
+   *
+   * The range is pushed down to bexio via `from`/`to`, so normally every returned row
+   * already qualifies. Rows are nevertheless re-checked locally: if the server ever
+   * returns something outside the range (wrong parameter names, an API change, a proxy
+   * dropping the query string), the range still holds and `serverSideFilter` reports
+   * false instead of the caller silently getting a wrong period.
+   *
+   * Rows can be backdated, so the scan never exits early on a date - it stops only when
+   * the journal is exhausted or the page cap is reached.
+   */
+  private async scanJournalRange(
+    startDate: string,
+    endDate: string,
+    onRow: (row: Record<string, unknown>) => void,
+    opts: { pageSize?: number; maxPages?: number; accountUuid?: string } = {}
+  ): Promise<{ scanned: number; matched: number; truncated: boolean; serverSideFilter: boolean }> {
+    const PAGE = opts.pageSize ?? 2000;
+    const MAX_PAGES = opts.maxPages ?? 500;
+
+    let scanned = 0;
+    let matched = 0;
+    let truncated = false;
+    let serverSideFilter = true; // until a row outside the range proves otherwise
+    let offset = 0;
+
+    for (let page = 0; ; page++) {
+      if (page >= MAX_PAGES) {
+        truncated = true;
+        break;
+      }
+      const batch = (await this.getJournalPage({
+        start_date: startDate,
+        end_date: endDate,
+        account_uuid: opts.accountUuid,
+        limit: PAGE,
+        offset,
+      })) as Array<Record<string, unknown>>;
+      if (!Array.isArray(batch) || batch.length === 0) break;
+
+      for (const row of batch) {
+        scanned++;
+        const d = BexioClient.journalRowDate(row);
+        if (d !== null && (d < startDate || d > endDate)) {
+          serverSideFilter = false;
+          continue;
+        }
+        matched++;
+        onRow(row);
+      }
+
+      if (batch.length < PAGE) break;
+      offset += PAGE;
+    }
+
+    if (truncated) {
+      logger.warn(
+        `scanJournalRange: journal exceeded ${MAX_PAGES * PAGE} rows for ${startDate}..${endDate}; result may be incomplete.`
+      );
+    }
+    if (!serverSideFilter) {
+      logger.warn(
+        `scanJournalRange: bexio returned rows outside ${startDate}..${endDate}; the range was enforced client-side.`
+      );
+    }
+    return { scanned, matched, truncated, serverSideFilter };
+  }
+
+  /**
+   * Journal rows for a date range. Pagination applies to the filtered result.
+   * Without a range this is a plain pass-through page of the raw journal.
+   */
+  async getJournal(params: {
+    start_date?: string;
+    end_date?: string;
+    account_uuid?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<unknown> {
+    const { start_date, end_date, account_uuid, limit = 100, offset = 0 } = params;
+
+    if (!start_date && !end_date) {
+      return this.getJournalPage({ account_uuid, limit, offset });
+    }
+
+    const startDate = start_date ?? "0000-01-01";
+    const endDate = end_date ?? "9999-12-31";
+
+    const matches: Array<Record<string, unknown>> = [];
+    const stats = await this.scanJournalRange(
+      startDate,
+      endDate,
+      (row) => {
+        matches.push(row);
+      },
+      { accountUuid: account_uuid }
+    );
+
+    return {
+      start_date: startDate,
+      end_date: endDate,
+      account_uuid: account_uuid ?? null,
+      total_matched: matches.length,
+      scanned_rows: stats.scanned,
+      server_side_filter: stats.serverSideFilter,
+      truncated: stats.truncated,
+      ...(stats.serverSideFilter
+        ? {}
+        : {
+            note: "bexio returned rows outside the requested range; the range was enforced client-side.",
+          }),
+      limit,
+      offset,
+      entries: matches.slice(offset, offset + limit),
+    };
   }
 
   // ===== ACCOUNT BALANCES / SALDENLISTE (computed, ACCT-08) =====
@@ -1591,13 +1761,6 @@ export class BexioClient {
     end_date?: string;
     account_id?: number;
   } = {}): Promise<unknown> {
-    type JournalRow = {
-      debit_account_id?: number;
-      credit_account_id?: number;
-      amount?: number | string;
-      base_currency_amount?: number | string;
-    };
-
     // 1. Resolve the date range. Default to the current business year so opening
     //    balances are included (yields true balances, not just period movement).
     let startDate = params.start_date;
@@ -1608,50 +1771,33 @@ export class BexioClient {
       endDate = endDate ?? range.end;
     }
 
-    // 2. Page through the journal until exhausted (with a logged safety cap).
-    const PAGE = 2000;
-    const MAX_PAGES = 25;
-    const rows: JournalRow[] = [];
-    let offset = 0;
-    let truncated = false;
-    for (let page = 0; ; page++) {
-      if (page >= MAX_PAGES) {
-        truncated = true;
-        break;
-      }
-      const batch = (await this.getJournal({
-        start_date: startDate,
-        end_date: endDate,
-        limit: PAGE,
-        offset,
-      })) as JournalRow[];
-      if (!Array.isArray(batch) || batch.length === 0) break;
-      rows.push(...batch);
-      if (batch.length < PAGE) break;
-      offset += PAGE;
-    }
-    if (truncated) {
-      logger.warn(
-        `getAccountBalances: journal exceeded ${MAX_PAGES * PAGE} rows for ${startDate}..${endDate}; balances may be incomplete.`
-      );
-    }
+    // 2. Chart of accounts first: it supplies account_no/name for the output and, for a
+    //    single-account query, the uuid that lets bexio narrow the journal server-side.
+    const accountMeta = await this.fetchAllAccounts();
+    const accountUuid = params.account_id ? accountMeta.get(params.account_id)?.uuid : undefined;
 
-    // 3. Aggregate per account (double-entry). Prefer the base-currency amount.
+    // 3. Scan the journal and aggregate per account as rows arrive, so memory stays flat
+    //    even on journals with hundreds of thousands of rows.
     const agg = new Map<number, { debit_total: number; credit_total: number }>();
-    const bump = (id: number | undefined, field: "debit_total" | "credit_total", amt: number) => {
-      if (!id || !Number.isFinite(amt)) return;
+    const bump = (id: unknown, field: "debit_total" | "credit_total", amt: number) => {
+      if (typeof id !== "number" || !id || !Number.isFinite(amt)) return;
       const entry = agg.get(id) ?? { debit_total: 0, credit_total: 0 };
       entry[field] += amt;
       agg.set(id, entry);
     };
-    for (const row of rows) {
-      const amt = Number(row.base_currency_amount ?? row.amount ?? 0);
-      bump(row.debit_account_id, "debit_total", amt);
-      bump(row.credit_account_id, "credit_total", amt);
-    }
+
+    const stats = await this.scanJournalRange(
+      startDate,
+      endDate,
+      (row) => {
+        const amt = Number(row["base_currency_amount"] ?? row["amount"] ?? 0);
+        bump(row["debit_account_id"], "debit_total", amt);
+        bump(row["credit_account_id"], "credit_total", amt);
+      },
+      { accountUuid }
+    );
 
     // 4. Enrich with account_no + name from the chart of accounts.
-    const accountMeta = await this.fetchAllAccounts();
     const round2 = (n: number) => Math.round(n * 100) / 100;
     let accounts = Array.from(agg.entries()).map(([account_id, totals]) => {
       const meta = accountMeta.get(account_id);
@@ -1676,8 +1822,11 @@ export class BexioClient {
       source: "computed from /3.0/accounting/journal (Bexio has no native balance endpoint)",
       note:
         "balance = sum(debits) - sum(credits) over the date range. When the range covers the full business year (the default), Bexio's opening/carry-forward entries are included, so this equals the account's current balance; for partial ranges it is the period movement only.",
+      server_side_filter: stats.serverSideFilter,
+      scanned_rows: stats.scanned,
+      matched_rows: stats.matched,
       account_count: accounts.length,
-      truncated,
+      truncated: stats.truncated,
       accounts,
     };
   }
@@ -1710,9 +1859,12 @@ export class BexioClient {
 
   /** Fetch the full chart of accounts as an id -> {account_no, name, account_group_id} map. */
   private async fetchAllAccounts(): Promise<
-    Map<number, { account_no: number | string; name: string; account_group_id?: number }>
+    Map<number, { account_no: number | string; name: string; account_group_id?: number; uuid?: string }>
   > {
-    const map = new Map<number, { account_no: number | string; name: string; account_group_id?: number }>();
+    const map = new Map<
+      number,
+      { account_no: number | string; name: string; account_group_id?: number; uuid?: string }
+    >();
     const PAGE = 2000;
     let offset = 0;
     for (let page = 0; page < 10; page++) {
@@ -1725,6 +1877,7 @@ export class BexioClient {
             account_no: (a["account_no"] as number | string) ?? "",
             name: (a["name"] as string) ?? "",
             account_group_id: a["account_group_id"] as number | undefined,
+            uuid: a["uuid"] as string | undefined,
           });
         }
       }
