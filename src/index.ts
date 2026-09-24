@@ -140,7 +140,7 @@ async function main(): Promise<void> {
     logger.info(`Starting in HTTP mode on ${host}:${port} (for n8n/remote access)`);
 
     const { createHttpServer } = await import("./transports/http.js");
-    await createHttpServer({ host, port });
+    await createHttpServer({ host, port, authToken: process.env["BEXIO_HTTP_TOKEN"]?.trim() || undefined });
 
     // Keep the process alive
     logger.info("HTTP server running. Press Ctrl+C to stop.");

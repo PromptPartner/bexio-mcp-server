@@ -5,6 +5,7 @@
  * IMPORTANT: All logging uses logger (stderr), stdout reserved for nothing in HTTP mode.
  */
 
+import { timingSafeEqual } from "node:crypto";
 import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import { logger } from "../logger.js";
@@ -13,6 +14,15 @@ import { getAllToolDefinitions, createHandlerRegistry } from "../tools/index.js"
 export interface HttpServerOptions {
   host: string;
   port: number;
+  /** BEXIO_HTTP_TOKEN: when set, every route except GET / requires this bearer token. */
+  authToken?: string;
+}
+
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "::1", "localhost"]);
+
+function bearerMatches(header: string | undefined, expected: Buffer): boolean {
+  const given = Buffer.from(/^Bearer\s+(.+)$/i.exec(header ?? "")?.[1]?.trim() ?? "");
+  return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
 /**
@@ -22,7 +32,7 @@ export interface HttpServerOptions {
 export async function createHttpServer(
   options: HttpServerOptions
 ): Promise<FastifyInstance> {
-  const { host, port } = options;
+  const { host, port, authToken } = options;
 
   // Handler registry resolves the active company's client per call (multi-company).
   const handlerRegistry = createHandlerRegistry();
@@ -37,6 +47,29 @@ export async function createHttpServer(
   });
 
   logger.info("HTTP server initializing...");
+
+  // Every tool reads or writes the company's books, so the HTTP surface needs a
+  // credential. Opt-in for now (existing n8n setups keep working); without it, say
+  // plainly what is exposed.
+  if (authToken) {
+    const expected = Buffer.from(authToken);
+    app.addHook("onRequest", async (request, reply) => {
+      if (request.method === "OPTIONS") return; // CORS preflight carries no credentials
+      if (request.method === "GET" && request.url.split("?")[0] === "/") return; // health check
+      if (!bearerMatches(request.headers.authorization, expected)) {
+        return reply.code(401).header("WWW-Authenticate", "Bearer").send({ error: "Unauthorized" });
+      }
+    });
+    logger.info("HTTP bearer auth enabled (BEXIO_HTTP_TOKEN).");
+  } else if (LOOPBACK_HOSTS.has(host)) {
+    logger.warn(
+      "No BEXIO_HTTP_TOKEN set: the HTTP endpoints are unauthenticated. Bound to loopback, but CORS allows any origin, so a web page open in your browser can call them. Set BEXIO_HTTP_TOKEN to require a bearer token."
+    );
+  } else {
+    logger.warn(
+      `!!! No BEXIO_HTTP_TOKEN set and listening on ${host}: ANYONE who can reach port ${port} can read and change your bexio data. Set BEXIO_HTTP_TOKEN (clients send "Authorization: Bearer <token>"), or bind to 127.0.0.1 with --host.`
+    );
+  }
 
   // Health check endpoint
   app.get("/", async () => {
