@@ -89,3 +89,56 @@ export class McpError extends Error {
     };
   }
 }
+
+const MAX_ERROR_DETAIL = 1000;
+
+function formatErrorItem(item: unknown): string {
+  if (typeof item === "string") return item;
+  if (item && typeof item === "object") {
+    const o = item as Record<string, unknown>;
+    const text = o["message"] ?? o["error"];
+    const field = o["field"] ?? o["property"] ?? o["path"];
+    if (typeof text === "string") return typeof field === "string" ? `${field}: ${text}` : text;
+  }
+  return JSON.stringify(item);
+}
+
+/**
+ * Build a readable message from a bexio error body.
+ *
+ * bexio puts the useful part of a validation failure in `errors` - a list of strings,
+ * a list of {field, message} objects, or a field -> messages map - while `message`
+ * alone is often just "The form could not be saved due to the following errors:".
+ * Binary endpoints deliver the body as a Buffer, and gateways can answer with HTML;
+ * both are handled, falling back to the HTTP status text.
+ */
+export function bexioErrorMessage(body: unknown, fallback: string): string {
+  let data = body;
+  if (Buffer.isBuffer(data) || data instanceof ArrayBuffer) {
+    data = Buffer.from(data as Buffer).toString("utf-8");
+  }
+  if (typeof data === "string") {
+    try {
+      data = JSON.parse(data);
+    } catch {
+      return fallback;
+    }
+  }
+  if (!data || typeof data !== "object") return fallback;
+
+  const o = data as Record<string, unknown>;
+  const message = typeof o["message"] === "string" && o["message"] ? o["message"] : fallback;
+  const errors = o["errors"];
+
+  let detail = "";
+  if (Array.isArray(errors)) {
+    detail = errors.map(formatErrorItem).filter(Boolean).join("; ");
+  } else if (errors && typeof errors === "object") {
+    detail = Object.entries(errors as Record<string, unknown>)
+      .map(([field, v]) => `${field}: ${Array.isArray(v) ? v.map(formatErrorItem).join(", ") : formatErrorItem(v)}`)
+      .join("; ");
+  }
+  if (!detail) return message;
+  if (detail.length > MAX_ERROR_DETAIL) detail = `${detail.slice(0, MAX_ERROR_DETAIL)}…`;
+  return `${message.replace(/[\s:.]+$/, "")}: ${detail}`;
+}

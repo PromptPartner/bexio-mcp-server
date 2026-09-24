@@ -6,7 +6,7 @@
 
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { logger } from "./logger.js";
-import { McpError } from "./shared/errors.js";
+import { McpError, bexioErrorMessage } from "./shared/errors.js";
 import {
   BexioConfig,
   PaginationParams,
@@ -38,23 +38,31 @@ export class BexioClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response) {
-          const status = error.response.status;
-          const message =
-            error.response.data?.message || error.response.statusText;
-          throw McpError.bexioApi(message, status, {
-            url: error.config?.url,
-            method: error.config?.method,
-          });
-        } else if (error.request) {
-          throw McpError.bexioApi("No response received from server", undefined, {
-            error: "NETWORK_ERROR",
-          });
-        } else {
-          throw McpError.internal(error.message);
-        }
+        throw BexioClient.toMcpError(error, error?.config?.url, error?.config?.method);
       }
     );
+  }
+
+  /**
+   * Normalize any failed bexio call into an McpError. Every transport path (the shared
+   * v2.0 instance, versioned v3.0/v4.0 calls, multipart upload, binary downloads) goes
+   * through here, so bexio's `errors` details and the status-based recovery hints reach
+   * the caller instead of a bare "Request failed with status code NNN".
+   */
+  private static toMcpError(error: unknown, url?: string, method?: string): McpError {
+    if (error instanceof McpError) return error;
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        const message = bexioErrorMessage(error.response.data, error.response.statusText);
+        return McpError.bexioApi(message, error.response.status, { url, method });
+      }
+      if (error.request) {
+        return McpError.bexioApi("No response received from server", undefined, {
+          error: "NETWORK_ERROR",
+        });
+      }
+    }
+    return McpError.internal(error instanceof Error ? error.message : String(error));
   }
 
   private async makeRequest<T = unknown>(
@@ -103,20 +111,7 @@ export class BexioClient {
       // This call bypasses the shared axios instance's interceptor, so normalize
       // errors to McpError here the same way (status-based recovery hints, and so
       // callers like the payroll module probe can inspect statusCode).
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          const message =
-            (error.response.data as { message?: string } | undefined)?.message ||
-            error.response.statusText;
-          throw McpError.bexioApi(message, error.response.status, { url, method });
-        }
-        if (error.request) {
-          throw McpError.bexioApi("No response received from server", undefined, {
-            error: "NETWORK_ERROR",
-          });
-        }
-      }
-      throw McpError.internal(error instanceof Error ? error.message : String(error));
+      throw BexioClient.toMcpError(error, url, method);
     }
   }
 
@@ -2108,19 +2103,8 @@ export class BexioClient {
         filename: `payslip_${employeeId}_${year}_${String(month).padStart(2, "0")}.pdf`,
       };
     } catch (error) {
-      // arraybuffer error bodies arrive as buffers; decode for a useful message.
-      if (axios.isAxiosError(error) && error.response) {
-        let message = error.response.statusText;
-        try {
-          message =
-            (JSON.parse(Buffer.from(error.response.data).toString("utf-8")) as { message?: string })
-              .message ?? message;
-        } catch {
-          // not JSON — keep statusText
-        }
-        throw McpError.bexioApi(message, error.response.status, { url, method: "get" });
-      }
-      throw McpError.internal(error instanceof Error ? error.message : String(error));
+      // arraybuffer error bodies arrive as buffers; bexioErrorMessage decodes them.
+      throw BexioClient.toMcpError(error, url, "get");
     }
   }
 
@@ -2143,24 +2127,34 @@ export class BexioClient {
       filename: data.name,
       contentType: data.content_type,
     });
-    const response = await axios.post("https://api.bexio.com/3.0/files", formData, {
-      headers: {
-        ...formData.getHeaders(),
-        Authorization: `Bearer ${this.config.apiToken}`,
-        // Bexio validates Accept strictly on POST /3.0/files and rejects the
-        // axios default ("application/json, text/plain, */*") with HTTP 415.
-        Accept: "application/json",
-      },
-    });
-    return response.data;
+    const url = "https://api.bexio.com/3.0/files";
+    try {
+      const response = await axios.post(url, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          Authorization: `Bearer ${this.config.apiToken}`,
+          // Bexio validates Accept strictly on POST /3.0/files and rejects the
+          // axios default ("application/json, text/plain, */*") with HTTP 415.
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw BexioClient.toMcpError(error, url, "post");
+    }
   }
 
   async downloadFile(fileId: number): Promise<string> {
-    const response = await axios.get(`https://api.bexio.com/3.0/files/${fileId}/download`, {
-      responseType: "arraybuffer",
-      headers: { Authorization: `Bearer ${this.config.apiToken}` },
-    });
-    return Buffer.from(response.data).toString("base64");
+    const url = `https://api.bexio.com/3.0/files/${fileId}/download`;
+    try {
+      const response = await axios.get(url, {
+        responseType: "arraybuffer",
+        headers: { Authorization: `Bearer ${this.config.apiToken}` },
+      });
+      return Buffer.from(response.data).toString("base64");
+    } catch (error) {
+      throw BexioClient.toMcpError(error, url, "get");
+    }
   }
 
   async updateFile(fileId: number, data: Record<string, unknown>): Promise<unknown> {
