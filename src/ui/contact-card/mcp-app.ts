@@ -1,4 +1,5 @@
 import { App } from "@modelcontextprotocol/ext-apps";
+import { esc } from "../shared/esc.js";
 
 interface Contact {
   id: number;
@@ -91,9 +92,9 @@ function renderContact(contact: Contact) {
   appEl.className = "card";
   appEl.innerHTML = `
     <div class="card-header">
-      <div class="avatar">${initials}</div>
-      <h1>${fullName}</h1>
-      ${contact.url ? `<div class="company">${contact.url}</div>` : ""}
+      <div class="avatar">${esc(initials)}</div>
+      <h1>${esc(fullName)}</h1>
+      ${contact.url ? `<div class="company">${esc(contact.url)}</div>` : ""}
       <span class="type-badge ${typeClass}">${typeBadge}</span>
     </div>
     <div class="card-body">
@@ -105,7 +106,7 @@ function renderContact(contact: Contact) {
               <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
               </svg>
-              <span class="info-value"><a href="mailto:${contact.mail}">${contact.mail}</a></span>
+              <span class="info-value"><a href="mailto:${esc(contact.mail)}">${esc(contact.mail)}</a></span>
             </div>
           ` : ""}
           ${contact.phone_fixed ? `
@@ -113,7 +114,7 @@ function renderContact(contact: Contact) {
               <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
               </svg>
-              <span class="info-value"><a href="tel:${contact.phone_fixed}">${contact.phone_fixed}</a></span>
+              <span class="info-value"><a href="tel:${esc(contact.phone_fixed)}">${esc(contact.phone_fixed)}</a></span>
             </div>
           ` : ""}
           ${contact.phone_mobile ? `
@@ -121,7 +122,7 @@ function renderContact(contact: Contact) {
               <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
               </svg>
-              <span class="info-value"><a href="tel:${contact.phone_mobile}">${contact.phone_mobile}</a></span>
+              <span class="info-value"><a href="tel:${esc(contact.phone_mobile)}">${esc(contact.phone_mobile)}</a></span>
             </div>
           ` : ""}
           ${contact.fax ? `
@@ -129,7 +130,7 @@ function renderContact(contact: Contact) {
               <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
               </svg>
-              <span class="info-value">${contact.fax}</span>
+              <span class="info-value">${esc(contact.fax)}</span>
             </div>
           ` : ""}
         </div>
@@ -139,7 +140,7 @@ function renderContact(contact: Contact) {
         <div class="info-section">
           <div class="info-label">Address</div>
           <div class="address-block">
-            ${addressParts.map(p => `<div>${p}</div>`).join("")}
+            ${addressParts.map(p => `<div>${esc(p)}</div>`).join("")}
           </div>
         </div>
       ` : ""}
