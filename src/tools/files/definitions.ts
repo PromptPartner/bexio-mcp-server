@@ -44,25 +44,30 @@ export const toolDefinitions: Tool[] = [
   },
   {
     name: "upload_file",
-    description: "Upload a file to Bexio. File content must be provided as base64 encoded string for MCP JSON transport.",
+    description:
+      "Upload a file to Bexio and get its id/uuid (e.g. for create_bill/update_bill attachment_ids). Provide EITHER file_path (preferred: the server reads the file itself, so a PDF never passes through the conversation as base64) OR content_base64 + name + content_type. file_path works for any local path in stdio mode; in HTTP mode only inside the BEXIO_FILE_DIR directory, and not at all if that is unset.",
     annotations: { destructiveHint: false },
     inputSchema: {
       type: "object",
       properties: {
-        name: {
+        file_path: {
           type: "string",
-          description: "The filename including extension (e.g., 'document.pdf')",
+          description: "Path of a local file for the server to read and upload. Mutually exclusive with content_base64.",
         },
         content_base64: {
           type: "string",
-          description: "The file content encoded as base64 string",
+          description: "The file content encoded as base64. Mutually exclusive with file_path; requires name and content_type.",
+        },
+        name: {
+          type: "string",
+          description: "The filename including extension (e.g., 'document.pdf'). Defaults to the file_path's filename.",
         },
         content_type: {
           type: "string",
-          description: "The MIME type of the file (e.g., 'application/pdf', 'image/png')",
+          description: "The MIME type (e.g., 'application/pdf'). With file_path it defaults from the file extension.",
         },
       },
-      required: ["name", "content_base64", "content_type"],
+      required: [],
     },
   },
   {
@@ -80,7 +85,7 @@ export const toolDefinitions: Tool[] = [
         output_path: {
           type: "string",
           description:
-            "Optional absolute path to write the file to (on the server host). When omitted, large files go to a temp file and small files are returned inline as base64.",
+            "Optional path to write the file to (on the server host). When omitted, large files go to a temp file and small files are returned inline as base64. In HTTP mode only allowed inside BEXIO_FILE_DIR (relative paths resolve against it).",
         },
       },
       required: ["file_id"],

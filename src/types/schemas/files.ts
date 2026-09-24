@@ -23,12 +23,23 @@ export const GetFileParamsSchema = z.object({
 
 export type GetFileParams = z.infer<typeof GetFileParamsSchema>;
 
-// Upload file (accepts base64 content for MCP JSON transport)
-export const UploadFileParamsSchema = z.object({
-  name: z.string().min(1),
-  content_base64: z.string().min(1),
-  content_type: z.string().min(1),
-});
+// Upload file: either inline base64, or a local file_path the server reads itself
+// (#16), so large receipts never pass through the model. Exactly one of the two.
+export const UploadFileParamsSchema = z
+  .object({
+    file_path: z.string().min(1).optional(),
+    content_base64: z.string().min(1).optional(),
+    name: z.string().min(1).optional(),
+    content_type: z.string().min(1).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (!!v.file_path === !!v.content_base64) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Provide exactly one of file_path or content_base64" });
+    }
+    if (v.content_base64 && (!v.name || !v.content_type)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "name and content_type are required with content_base64" });
+    }
+  });
 
 export type UploadFileParams = z.infer<typeof UploadFileParamsSchema>;
 

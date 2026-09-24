@@ -16,6 +16,7 @@
 
 import { logger, silenceLogger } from "./logger.js";
 import { parseCompanyTokens, companyManager } from "./company-manager.js";
+import { setTransportMode } from "./shared/path-guard.js";
 
 // #18: when a stdio stream's reader is gone, writes fail with EPIPE (EIO on a dead
 // TTY). Logging that error goes to the same dead stderr and fails again, forever.
@@ -107,6 +108,8 @@ async function main(): Promise<void> {
     process.env["BEXIO_BASE_URL"] ?? "https://api.bexio.com/2.0";
 
   const { mode, host, port } = parseArgs();
+  // Tool-supplied local paths (upload/download) are confined per transport.
+  setTransportMode(mode);
 
   // v2.5.0: one or many companies. Single BEXIO_API_TOKEN → one company ("default");
   // BEXIO_API_TOKENS → multiple, switchable via the select_company tool.

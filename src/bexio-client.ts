@@ -2120,14 +2120,18 @@ export class BexioClient {
   }
 
   async uploadFile(data: { name: string; content_base64: string; content_type: string }): Promise<unknown> {
-    const buffer = Buffer.from(data.content_base64, "base64");
+    return this.uploadFileBuffer(data.name, Buffer.from(data.content_base64, "base64"), data.content_type);
+  }
+
+  /** Multipart upload of raw bytes (upload_file's file_path reads straight into this). */
+  async uploadFileBuffer(name: string, bytes: Buffer, contentType: string): Promise<unknown> {
     // Use form-data for multipart upload (transitive dep of axios). The shared
     // axios instance is bound to the v2.0 baseURL, so hit the v3.0 URL directly.
     const FormData = (await import("form-data")).default;
     const formData = new FormData();
-    formData.append("file", buffer, {
-      filename: data.name,
-      contentType: data.content_type,
+    formData.append("file", bytes, {
+      filename: name,
+      contentType,
     });
     const url = "https://api.bexio.com/3.0/files";
     try {
