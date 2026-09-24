@@ -472,12 +472,14 @@ export class BexioClient {
     return this.makeRequest("GET", `/kb_order/${orderId}/repetition`);
   }
 
-  async editOrderRepetition(orderId: number, repetitionId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("POST", `/kb_order/${orderId}/repetition/${repetitionId}`, undefined, data);
+  // An order has at most one repetition; bexio addresses it by the order id alone
+  // (/kb_order/{id}/repetition). There is no /repetition/{repetition_id} route.
+  async editOrderRepetition(orderId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_order/${orderId}/repetition`, undefined, data);
   }
 
-  async deleteOrderRepetition(orderId: number, repetitionId: number): Promise<unknown> {
-    return this.makeRequest("DELETE", `/kb_order/${orderId}/repetition/${repetitionId}`);
+  async deleteOrderRepetition(orderId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/kb_order/${orderId}/repetition`);
   }
 
   // ===== CONTACTS =====

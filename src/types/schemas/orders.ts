@@ -170,9 +170,11 @@ export const GetOrderRepetitionParamsSchema = z.object({
 export type GetOrderRepetitionParams = z.infer<typeof GetOrderRepetitionParamsSchema>;
 
 // Edit order repetition
+// repetition_id is accepted for backward compatibility but ignored: an order has at
+// most one repetition, addressed by the order id.
 export const EditOrderRepetitionParamsSchema = z.object({
   order_id: z.number().int().positive(),
-  repetition_id: z.number().int().positive(),
+  repetition_id: z.number().int().positive().optional(),
   repetition_data: z.record(z.unknown()),
 });
 
@@ -181,7 +183,7 @@ export type EditOrderRepetitionParams = z.infer<typeof EditOrderRepetitionParams
 // Delete order repetition
 export const DeleteOrderRepetitionParamsSchema = z.object({
   order_id: z.number().int().positive(),
-  repetition_id: z.number().int().positive(),
+  repetition_id: z.number().int().positive().optional(),
 });
 
 export type DeleteOrderRepetitionParams = z.infer<typeof DeleteOrderRepetitionParamsSchema>;

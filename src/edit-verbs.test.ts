@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { BexioClient } from "./bexio-client.js";
+import { handlers as orderHandlers } from "./tools/orders/handlers.js";
 
 /**
  * bexio's 2.0 API edits with POST ("Edit an invoice", "Edit an item", ...). Its OpenAPI
@@ -45,5 +46,29 @@ describe("2.0 edits use POST (the documented partial edit), never PUT", () => {
     // makeRequest (v3.0/v4.0 through makeVersionedRequest, where PUT is valid).
     const src = readFileSync(fileURLToPath(new URL("./bexio-client.ts", import.meta.url)), "utf-8");
     expect(src.match(/makeRequest(<[^>]*>)?\(\s*"PUT"/g) ?? []).toEqual([]);
+  });
+});
+
+describe("order repetition lives at /kb_order/{id}/repetition (one per order, no id)", () => {
+  it("edit posts to the order's repetition", async () => {
+    const { client, calls } = recordingClient();
+    await client.editOrderRepetition(3, { repetition: { type: "monthly", interval: 1 } });
+    expect(calls).toEqual([{ method: "POST", endpoint: "/kb_order/3/repetition" }]);
+  });
+
+  it("delete targets the order's repetition", async () => {
+    const { client, calls } = recordingClient();
+    await client.deleteOrderRepetition(3);
+    expect(calls).toEqual([{ method: "DELETE", endpoint: "/kb_order/3/repetition" }]);
+  });
+
+  it("the tools no longer require repetition_id, and ignore it if a caller still sends it", async () => {
+    const { client, calls } = recordingClient();
+    await orderHandlers.edit_order_repetition(client, { order_id: 3, repetition_data: { start: "2026-10-01" } });
+    await orderHandlers.delete_order_repetition(client, { order_id: 3, repetition_id: 99 });
+    expect(calls).toEqual([
+      { method: "POST", endpoint: "/kb_order/3/repetition" },
+      { method: "DELETE", endpoint: "/kb_order/3/repetition" },
+    ]);
   });
 });
