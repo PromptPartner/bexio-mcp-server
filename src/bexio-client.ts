@@ -133,7 +133,7 @@ export class BexioClient {
   }
 
   async updateContactGroup(groupId: number, data: { name: string }): Promise<unknown> {
-    return this.makeRequest("PUT", `/contact_group/${groupId}`, undefined, data);
+    return this.makeRequest("POST", `/contact_group/${groupId}`, undefined, data);
   }
 
   async searchContactGroups(query: string, limit = 100): Promise<unknown[]> {
@@ -177,7 +177,7 @@ export class BexioClient {
   }
 
   async updateSalutation(salutationId: number, data: { name: string }): Promise<unknown> {
-    return this.makeRequest("PUT", `/salutation/${salutationId}`, undefined, data);
+    return this.makeRequest("POST", `/salutation/${salutationId}`, undefined, data);
   }
 
   async searchSalutations(query: string, limit = 100): Promise<unknown[]> {
@@ -203,7 +203,7 @@ export class BexioClient {
   }
 
   async updateTitle(titleId: number, data: { name: string }): Promise<unknown> {
-    return this.makeRequest("PUT", `/title/${titleId}`, undefined, data);
+    return this.makeRequest("POST", `/title/${titleId}`, undefined, data);
   }
 
   async searchTitles(query: string, limit = 100): Promise<unknown[]> {
@@ -453,7 +453,7 @@ export class BexioClient {
   }
 
   async editOrder(orderId: number, orderData: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_order/${orderId}`, undefined, orderData);
+    return this.makeRequest("POST", `/kb_order/${orderId}`, undefined, orderData);
   }
 
   async deleteOrder(orderId: number): Promise<unknown> {
@@ -473,7 +473,7 @@ export class BexioClient {
   }
 
   async editOrderRepetition(orderId: number, repetitionId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_order/${orderId}/repetition/${repetitionId}`, undefined, data);
+    return this.makeRequest("POST", `/kb_order/${orderId}/repetition/${repetitionId}`, undefined, data);
   }
 
   async deleteOrderRepetition(orderId: number, repetitionId: number): Promise<unknown> {
@@ -628,7 +628,7 @@ export class BexioClient {
   }
 
   async editQuote(quoteId: number, quoteData: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_offer/${quoteId}`, undefined, quoteData);
+    return this.makeRequest("POST", `/kb_offer/${quoteId}`, undefined, quoteData);
   }
 
   async deleteQuote(quoteId: number): Promise<unknown> {
@@ -765,7 +765,7 @@ export class BexioClient {
   }
 
   async editInvoice(invoiceId: number, invoiceData: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_invoice/${invoiceId}`, undefined, invoiceData);
+    return this.makeRequest("POST", `/kb_invoice/${invoiceId}`, undefined, invoiceData);
   }
 
   async deleteInvoice(invoiceId: number): Promise<unknown> {
@@ -810,7 +810,7 @@ export class BexioClient {
     itemId: number,
     itemData: Record<string, unknown>
   ): Promise<unknown> {
-    return this.makeRequest("PUT", `/article/${itemId}`, undefined, itemData);
+    return this.makeRequest("POST", `/article/${itemId}`, undefined, itemData);
   }
 
   async deleteItem(itemId: number): Promise<unknown> {
@@ -2179,7 +2179,7 @@ export class BexioClient {
   }
 
   async updateAdditionalAddress(contactId: number, addressId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/contact/${contactId}/additional_address/${addressId}`, undefined, data);
+    return this.makeRequest("POST", `/contact/${contactId}/additional_address/${addressId}`, undefined, data);
   }
 
   async searchAdditionalAddresses(contactId: number, criteria: SearchCriteria[], limit = 50): Promise<unknown[]> {
@@ -2218,7 +2218,7 @@ export class BexioClient {
   }
 
   async updateNote(noteId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/note/${noteId}`, undefined, data);
+    return this.makeRequest("POST", `/note/${noteId}`, undefined, data);
   }
 
   async deleteNote(noteId: number): Promise<unknown> {
