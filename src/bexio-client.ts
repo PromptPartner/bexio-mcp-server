@@ -1633,6 +1633,8 @@ export class BexioClient {
 
   /**
    * Page through the journal for [startDate, endDate] and hand each row to `onRow`.
+   * Either bound may be omitted (open-ended range); only the given bounds are sent,
+   * because bexio may reject a placeholder such as 0000-01-01.
    *
    * The range is pushed down to bexio via `from`/`to`, so normally every returned row
    * already qualifies. Rows are nevertheless re-checked locally: if the server ever
@@ -1644,8 +1646,8 @@ export class BexioClient {
    * the journal is exhausted or the page cap is reached.
    */
   private async scanJournalRange(
-    startDate: string,
-    endDate: string,
+    startDate: string | undefined,
+    endDate: string | undefined,
     onRow: (row: Record<string, unknown>) => void,
     opts: { pageSize?: number; maxPages?: number; accountUuid?: string } = {}
   ): Promise<{ scanned: number; matched: number; truncated: boolean; serverSideFilter: boolean }> {
@@ -1675,7 +1677,7 @@ export class BexioClient {
       for (const row of batch) {
         scanned++;
         const d = BexioClient.journalRowDate(row);
-        if (d !== null && (d < startDate || d > endDate)) {
+        if (d !== null && ((startDate && d < startDate) || (endDate && d > endDate))) {
           serverSideFilter = false;
           continue;
         }
@@ -1687,14 +1689,15 @@ export class BexioClient {
       offset += PAGE;
     }
 
+    const range = `${startDate ?? "(open)"}..${endDate ?? "(open)"}`;
     if (truncated) {
       logger.warn(
-        `scanJournalRange: journal exceeded ${MAX_PAGES * PAGE} rows for ${startDate}..${endDate}; result may be incomplete.`
+        `scanJournalRange: journal exceeded ${MAX_PAGES * PAGE} rows for ${range}; result may be incomplete.`
       );
     }
     if (!serverSideFilter) {
       logger.warn(
-        `scanJournalRange: bexio returned rows outside ${startDate}..${endDate}; the range was enforced client-side.`
+        `scanJournalRange: bexio returned rows outside ${range}; the range was enforced client-side.`
       );
     }
     return { scanned, matched, truncated, serverSideFilter };
@@ -1717,13 +1720,10 @@ export class BexioClient {
       return this.getJournalPage({ account_uuid, limit, offset });
     }
 
-    const startDate = start_date ?? "0000-01-01";
-    const endDate = end_date ?? "9999-12-31";
-
     const matches: Array<Record<string, unknown>> = [];
     const stats = await this.scanJournalRange(
-      startDate,
-      endDate,
+      start_date,
+      end_date,
       (row) => {
         matches.push(row);
       },
@@ -1731,8 +1731,8 @@ export class BexioClient {
     );
 
     return {
-      start_date: startDate,
-      end_date: endDate,
+      start_date: start_date ?? null,
+      end_date: end_date ?? null,
       account_uuid: account_uuid ?? null,
       total_matched: matches.length,
       scanned_rows: stats.scanned,
