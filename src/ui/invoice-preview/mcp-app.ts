@@ -1,4 +1,5 @@
 import { App } from "@modelcontextprotocol/ext-apps";
+import { esc } from "../shared/esc.js";
 
 interface InvoicePosition {
   text: string;
@@ -90,22 +91,22 @@ function renderInvoice(invoice: Invoice) {
   appEl.innerHTML = `
     <div class="header">
       <div class="header-left">
-        <h1>Invoice ${invoice.document_nr}</h1>
-        <p class="title">${invoice.title || ""}</p>
+        <h1>Invoice ${esc(invoice.document_nr)}</h1>
+        <p class="title">${esc(invoice.title)}</p>
       </div>
       <div class="header-right">
         <div class="dates">
-          <div>Issue: ${formatDate(invoice.is_valid_from)}</div>
-          <div>Due: ${formatDate(invoice.is_valid_to)}</div>
+          <div>Issue: ${esc(formatDate(invoice.is_valid_from))}</div>
+          <div>Due: ${esc(formatDate(invoice.is_valid_to))}</div>
         </div>
-        <span class="status-badge ${status.className}">${status.label}</span>
+        <span class="status-badge ${status.className}">${esc(status.label)}</span>
       </div>
     </div>
 
     <div class="contact-section">
       <h2>Bill To</h2>
-      <div class="name">${invoice.contact_address?.split("\n")[0] || `Contact #${invoice.contact_id}`}</div>
-      <div class="email">${invoice.contact_address?.split("\n").slice(1).join(", ") || ""}</div>
+      <div class="name">${esc(invoice.contact_address?.split("\n")[0] || `Contact #${invoice.contact_id}`)}</div>
+      <div class="email">${esc(invoice.contact_address?.split("\n").slice(1).join(", "))}</div>
     </div>
 
     <table class="line-items">
@@ -120,10 +121,10 @@ function renderInvoice(invoice: Invoice) {
       <tbody>
         ${positions.length > 0 ? positions.map((p) => `
           <tr>
-            <td>${p.text}</td>
-            <td>${p.amount}</td>
-            <td>${formatCurrency(p.unit_price, invoice.currency_id)}</td>
-            <td>${formatCurrency(p.amount * p.unit_price * (1 - (p.discount_in_percent || 0) / 100), invoice.currency_id)}</td>
+            <td>${esc(p.text)}</td>
+            <td>${esc(p.amount)}</td>
+            <td>${esc(formatCurrency(p.unit_price, invoice.currency_id))}</td>
+            <td>${esc(formatCurrency(p.amount * p.unit_price * (1 - (p.discount_in_percent || 0) / 100), invoice.currency_id))}</td>
           </tr>
         `).join("") : `
           <tr>
@@ -136,7 +137,7 @@ function renderInvoice(invoice: Invoice) {
     <div class="total-section">
       <div class="total-row">
         <span class="total-label">Total:</span>
-        <span class="total-amount">${formatCurrency(invoice.total_gross, invoice.currency_id)}</span>
+        <span class="total-amount">${esc(formatCurrency(invoice.total_gross, invoice.currency_id))}</span>
       </div>
     </div>
   `;

@@ -1,0 +1,6 @@
+# Keep LF everywhere. The repo is edited from Windows and macOS (via Dropbox); a
+# Windows checkout with core.autocrlf rewrote every file to CRLF and showed the
+# whole tree as modified with no content change.
+* text=auto eol=lf
+*.png binary
+*.mcpb binary

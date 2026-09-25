@@ -54,11 +54,22 @@ Config location:
 
 ### For n8n and Other HTTP Clients
 
-Start the server in HTTP mode:
+Start the server in HTTP mode, with a bearer token:
 
 ```bash
-BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --port 8000
+BEXIO_API_TOKEN=your-token BEXIO_HTTP_TOKEN=$(openssl rand -hex 32) \
+  npx @promptpartner/bexio-mcp-server --mode http --host 127.0.0.1 --port 8000
 ```
+
+Clients then send `Authorization: Bearer <BEXIO_HTTP_TOKEN>` on every request (`GET /`,
+the health check, stays open).
+
+> **Security:** every tool reads or changes your books. Without `BEXIO_HTTP_TOKEN` the HTTP
+> endpoints are unauthenticated: on `0.0.0.0` (the default) anyone who can reach the port
+> can use them, and because CORS allows any origin, even a loopback-only server can be
+> called by a web page open in your browser. The server warns at startup when no token is
+> set. Local file paths (`upload_file` `file_path`, `download_file` `output_path`) are
+> refused over HTTP unless `BEXIO_FILE_DIR` names a directory to confine them to.
 
 The server exposes MCP over HTTP at `http://localhost:8000`. Configure your MCP client to connect to this endpoint.
 
@@ -87,7 +98,7 @@ BEXIO_API_TOKEN=your-token node dist/index.js
 
 ## Features
 
-This MCP server provides **314 tools** across all Bexio domains:
+This MCP server provides **315 tools** across all Bexio domains:
 
 ### Contacts & CRM
 - Create, update, search contacts
@@ -115,7 +126,8 @@ This MCP server provides **314 tools** across all Bexio domains:
 
 ### Accounting
 - Chart of accounts
-- Manual journal entries
+- Manual journal entries, incl. group entries (Sammelbuchung: one voucher, many postings)
+- Journal by date range and account; computed account balances (Saldenliste)
 - Business years and VAT periods
 - Account groups
 
@@ -125,7 +137,7 @@ This MCP server provides **314 tools** across all Bexio domains:
 - Outgoing payments
 
 ### Files & Documents
-- Document upload/download
+- Document upload/download; upload straight from a local file path (no base64 through the chat)
 - File management
 
 ### Payroll (requires Bexio Payroll module)
@@ -231,6 +243,9 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 | `BEXIO_DEFAULT_COMPANY` | No | first | Which company is active at startup |
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
 | `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
+| `BEXIO_HTTP_TOKEN` | Recommended for HTTP | - | Bearer token required on every HTTP endpoint except `GET /` |
+| `BEXIO_FILE_DIR` | No | - | Directory that `upload_file` `file_path` / `download_file` `output_path` are confined to. Required for local paths over HTTP; optional extra confinement over stdio |
+| `BEXIO_DOWNLOAD_INLINE_MAX_BYTES` | No | `64000` | `download_file` returns files up to this size inline as base64; larger ones are written to disk |
 
 \* Provide either `BEXIO_API_TOKEN` (one company) or `BEXIO_API_TOKENS` (several).
 

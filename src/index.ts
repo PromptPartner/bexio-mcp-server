@@ -14,14 +14,38 @@
  * stdout is reserved for MCP JSON-RPC protocol messages (stdio mode only).
  */
 
-import { logger } from "./logger.js";
+import { logger, silenceLogger } from "./logger.js";
 import { parseCompanyTokens, companyManager } from "./company-manager.js";
+import { setTransportMode } from "./shared/path-guard.js";
+
+// #18: when a stdio stream's reader is gone, writes fail with EPIPE (EIO on a dead
+// TTY). Logging that error goes to the same dead stderr and fails again, forever.
+// - stderr dead: stop logging. A client may drop stderr and still talk over stdout.
+// - stdout dead in stdio mode: the MCP client is gone, so exit, as #11 does on
+//   stdin close. HTTP mode does not use stdout and never exits here.
+const BROKEN_PIPE_CODES = new Set(["EPIPE", "EIO", "ERR_STREAM_DESTROYED"]);
+const isBrokenPipe = (err: unknown): boolean =>
+  BROKEN_PIPE_CODES.has((err as NodeJS.ErrnoException | undefined)?.code ?? "");
+const stdioMode = parseArgs().mode === "stdio";
+
+process.stderr.on("error", (err) => {
+  if (isBrokenPipe(err)) silenceLogger();
+});
+process.stdout.on("error", (err) => {
+  if (isBrokenPipe(err) && stdioMode) process.exit(0);
+});
 
 // Surface otherwise-silent failures. A peripheral throw or rejection must never
 // vanish without a trace: the v2.3.0 startup crash exited the process during the
 // `initialize` handshake with no stderr the user could see. Log the full stack;
 // do NOT exit here — a non-fatal background error should not kill a running server.
 process.on("uncaughtException", (err) => {
+  // A broken pipe cannot be logged (the log stream may be the broken one) - that
+  // attempt is what used to recurse (#18). Stop logging instead.
+  if (isBrokenPipe(err)) {
+    silenceLogger();
+    return;
+  }
   logger.error(
     "[FATAL] uncaughtException:",
     err instanceof Error ? (err.stack ?? err.message) : String(err)
@@ -84,6 +108,8 @@ async function main(): Promise<void> {
     process.env["BEXIO_BASE_URL"] ?? "https://api.bexio.com/2.0";
 
   const { mode, host, port } = parseArgs();
+  // Tool-supplied local paths (upload/download) are confined per transport.
+  setTransportMode(mode);
 
   // v2.5.0: one or many companies. Single BEXIO_API_TOKEN → one company ("default");
   // BEXIO_API_TOKENS → multiple, switchable via the select_company tool.
@@ -114,7 +140,7 @@ async function main(): Promise<void> {
     logger.info(`Starting in HTTP mode on ${host}:${port} (for n8n/remote access)`);
 
     const { createHttpServer } = await import("./transports/http.js");
-    await createHttpServer({ host, port });
+    await createHttpServer({ host, port, authToken: process.env["BEXIO_HTTP_TOKEN"]?.trim() || undefined });
 
     // Keep the process alive
     logger.info("HTTP server running. Press Ctrl+C to stop.");

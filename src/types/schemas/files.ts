@@ -23,12 +23,23 @@ export const GetFileParamsSchema = z.object({
 
 export type GetFileParams = z.infer<typeof GetFileParamsSchema>;
 
-// Upload file (accepts base64 content for MCP JSON transport)
-export const UploadFileParamsSchema = z.object({
-  name: z.string().min(1),
-  content_base64: z.string().min(1),
-  content_type: z.string().min(1),
-});
+// Upload file: either inline base64, or a local file_path the server reads itself
+// (#16), so large receipts never pass through the model. Exactly one of the two.
+export const UploadFileParamsSchema = z
+  .object({
+    file_path: z.string().min(1).optional(),
+    content_base64: z.string().min(1).optional(),
+    name: z.string().min(1).optional(),
+    content_type: z.string().min(1).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (!!v.file_path === !!v.content_base64) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Provide exactly one of file_path or content_base64" });
+    }
+    if (v.content_base64 && (!v.name || !v.content_type)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "name and content_type are required with content_base64" });
+    }
+  });
 
 export type UploadFileParams = z.infer<typeof UploadFileParamsSchema>;
 
@@ -78,17 +89,25 @@ export const GetAdditionalAddressParamsSchema = z.object({
 export type GetAdditionalAddressParams = z.infer<typeof GetAdditionalAddressParamsSchema>;
 
 // Create additional address
+// bexio's additional-address fields. `address` is read-only on bexio's side; it stays
+// accepted here as deprecated and is split into street_name + house_number.
+const AdditionalAddressFieldsSchema = z.object({
+  name: z.string().optional(),
+  name_addition: z.string().optional(),
+  street_name: z.string().optional(),
+  house_number: z.string().optional(),
+  address_addition: z.string().optional(),
+  address: z.string().optional(),
+  postcode: z.string().optional(),
+  city: z.string().optional(),
+  country_id: z.number().int().positive().optional(),
+  subject: z.string().optional(),
+  description: z.string().optional(),
+});
+
 export const CreateAdditionalAddressParamsSchema = z.object({
   contact_id: z.number().int().positive(),
-  address_data: z.object({
-    name: z.string().optional(),
-    address: z.string().optional(),
-    postcode: z.string().optional(),
-    city: z.string().optional(),
-    country_id: z.number().int().positive().optional(),
-    subject: z.string().optional(),
-    description: z.string().optional(),
-  }),
+  address_data: AdditionalAddressFieldsSchema,
 });
 
 export type CreateAdditionalAddressParams = z.infer<typeof CreateAdditionalAddressParamsSchema>;
@@ -97,15 +116,7 @@ export type CreateAdditionalAddressParams = z.infer<typeof CreateAdditionalAddre
 export const UpdateAdditionalAddressParamsSchema = z.object({
   contact_id: z.number().int().positive(),
   address_id: z.number().int().positive(),
-  address_data: z.object({
-    name: z.string().optional(),
-    address: z.string().optional(),
-    postcode: z.string().optional(),
-    city: z.string().optional(),
-    country_id: z.number().int().positive().optional(),
-    subject: z.string().optional(),
-    description: z.string().optional(),
-  }),
+  address_data: AdditionalAddressFieldsSchema,
 });
 
 export type UpdateAdditionalAddressParams = z.infer<typeof UpdateAdditionalAddressParamsSchema>;

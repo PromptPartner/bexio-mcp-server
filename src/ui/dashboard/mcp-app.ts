@@ -1,4 +1,5 @@
 import { App } from "@modelcontextprotocol/ext-apps";
+import { esc } from "../shared/esc.js";
 
 interface RecentContact {
   id: number;
@@ -60,8 +61,8 @@ function renderDashboard(data: DashboardData) {
           </div>
           <span class="card-title">Open Invoices</span>
         </div>
-        <div class="card-value">${data.open_invoices_count}</div>
-        <div class="card-subtitle">${formatCurrency(data.open_invoices_total, data.currency)} total</div>
+        <div class="card-value">${esc(data.open_invoices_count)}</div>
+        <div class="card-subtitle">${esc(formatCurrency(data.open_invoices_total, data.currency))} total</div>
       </div>
 
       <div class="card">
@@ -73,8 +74,8 @@ function renderDashboard(data: DashboardData) {
           </div>
           <span class="card-title">Overdue</span>
         </div>
-        <div class="card-value">${data.overdue_count}</div>
-        <div class="card-subtitle">${formatCurrency(data.overdue_total, data.currency)} outstanding</div>
+        <div class="card-value">${esc(data.overdue_count)}</div>
+        <div class="card-subtitle">${esc(formatCurrency(data.overdue_total, data.currency))} outstanding</div>
       </div>
 
       <div class="card">
@@ -89,8 +90,8 @@ function renderDashboard(data: DashboardData) {
         <div class="contacts-list">
           ${data.recent_contacts.length > 0 ? data.recent_contacts.slice(0, 5).map(contact => `
             <div class="contact-item">
-              <div class="contact-avatar">${getInitials(contact.name_1, contact.name_2)}</div>
-              <span class="contact-name">${[contact.name_1, contact.name_2].filter(Boolean).join(" ")}</span>
+              <div class="contact-avatar">${esc(getInitials(contact.name_1, contact.name_2))}</div>
+              <span class="contact-name">${esc([contact.name_1, contact.name_2].filter(Boolean).join(" "))}</span>
             </div>
           `).join("") : `
             <div class="empty-state">No recent contacts</div>

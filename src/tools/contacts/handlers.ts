@@ -17,6 +17,7 @@ import {
   DeleteContactParamsSchema,
   BulkCreateContactsParamsSchema,
   RestoreContactParamsSchema,
+  normalizeContactAddress,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -62,11 +63,12 @@ export const handlers: Record<string, HandlerFn> = {
 
   update_contact: async (client, args) => {
     const { contact_id, contact_data } = UpdateContactParamsSchema.parse(args);
-    return client.updateContact(contact_id, contact_data);
+    return client.updateContact(contact_id, normalizeContactAddress(contact_data));
   },
 
   create_contact: async (client, args) => {
-    const { contact_type, ...fields } = CreateContactParamsSchema.parse(args);
+    const { contact_type, ...parsed } = CreateContactParamsSchema.parse(args);
+    const fields = normalizeContactAddress(parsed);
     const contact_type_id = contact_type === "company" ? 1 : 2;
     // user_id and owner_id are required by the bexio API — default to 1 if not provided
     const user_id = fields.user_id ?? 1;
@@ -82,7 +84,8 @@ export const handlers: Record<string, HandlerFn> = {
 
   bulk_create_contacts: async (client, args) => {
     const { contacts } = BulkCreateContactsParamsSchema.parse(args);
-    const mappedContacts = contacts.map(({ contact_type, ...fields }) => {
+    const mappedContacts = contacts.map(({ contact_type, ...parsed }) => {
+      const fields = normalizeContactAddress(parsed);
       const user_id = fields.user_id ?? 1;
       const owner_id = (fields as Record<string, unknown>).owner_id ?? user_id;
       return { contact_type_id: contact_type === "company" ? 1 : 2, ...fields, user_id, owner_id };

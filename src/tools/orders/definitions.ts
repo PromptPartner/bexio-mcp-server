@@ -206,14 +206,14 @@ export const toolDefinitions: Tool[] = [
         },
         repetition_id: {
           type: "integer",
-          description: "The ID of the repetition to edit",
+          description: "Deprecated and ignored: an order has at most one repetition, addressed by order_id",
         },
         repetition_data: {
           type: "object",
           description: "Repetition fields to update",
         },
       },
-      required: ["order_id", "repetition_id", "repetition_data"],
+      required: ["order_id", "repetition_data"],
     },
   },
   {
@@ -229,10 +229,10 @@ export const toolDefinitions: Tool[] = [
         },
         repetition_id: {
           type: "integer",
-          description: "The ID of the repetition to delete",
+          description: "Deprecated and ignored: an order has at most one repetition, addressed by order_id",
         },
       },
-      required: ["order_id", "repetition_id"],
+      required: ["order_id"],
     },
   },
 ];

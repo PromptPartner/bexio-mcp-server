@@ -1,6 +1,6 @@
 # Bexio MCP Server
 
-MCP server that connects Claude Desktop to [Bexio](https://www.bexio.com/), the Swiss accounting platform. 314 tools for invoices, contacts, projects, time tracking, banking, account balances, and more.
+MCP server that connects Claude Desktop to [Bexio](https://www.bexio.com/), the Swiss accounting platform. 315 tools for invoices, contacts, projects, time tracking, banking, account balances, and more.
 
 > **Early Release** — Functional and tested, but under active development. [Report issues here.](https://github.com/promptpartner/bexio-mcp-server/issues)
 
@@ -50,11 +50,22 @@ BEXIO_API_TOKEN=your-token node dist/index.js
 
 ### n8n and HTTP Clients
 
-Start in HTTP mode for n8n or other HTTP-based MCP clients:
+Start in HTTP mode for n8n or other HTTP-based MCP clients, with a bearer token:
 
 ```bash
-BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --port 8000
+BEXIO_API_TOKEN=your-token BEXIO_HTTP_TOKEN=$(openssl rand -hex 32) \
+  npx @promptpartner/bexio-mcp-server --mode http --host 127.0.0.1 --port 8000
 ```
+
+Clients then send `Authorization: Bearer <BEXIO_HTTP_TOKEN>` on every request (`GET /`,
+the health check, stays open).
+
+> **Security:** every tool reads or changes your books. Without `BEXIO_HTTP_TOKEN` the HTTP
+> endpoints are unauthenticated: on `0.0.0.0` (the default) anyone who can reach the port
+> can use them, and because CORS allows any origin, even a loopback-only server can be
+> called by a web page open in your browser. The server warns at startup when no token is
+> set. Local file paths (`upload_file` `file_path`, `download_file` `output_path`) are
+> refused over HTTP unless `BEXIO_FILE_DIR` names a directory to confine them to.
 
 ## Compatibility
 
@@ -74,7 +85,7 @@ BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server --mode http --por
 
 ## Features
 
-This MCP server provides **310 tools** across all Bexio domains:
+This MCP server provides **315 tools** across all Bexio domains:
 
 ### Contacts & CRM
 - Create, update, search contacts
@@ -126,6 +137,8 @@ This MCP server provides **310 tools** across all Bexio domains:
 |----------|----------|---------|-------------|
 | `BEXIO_API_TOKEN` | Yes | - | Your Bexio API token |
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
+| `BEXIO_HTTP_TOKEN` | Recommended for HTTP | - | Bearer token required on every HTTP endpoint except `GET /` |
+| `BEXIO_FILE_DIR` | No | - | Directory that local file paths (`upload_file` / `download_file`) are confined to. Required for local paths over HTTP |
 
 ## Command Line Options
 

@@ -174,7 +174,8 @@ export const handlers: Record<string, HandlerFn> = {
       "show_position_taxes", "is_valid_from", "is_valid_to",
       "delivery_address_type", "reference",
       "kb_terms_of_payment_template_id", "template_slug",
-      "esr_id", "qr_invoice_id",
+      // not esr_id / qr_invoice_id: they come back on GET, but the edit form rejects
+      // them ("Widget schema does not include the following field(s)", #19)
     ];
     const payload: Record<string, unknown> = {};
     for (const key of writable) {

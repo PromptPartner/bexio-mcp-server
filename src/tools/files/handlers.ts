@@ -6,6 +6,31 @@
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
 import { shouldInline, writeDownloadToTemp, resolveInlineThreshold } from "../../shared/tempfile.js";
+import { resolveLocalPath } from "../../shared/path-guard.js";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+// Content type for upload_file(file_path) when the caller does not give one.
+const CONTENT_TYPES: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".heic": "image/heic",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+  ".txt": "text/plain",
+  ".csv": "text/csv",
+  ".xml": "application/xml",
+  ".json": "application/json",
+  ".doc": "application/msword",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".xls": "application/vnd.ms-excel",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ".zip": "application/zip",
+};
 import {
   ListFilesParamsSchema,
   GetFileParamsSchema,
@@ -19,6 +44,7 @@ import {
   UpdateAdditionalAddressParamsSchema,
   SearchAdditionalAddressesParamsSchema,
   DeleteAdditionalAddressParamsSchema,
+  normalizeContactAddress,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -44,11 +70,26 @@ export const handlers: Record<string, HandlerFn> = {
 
   upload_file: async (client, args) => {
     const params = UploadFileParamsSchema.parse(args);
-    return client.uploadFile(params);
+    if (params.file_path) {
+      const source = await resolveLocalPath(params.file_path, "read");
+      const bytes = await readFile(source);
+      const name = params.name ?? path.basename(source);
+      const contentType =
+        params.content_type ?? CONTENT_TYPES[path.extname(name).toLowerCase()] ?? "application/octet-stream";
+      return client.uploadFileBuffer(name, bytes, contentType);
+    }
+    // superRefine guarantees content_base64 + name + content_type here
+    return client.uploadFile({
+      name: params.name!,
+      content_base64: params.content_base64!,
+      content_type: params.content_type!,
+    });
   },
 
   download_file: async (client, args) => {
-    const { file_id, output_path } = DownloadFileParamsSchema.parse(args);
+    const { file_id, output_path: requestedPath } = DownloadFileParamsSchema.parse(args);
+    // Checked before downloading, so a refused path costs no API call.
+    const output_path = requestedPath ? await resolveLocalPath(requestedPath, "write") : undefined;
     const content_base64 = await client.downloadFile(file_id);
     const bytes = Buffer.from(content_base64, "base64");
     const size_bytes = bytes.length;
@@ -121,12 +162,12 @@ export const handlers: Record<string, HandlerFn> = {
 
   create_additional_address: async (client, args) => {
     const { contact_id, address_data } = CreateAdditionalAddressParamsSchema.parse(args);
-    return client.createAdditionalAddress(contact_id, address_data);
+    return client.createAdditionalAddress(contact_id, normalizeContactAddress(address_data));
   },
 
   update_additional_address: async (client, args) => {
     const { contact_id, address_id, address_data } = UpdateAdditionalAddressParamsSchema.parse(args);
-    return client.updateAdditionalAddress(contact_id, address_id, address_data);
+    return client.updateAdditionalAddress(contact_id, address_id, normalizeContactAddress(address_data));
   },
 
   search_additional_addresses: async (client, args) => {

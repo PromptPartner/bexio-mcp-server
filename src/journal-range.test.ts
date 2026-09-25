@@ -133,6 +133,26 @@ describe("journal date range", () => {
     expect(res.entries.map((r) => r.id)).toEqual([4, 6]);
   });
 
+  it("sends only the bound the caller gave, never a placeholder date", async () => {
+    const { client, queries } = fakeClient(JOURNAL);
+    const res = (await client.getJournal({ end_date: "2018-12-31" })) as {
+      entries: Row[];
+      start_date: string | null;
+      end_date: string | null;
+    };
+    expect(queries[0]).toMatchObject({ to: "2018-12-31" });
+    expect(queries[0]).not.toHaveProperty("from");
+    expect(res.entries.map((r) => r.id)).toEqual([1, 2]);
+    expect(res.start_date).toBeNull();
+    expect(res.end_date).toBe("2018-12-31");
+
+    const { client: c2, queries: q2 } = fakeClient(JOURNAL);
+    const res2 = (await c2.getJournal({ start_date: "2026-02-01" })) as { entries: Row[] };
+    expect(q2[0]).toMatchObject({ from: "2026-02-01" });
+    expect(q2[0]).not.toHaveProperty("to");
+    expect(res2.entries.map((r) => r.id)).toEqual([6]);
+  });
+
   it("passes the raw journal through when no range is given", async () => {
     const { client } = fakeClient(JOURNAL);
     const res = (await client.getJournal({ limit: 2, offset: 0 })) as Row[];

@@ -158,12 +158,12 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   edit_order_repetition: async (client, args) => {
-    const { order_id, repetition_id, repetition_data } = EditOrderRepetitionParamsSchema.parse(args);
-    return client.editOrderRepetition(order_id, repetition_id, repetition_data);
+    const { order_id, repetition_data } = EditOrderRepetitionParamsSchema.parse(args);
+    return client.editOrderRepetition(order_id, repetition_data);
   },
 
   delete_order_repetition: async (client, args) => {
-    const { order_id, repetition_id } = DeleteOrderRepetitionParamsSchema.parse(args);
-    return client.deleteOrderRepetition(order_id, repetition_id);
+    const { order_id } = DeleteOrderRepetitionParamsSchema.parse(args);
+    return client.deleteOrderRepetition(order_id);
   },
 };

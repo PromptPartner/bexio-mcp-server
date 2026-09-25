@@ -6,7 +6,7 @@
 
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { logger } from "./logger.js";
-import { McpError } from "./shared/errors.js";
+import { McpError, bexioErrorMessage } from "./shared/errors.js";
 import {
   BexioConfig,
   PaginationParams,
@@ -20,6 +20,7 @@ import {
 export class BexioClient {
   private client: AxiosInstance;
   private config: BexioConfig;
+  private baseCurrencyId?: Promise<number>;
 
   constructor(config: BexioConfig) {
     this.config = config;
@@ -37,23 +38,31 @@ export class BexioClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response) {
-          const status = error.response.status;
-          const message =
-            error.response.data?.message || error.response.statusText;
-          throw McpError.bexioApi(message, status, {
-            url: error.config?.url,
-            method: error.config?.method,
-          });
-        } else if (error.request) {
-          throw McpError.bexioApi("No response received from server", undefined, {
-            error: "NETWORK_ERROR",
-          });
-        } else {
-          throw McpError.internal(error.message);
-        }
+        throw BexioClient.toMcpError(error, error?.config?.url, error?.config?.method);
       }
     );
+  }
+
+  /**
+   * Normalize any failed bexio call into an McpError. Every transport path (the shared
+   * v2.0 instance, versioned v3.0/v4.0 calls, multipart upload, binary downloads) goes
+   * through here, so bexio's `errors` details and the status-based recovery hints reach
+   * the caller instead of a bare "Request failed with status code NNN".
+   */
+  private static toMcpError(error: unknown, url?: string, method?: string): McpError {
+    if (error instanceof McpError) return error;
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        const message = bexioErrorMessage(error.response.data, error.response.statusText);
+        return McpError.bexioApi(message, error.response.status, { url, method });
+      }
+      if (error.request) {
+        return McpError.bexioApi("No response received from server", undefined, {
+          error: "NETWORK_ERROR",
+        });
+      }
+    }
+    return McpError.internal(error instanceof Error ? error.message : String(error));
   }
 
   private async makeRequest<T = unknown>(
@@ -102,20 +111,7 @@ export class BexioClient {
       // This call bypasses the shared axios instance's interceptor, so normalize
       // errors to McpError here the same way (status-based recovery hints, and so
       // callers like the payroll module probe can inspect statusCode).
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          const message =
-            (error.response.data as { message?: string } | undefined)?.message ||
-            error.response.statusText;
-          throw McpError.bexioApi(message, error.response.status, { url, method });
-        }
-        if (error.request) {
-          throw McpError.bexioApi("No response received from server", undefined, {
-            error: "NETWORK_ERROR",
-          });
-        }
-      }
-      throw McpError.internal(error instanceof Error ? error.message : String(error));
+      throw BexioClient.toMcpError(error, url, method);
     }
   }
 
@@ -137,7 +133,7 @@ export class BexioClient {
   }
 
   async updateContactGroup(groupId: number, data: { name: string }): Promise<unknown> {
-    return this.makeRequest("PUT", `/contact_group/${groupId}`, undefined, data);
+    return this.makeRequest("POST", `/contact_group/${groupId}`, undefined, data);
   }
 
   async searchContactGroups(query: string, limit = 100): Promise<unknown[]> {
@@ -181,7 +177,7 @@ export class BexioClient {
   }
 
   async updateSalutation(salutationId: number, data: { name: string }): Promise<unknown> {
-    return this.makeRequest("PUT", `/salutation/${salutationId}`, undefined, data);
+    return this.makeRequest("POST", `/salutation/${salutationId}`, undefined, data);
   }
 
   async searchSalutations(query: string, limit = 100): Promise<unknown[]> {
@@ -207,7 +203,7 @@ export class BexioClient {
   }
 
   async updateTitle(titleId: number, data: { name: string }): Promise<unknown> {
-    return this.makeRequest("PUT", `/title/${titleId}`, undefined, data);
+    return this.makeRequest("POST", `/title/${titleId}`, undefined, data);
   }
 
   async searchTitles(query: string, limit = 100): Promise<unknown[]> {
@@ -269,6 +265,44 @@ export class BexioClient {
 
   async updateCompanyProfile(data: Record<string, unknown>): Promise<unknown> {
     return this.makeRequest("POST", "/company_profile", undefined, data);
+  }
+
+  /**
+   * The mandate's base currency id. Used as the default currency for manual entries:
+   * bexio rejects a posting line without one, and currency ids are global (1 = CHF,
+   * 2 = EUR, ...), so a hard-coded 1 would book an EUR mandate's entries in CHF.
+   * bexio's spec lists company_profile.base_currency_id, but the live API does not
+   * return it; every journal row carries base_currency_id, so one row is read as the
+   * fallback. Asked once per client; 1 only if both are absent (an empty mandate).
+   */
+  async getBaseCurrencyId(): Promise<number> {
+    const valid = (v: unknown): number | undefined => {
+      const n = Number(v);
+      return Number.isInteger(n) && n > 0 ? n : undefined;
+    };
+    this.baseCurrencyId ??= (async () => {
+      const raw = await this.makeRequest<unknown>("GET", "/company_profile");
+      const profile = (Array.isArray(raw) ? raw[0] : raw) as
+        | { base_currency_id?: unknown; base_currency?: { id?: unknown } }
+        | undefined;
+      const fromProfile = valid(profile?.base_currency_id ?? profile?.base_currency?.id);
+      if (fromProfile) return fromProfile;
+
+      const rows = await this.makeVersionedRequest<Array<{ base_currency_id?: unknown }>>(
+        "3.0", "GET", "accounting/journal", { limit: 1 }
+      );
+      const fromJournal = valid(Array.isArray(rows) ? rows[0]?.base_currency_id : undefined);
+      if (fromJournal) return fromJournal;
+
+      logger.warn("getBaseCurrencyId: no base currency in company profile or journal; defaulting to currency 1.");
+      return 1;
+    })();
+    try {
+      return await this.baseCurrencyId;
+    } catch (err) {
+      this.baseCurrencyId = undefined; // don't cache a failed lookup
+      throw err;
+    }
   }
 
   // ===== PERMISSIONS (v3.0 API; v2.0 /permission returns 404) =====
@@ -432,7 +466,7 @@ export class BexioClient {
   }
 
   async editOrder(orderId: number, orderData: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_order/${orderId}`, undefined, orderData);
+    return this.makeRequest("POST", `/kb_order/${orderId}`, undefined, orderData);
   }
 
   async deleteOrder(orderId: number): Promise<unknown> {
@@ -451,12 +485,14 @@ export class BexioClient {
     return this.makeRequest("GET", `/kb_order/${orderId}/repetition`);
   }
 
-  async editOrderRepetition(orderId: number, repetitionId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_order/${orderId}/repetition/${repetitionId}`, undefined, data);
+  // An order has at most one repetition; bexio addresses it by the order id alone
+  // (/kb_order/{id}/repetition). There is no /repetition/{repetition_id} route.
+  async editOrderRepetition(orderId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/kb_order/${orderId}/repetition`, undefined, data);
   }
 
-  async deleteOrderRepetition(orderId: number, repetitionId: number): Promise<unknown> {
-    return this.makeRequest("DELETE", `/kb_order/${orderId}/repetition/${repetitionId}`);
+  async deleteOrderRepetition(orderId: number): Promise<unknown> {
+    return this.makeRequest("DELETE", `/kb_order/${orderId}/repetition`);
   }
 
   // ===== CONTACTS =====
@@ -607,7 +643,7 @@ export class BexioClient {
   }
 
   async editQuote(quoteId: number, quoteData: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_offer/${quoteId}`, undefined, quoteData);
+    return this.makeRequest("POST", `/kb_offer/${quoteId}`, undefined, quoteData);
   }
 
   async deleteQuote(quoteId: number): Promise<unknown> {
@@ -744,7 +780,7 @@ export class BexioClient {
   }
 
   async editInvoice(invoiceId: number, invoiceData: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/kb_invoice/${invoiceId}`, undefined, invoiceData);
+    return this.makeRequest("POST", `/kb_invoice/${invoiceId}`, undefined, invoiceData);
   }
 
   async deleteInvoice(invoiceId: number): Promise<unknown> {
@@ -789,7 +825,7 @@ export class BexioClient {
     itemId: number,
     itemData: Record<string, unknown>
   ): Promise<unknown> {
-    return this.makeRequest("PUT", `/article/${itemId}`, undefined, itemData);
+    return this.makeRequest("POST", `/article/${itemId}`, undefined, itemData);
   }
 
   async deleteItem(itemId: number): Promise<unknown> {
@@ -1633,6 +1669,8 @@ export class BexioClient {
 
   /**
    * Page through the journal for [startDate, endDate] and hand each row to `onRow`.
+   * Either bound may be omitted (open-ended range); only the given bounds are sent,
+   * because bexio may reject a placeholder such as 0000-01-01.
    *
    * The range is pushed down to bexio via `from`/`to`, so normally every returned row
    * already qualifies. Rows are nevertheless re-checked locally: if the server ever
@@ -1644,8 +1682,8 @@ export class BexioClient {
    * the journal is exhausted or the page cap is reached.
    */
   private async scanJournalRange(
-    startDate: string,
-    endDate: string,
+    startDate: string | undefined,
+    endDate: string | undefined,
     onRow: (row: Record<string, unknown>) => void,
     opts: { pageSize?: number; maxPages?: number; accountUuid?: string } = {}
   ): Promise<{ scanned: number; matched: number; truncated: boolean; serverSideFilter: boolean }> {
@@ -1675,7 +1713,7 @@ export class BexioClient {
       for (const row of batch) {
         scanned++;
         const d = BexioClient.journalRowDate(row);
-        if (d !== null && (d < startDate || d > endDate)) {
+        if (d !== null && ((startDate && d < startDate) || (endDate && d > endDate))) {
           serverSideFilter = false;
           continue;
         }
@@ -1687,14 +1725,15 @@ export class BexioClient {
       offset += PAGE;
     }
 
+    const range = `${startDate ?? "(open)"}..${endDate ?? "(open)"}`;
     if (truncated) {
       logger.warn(
-        `scanJournalRange: journal exceeded ${MAX_PAGES * PAGE} rows for ${startDate}..${endDate}; result may be incomplete.`
+        `scanJournalRange: journal exceeded ${MAX_PAGES * PAGE} rows for ${range}; result may be incomplete.`
       );
     }
     if (!serverSideFilter) {
       logger.warn(
-        `scanJournalRange: bexio returned rows outside ${startDate}..${endDate}; the range was enforced client-side.`
+        `scanJournalRange: bexio returned rows outside ${range}; the range was enforced client-side.`
       );
     }
     return { scanned, matched, truncated, serverSideFilter };
@@ -1717,13 +1756,10 @@ export class BexioClient {
       return this.getJournalPage({ account_uuid, limit, offset });
     }
 
-    const startDate = start_date ?? "0000-01-01";
-    const endDate = end_date ?? "9999-12-31";
-
     const matches: Array<Record<string, unknown>> = [];
     const stats = await this.scanJournalRange(
-      startDate,
-      endDate,
+      start_date,
+      end_date,
       (row) => {
         matches.push(row);
       },
@@ -1731,8 +1767,8 @@ export class BexioClient {
     );
 
     return {
-      start_date: startDate,
-      end_date: endDate,
+      start_date: start_date ?? null,
+      end_date: end_date ?? null,
       account_uuid: account_uuid ?? null,
       total_matched: matches.length,
       scanned_rows: stats.scanned,
@@ -2082,19 +2118,8 @@ export class BexioClient {
         filename: `payslip_${employeeId}_${year}_${String(month).padStart(2, "0")}.pdf`,
       };
     } catch (error) {
-      // arraybuffer error bodies arrive as buffers; decode for a useful message.
-      if (axios.isAxiosError(error) && error.response) {
-        let message = error.response.statusText;
-        try {
-          message =
-            (JSON.parse(Buffer.from(error.response.data).toString("utf-8")) as { message?: string })
-              .message ?? message;
-        } catch {
-          // not JSON — keep statusText
-        }
-        throw McpError.bexioApi(message, error.response.status, { url, method: "get" });
-      }
-      throw McpError.internal(error instanceof Error ? error.message : String(error));
+      // arraybuffer error bodies arrive as buffers; bexioErrorMessage decodes them.
+      throw BexioClient.toMcpError(error, url, "get");
     }
   }
 
@@ -2108,33 +2133,47 @@ export class BexioClient {
   }
 
   async uploadFile(data: { name: string; content_base64: string; content_type: string }): Promise<unknown> {
-    const buffer = Buffer.from(data.content_base64, "base64");
+    return this.uploadFileBuffer(data.name, Buffer.from(data.content_base64, "base64"), data.content_type);
+  }
+
+  /** Multipart upload of raw bytes (upload_file's file_path reads straight into this). */
+  async uploadFileBuffer(name: string, bytes: Buffer, contentType: string): Promise<unknown> {
     // Use form-data for multipart upload (transitive dep of axios). The shared
     // axios instance is bound to the v2.0 baseURL, so hit the v3.0 URL directly.
     const FormData = (await import("form-data")).default;
     const formData = new FormData();
-    formData.append("file", buffer, {
-      filename: data.name,
-      contentType: data.content_type,
+    formData.append("file", bytes, {
+      filename: name,
+      contentType,
     });
-    const response = await axios.post("https://api.bexio.com/3.0/files", formData, {
-      headers: {
-        ...formData.getHeaders(),
-        Authorization: `Bearer ${this.config.apiToken}`,
-        // Bexio validates Accept strictly on POST /3.0/files and rejects the
-        // axios default ("application/json, text/plain, */*") with HTTP 415.
-        Accept: "application/json",
-      },
-    });
-    return response.data;
+    const url = "https://api.bexio.com/3.0/files";
+    try {
+      const response = await axios.post(url, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          Authorization: `Bearer ${this.config.apiToken}`,
+          // Bexio validates Accept strictly on POST /3.0/files and rejects the
+          // axios default ("application/json, text/plain, */*") with HTTP 415.
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw BexioClient.toMcpError(error, url, "post");
+    }
   }
 
   async downloadFile(fileId: number): Promise<string> {
-    const response = await axios.get(`https://api.bexio.com/3.0/files/${fileId}/download`, {
-      responseType: "arraybuffer",
-      headers: { Authorization: `Bearer ${this.config.apiToken}` },
-    });
-    return Buffer.from(response.data).toString("base64");
+    const url = `https://api.bexio.com/3.0/files/${fileId}/download`;
+    try {
+      const response = await axios.get(url, {
+        responseType: "arraybuffer",
+        headers: { Authorization: `Bearer ${this.config.apiToken}` },
+      });
+      return Buffer.from(response.data).toString("base64");
+    } catch (error) {
+      throw BexioClient.toMcpError(error, url, "get");
+    }
   }
 
   async updateFile(fileId: number, data: Record<string, unknown>): Promise<unknown> {
@@ -2159,7 +2198,7 @@ export class BexioClient {
   }
 
   async updateAdditionalAddress(contactId: number, addressId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/contact/${contactId}/additional_address/${addressId}`, undefined, data);
+    return this.makeRequest("POST", `/contact/${contactId}/additional_address/${addressId}`, undefined, data);
   }
 
   async searchAdditionalAddresses(contactId: number, criteria: SearchCriteria[], limit = 50): Promise<unknown[]> {
@@ -2198,7 +2237,7 @@ export class BexioClient {
   }
 
   async updateNote(noteId: number, data: Record<string, unknown>): Promise<unknown> {
-    return this.makeRequest("PUT", `/note/${noteId}`, undefined, data);
+    return this.makeRequest("POST", `/note/${noteId}`, undefined, data);
   }
 
   async deleteNote(noteId: number): Promise<unknown> {

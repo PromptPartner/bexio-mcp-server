@@ -150,7 +150,7 @@ export const handlers: Record<string, HandlerFn> = {
     const { quote_id, quote_data } = EditQuoteParamsSchema.parse(args);
     // GET existing record, then pick only writable fields + merge user changes
     const existing = await client.getQuote(quote_id) as Record<string, unknown>;
-    // Whitelist: only fields Bexio accepts on PUT for kb_offer
+    // Whitelist: only fields the kb_offer edit form accepts
     const writable = [
       "contact_id", "contact_sub_id", "user_id", "logopaper_id",
       "language_id", "bank_account_id", "currency_id", "payment_type_id",
