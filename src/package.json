@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc && npm run build:ui && npm run postbuild",
     "postbuild": "node -e \"require('fs').writeFileSync('dist/package.json', JSON.stringify({type:'module'}, null, 2)+'\\n'); console.log('Created dist/package.json')\"",
-    "build:ui": "node -e \"const fs=require('fs'); if(fs.existsSync('ui')){const{execSync}=require('child_process');execSync('npx vite build',{stdio:'inherit'})}else{console.log('Skipping UI build - ui/ not found')}\"",
+    "build:ui": "node scripts/build-ui.mjs",
     "dev": "tsx watch src/index.ts",
     "dev:ui": "vite build --watch",
     "start": "node dist/index.js",
