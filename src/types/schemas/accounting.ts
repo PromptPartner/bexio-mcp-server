@@ -115,7 +115,7 @@ export const CreateManualEntryParamsSchema = z.object({
   tax_account_id: z.number().int().positive().optional(),
   // bexio answers 422 "validation failed" when a posting line carries no currency, even
   // though the API docs mark these optional. The handler defaults currency_id to the
-  // mandate's base currency (company_profile.base_currency_id) when it is omitted.
+  // mandate's base currency (BexioClient.getBaseCurrencyId) when it is omitted.
   currency_id: z.number().int().positive().optional(),
   currency_factor: z.number().positive().default(1),
 });

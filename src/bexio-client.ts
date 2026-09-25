@@ -268,20 +268,33 @@ export class BexioClient {
   }
 
   /**
-   * The mandate's base currency id, from company_profile.base_currency_id. Used as the
-   * default currency for manual entries: bexio rejects a posting line without one, and
-   * a hard-coded 1 is only right where id 1 happens to be the base currency (in an EUR
-   * mandate it can be CHF). Asked once per client; falls back to 1 if absent.
+   * The mandate's base currency id. Used as the default currency for manual entries:
+   * bexio rejects a posting line without one, and currency ids are global (1 = CHF,
+   * 2 = EUR, ...), so a hard-coded 1 would book an EUR mandate's entries in CHF.
+   * bexio's spec lists company_profile.base_currency_id, but the live API does not
+   * return it; every journal row carries base_currency_id, so one row is read as the
+   * fallback. Asked once per client; 1 only if both are absent (an empty mandate).
    */
   async getBaseCurrencyId(): Promise<number> {
+    const valid = (v: unknown): number | undefined => {
+      const n = Number(v);
+      return Number.isInteger(n) && n > 0 ? n : undefined;
+    };
     this.baseCurrencyId ??= (async () => {
       const raw = await this.makeRequest<unknown>("GET", "/company_profile");
       const profile = (Array.isArray(raw) ? raw[0] : raw) as
         | { base_currency_id?: unknown; base_currency?: { id?: unknown } }
         | undefined;
-      const id = Number(profile?.base_currency_id ?? profile?.base_currency?.id);
-      if (Number.isInteger(id) && id > 0) return id;
-      logger.warn("getBaseCurrencyId: company profile has no base_currency_id; defaulting to currency 1.");
+      const fromProfile = valid(profile?.base_currency_id ?? profile?.base_currency?.id);
+      if (fromProfile) return fromProfile;
+
+      const rows = await this.makeVersionedRequest<Array<{ base_currency_id?: unknown }>>(
+        "3.0", "GET", "accounting/journal", { limit: 1 }
+      );
+      const fromJournal = valid(Array.isArray(rows) ? rows[0]?.base_currency_id : undefined);
+      if (fromJournal) return fromJournal;
+
+      logger.warn("getBaseCurrencyId: no base currency in company profile or journal; defaulting to currency 1.");
       return 1;
     })();
     try {

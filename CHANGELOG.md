@@ -44,10 +44,10 @@ its own.
 Bexio rejects a posting line that carries no currency with a bare
 `422 validation failed` and no field information, even though the API documents
 `currency_id` as optional. `currency_id` now defaults to the company's **base currency**
-(read once from the company profile's `base_currency_id`) and `currency_factor` to `1`.
-The base currency is looked up rather than assumed to be id `1`, because in a mandate
-whose base currency is EUR, id `1` can be CHF, and the entry would silently be booked in
-the wrong currency. The same default applies to `create_manual_group_entry`.
+(looked up once: the company profile's `base_currency_id` if present, else a journal
+row's `base_currency_id`, else `1`) and `currency_factor` to `1`. Currency ids are global
+(1 = CHF, 2 = EUR, ...), so assuming `1` would silently book an EUR mandate's entries
+in CHF. The same default applies to `create_manual_group_entry`.
 
 ## [2.5.0] - 2026-07-01
 
