@@ -119,8 +119,13 @@ try {
 
   // ---------- #19 edit_invoice + error details + POST-partial experiment ----------
   await attempt("#19 edit_invoice", async () => {
+    const taxes = await client.listTaxes({ limit: 200 });
+    const salesTax = taxes.find((t) => t.is_active && t.type === "sales_tax");
     const inv = await invoices.create_invoice(client, {
-      invoice_data: { contact_id: contactId, user_id: userId, title: `${TAG} invoice`, mwst_type: 0, mwst_is_net: true },
+      invoice_data: {
+        contact_id: contactId, user_id: userId, title: `${TAG} invoice`, mwst_type: 0, mwst_is_net: true,
+        positions: [{ type: "KbPositionCustom", text: `${TAG} position`, amount: 1, unit_price: 1, tax_id: salesTax?.id }],
+      },
     });
     cleanup.push(["invoice", () => invoices.delete_invoice(client, { invoice_id: inv.id })]);
     await invoices.edit_invoice(client, { invoice_id: inv.id, invoice_data: { reference: "V260-REF" } });
@@ -209,8 +214,10 @@ try {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "bexio-verify-"));
   cleanup.push(["temp dir", () => rm(tmp, { recursive: true, force: true })]);
   await attempt("#20 upload_file (base64)", async () => {
+    // bexio rejects some extensions (e.g. .txt: "File extension txt is not allowed").
     const f = await files.upload_file(client, {
-      name: `${TAG}.txt`, content_base64: Buffer.from("verify v2.6.0").toString("base64"), content_type: "text/plain",
+      name: `${TAG}.pdf`, content_base64: Buffer.from("%PDF-1.4\n% verify v2.6.0 base64\n").toString("base64"),
+      content_type: "application/pdf",
     });
     const rec = Array.isArray(f) ? f[0] : f;
     cleanup.push(["file (base64)", () => files.delete_file(client, { file_id: rec.id })]);
@@ -249,13 +256,14 @@ try {
     const base = (Array.isArray(currencies) ? currencies : []).find((c) => c.id === baseId);
     info("company base currency", `id=${baseId} name=${base?.name}`);
     const accts = await client.listAccounts({ limit: 2000 });
-    const pick = (no) => accts.find((a) => String(a.account_no) === no && a.is_active && !a.is_locked);
-    const debit = pick("1020") ?? pick("1000");
-    const credit = pick("1000") && pick("1000") !== debit ? pick("1000") : pick("1010");
+    // Two unlocked balance-sheet asset accounts (1xxx); the voucher nets to zero.
+    const assets = accts.filter((a) => /^1\d{3}$/.test(String(a.account_no)) && a.is_active && !a.is_locked);
+    const [debit, credit] = assets;
     if (!debit || !credit) {
-      info("group entry skipped", "no unlocked 1000/1010/1020 accounts");
+      info("group entry skipped", "fewer than two unlocked 1xxx accounts");
       return;
     }
+    info("group entry accounts", `${debit.account_no} ${debit.name} / ${credit.account_no} ${credit.name}`);
     const e = await accounting.create_manual_group_entry(client, {
       date: today,
       reference_nr: TAG,

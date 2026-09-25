@@ -42,11 +42,14 @@ _Last reviewed: 2026-09-24 (v2.6.0 audit)._
 - **Intended:** when bexio honours `from`/`to` (the normal case), pass `limit`/`offset`
   through and only fall back to the full scan when a row outside the range shows up.
 
-### `edit_invoice` / `edit_quote` / `edit_order` read-merge lists may be unnecessary
-- Written for PUT (a full overwrite). With POST (v2.6.0), bexio may treat the edit as
-  partial. `scripts/verify-v2.6.0.mjs` runs an "EXPERIMENT" line that shows whether a
-  bare `POST {title}` keeps the other fields. If it does, drop the merge lists: one
-  API call fewer per edit, and no stale-overwrite race.
+### `edit_invoice` / `edit_quote` / `edit_order` read-merge lists are unnecessary
+- Written for PUT (a full overwrite). **Live result 2026-09-25:** with POST, a bare
+  `POST /2.0/kb_invoice/{id} {title}` changed the title and kept `reference` and
+  `contact_id`. bexio's POST is a true partial edit.
+- **Intended:** drop the merge lists (one API call fewer per edit, no stale-overwrite
+  race, no risk of re-sending a field the edit form rejects, as with esr_id). Verify
+  quotes and orders live the same way first. Deferred from v2.6.0 because every live
+  run on the production mandate uses up a document number.
 
 ### Multi-company: the active company is process-global in HTTP mode
 - Documented in README. Concurrent HTTP clients share one active company.

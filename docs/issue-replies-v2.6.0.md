@@ -1,8 +1,8 @@
 # Issue replies — v2.6.0
 
-> Posted after the v2.6.0 release (GitHub writes authorized for this session). Lines
-> marked **[LIVE]** are confirmed by `src/scripts/verify-v2.6.0.mjs` against a live
-> bexio company before posting. Adjust any claim the live run does not support.
+> Posted after the v2.6.0 release (GitHub writes authorized for this session). The
+> live claims were confirmed on 2026-09-25 by `src/scripts/verify-v2.6.0.mjs` against a
+> live bexio company: 24/24 checks passed, all throwaway records deleted.
 
 ---
 
@@ -26,7 +26,7 @@ All three points are in:
    saved due to the following errors: Widget schema does not include the following
    field(s): esr_id, qr_invoice_id" instead of "…errors:.".
 
-**[LIVE]** Verified on a live company with throwaway records: `edit_item` changing one
+Verified on a live company with throwaway records: `edit_item` changing one
 field leaves prices, code and description intact; `edit_invoice` / `edit_quote` /
 `edit_order` / `update_note` / group / salutation / title all apply partial edits.
 
