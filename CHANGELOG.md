@@ -51,6 +51,13 @@ addresses had the same defect: `create_additional_address` dropped the street en
 bexio addresses an order's single repetition as `/kb_order/{id}/repetition`.
 `repetition_id` is now optional and ignored.
 
+### Fixed — MCP App panels never loaded
+With `BEXIO_ENABLE_UI=true`, the contact card, invoice preview and dashboard stayed on
+"Loading…": the build moved their shared code into a separate file that was never
+shipped. Each panel is now built as one self-contained HTML file, and the build fails
+if one is not. `src/scripts/verify-ui-render.mjs` renders all three in headless Chrome
+through the real MCP Apps handshake.
+
 ### Fixed — MCP App panels rendered bexio data unescaped
 The contact card, invoice preview and dashboard now escape every value. A contact name
 containing HTML could otherwise run script next to the host bridge.
