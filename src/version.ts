@@ -4,4 +4,4 @@
  * version. Bump with package.json, package-lock.json, server.json and manifest.json;
  * version.test.ts fails if they disagree.
  */
-export const SERVER_VERSION = "2.5.0";
+export const SERVER_VERSION = "2.6.0";

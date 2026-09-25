@@ -98,7 +98,7 @@ BEXIO_API_TOKEN=your-token node dist/index.js
 
 ## Features
 
-This MCP server provides **314 tools** across all Bexio domains:
+This MCP server provides **315 tools** across all Bexio domains:
 
 ### Contacts & CRM
 - Create, update, search contacts
@@ -126,7 +126,8 @@ This MCP server provides **314 tools** across all Bexio domains:
 
 ### Accounting
 - Chart of accounts
-- Manual journal entries
+- Manual journal entries, incl. group entries (Sammelbuchung: one voucher, many postings)
+- Journal by date range and account; computed account balances (Saldenliste)
 - Business years and VAT periods
 - Account groups
 
@@ -136,7 +137,7 @@ This MCP server provides **314 tools** across all Bexio domains:
 - Outgoing payments
 
 ### Files & Documents
-- Document upload/download
+- Document upload/download; upload straight from a local file path (no base64 through the chat)
 - File management
 
 ### Payroll (requires Bexio Payroll module)

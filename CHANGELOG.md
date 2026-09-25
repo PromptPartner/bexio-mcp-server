@@ -7,7 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed — Journal date filter used the wrong parameter names
+## [2.6.0] - 2026-09-25
+
+Fixes the open issues #16–#20, adds follow-ups to the merged contributor PRs #21 and #22,
+and hardens HTTP mode. Verified against a live bexio company through the real built
+handlers (`src/scripts/verify-v2.6.0.mjs`: 24/24, throwaway records only).
+
+### Fixed — v2.0 edits used PUT; `edit_item` silently wiped records (#19)
+bexio's 2.0 API edits with **POST**; its spec documents no PUT on these paths. PUT on
+`kb_invoice` failed with an empty 422, so `edit_invoice` never worked. Worse, `/article`
+still accepts PUT as an undocumented *overwrite*: `edit_item` returned 200 and cleared
+every field not in the payload (prices, codes, taxes). All ten v2.0 edits now POST:
+`edit_invoice`, `edit_quote`, `edit_order`, `edit_item`, `update_note`,
+`update_additional_address`, `update_contact_group`, `update_salutation`, `update_title`,
+`edit_order_repetition`. A guard test fails if a v2.0 PUT comes back. `edit_invoice` no
+longer re-sends `esr_id` / `qr_invoice_id`, which the edit form rejects.
+
+### Fixed — `upload_file` always failed with HTTP 415 (#20, #21, thanks @gilles-stack)
+bexio's `POST /3.0/files` only accepts the exact header `Accept: application/json`;
+axios' default Accept was rejected for every file.
+
+### Fixed — bexio's validation details were swallowed (#19, #17, #20)
+Errors now include bexio's `errors[]`: "…following errors: Widget schema does not
+include the following field(s): esr_id" instead of "…following errors:.". This covers
+every transport path; upload, download and payslip previously surfaced a bare
+"Request failed with status code NNN".
+
+### Fixed — orphaned stdio servers spinning at 100% CPU (#18)
+When a client died half-way (stdout/stderr gone, stdin open), each failed log write
+was logged again, forever. The logger now stops writing once stderr is dead. A dead
+stdout in stdio mode exits the server; a dead stderr alone only silences logging.
+`src/scripts/verify-shutdown.mjs` reproduces the case (before: 99% CPU; after: exit in
+~100 ms).
+
+### Fixed — contact street fields (#17)
+Contacts take `street_name`, `house_number` and `address_addition`. `create_contact` and
+`bulk_create_contacts` advertised only `address`, which bexio rejects, and their schema
+stripped the real fields. `address` still works, deprecated, and is split
+("Bahnhofstrasse 12a" → `Bahnhofstrasse` + `12a`), also in `update_contact`. Additional
+addresses had the same defect: `create_additional_address` dropped the street entirely.
+
+### Fixed — order repetition edit/delete targeted a route that doesn't exist
+bexio addresses an order's single repetition as `/kb_order/{id}/repetition`.
+`repetition_id` is now optional and ignored.
+
+### Fixed — MCP App panels rendered bexio data unescaped
+The contact card, invoice preview and dashboard now escape every value. A contact name
+containing HTML could otherwise run script next to the host bridge.
+
+### Fixed — HTTP transport reported version 2.0.0
+The version now comes from one `src/version.ts`, with a test that keeps package.json,
+package-lock.json, server.json and manifest.json in lockstep.
+
+### Added — `upload_file` from a local `file_path` (#16)
+The server reads the file and uploads it, so a PDF never passes through the model as
+base64. `name` / `content_type` default from the file.
+
+### Added — HTTP bearer auth (`BEXIO_HTTP_TOKEN`) and local-path confinement (`BEXIO_FILE_DIR`)
+HTTP mode had no authentication (default bind `0.0.0.0`, CORS open to any origin).
+Setting `BEXIO_HTTP_TOKEN` requires `Authorization: Bearer <token>` on every route except
+`GET /`; without it the server warns at startup. **Non-breaking**: existing setups keep
+working. Local file paths over HTTP (`upload_file` `file_path`, `download_file`
+`output_path`, which previously could write anywhere on the host) are refused unless
+`BEXIO_FILE_DIR` confines them, with symlink and `../` escapes blocked.
+
+### Fixed — journal ranges with a single bound
+A range with only `start_date` or only `end_date` now sends only that bound, instead
+of the placeholder dates `0000-01-01` / `9999-12-31`.
+
+
+### Fixed — Journal date filter used the wrong parameter names (#22, thanks @jschwertfeger)
 `GET /3.0/accounting/journal` filters by **`from`** and **`to`** (YYYY-MM-DD), plus an
 optional **`account_uuid`**. The client sent `start_date`/`end_date` instead. Bexio
 ignores unknown query parameters silently, so nothing failed — the endpoint simply
@@ -27,12 +96,12 @@ streamed per row instead of buffering the journal, the page cap is 500 pages, an
 `get_journal`'s `limit`/`offset` now page the **filtered** result. The scan never exits
 early on a date, so backdated postings are not lost.
 
-### Added — `account_uuid` filter on `get_journal`
+### Added — `account_uuid` filter on `get_journal` (#22)
 Restricts the journal to a single account, as the API supports. `get_account_balances`
 uses it automatically when called with `account_id`, so a single-account balance no
 longer pulls the entire journal.
 
-### Added — `create_manual_group_entry` (Sammelbuchung)
+### Added — `create_manual_group_entry` (Sammelbuchung) (#22)
 One voucher holding many postings, e.g. a whole payroll run booked as a single document.
 Previously only `create_manual_entry` existed, so a 130-line payroll journal meant 130
 API round-trips and 130 separate vouchers to correct or delete one by one. Each line
@@ -40,7 +109,7 @@ carries its own debit account, credit account, amount and description; `date`,
 `currency_id` and `currency_factor` are inherited from the document unless the line sets
 its own.
 
-### Fixed — `create_manual_entry` failed with an undiagnosable 422
+### Fixed — `create_manual_entry` failed with an undiagnosable 422 (#22)
 Bexio rejects a posting line that carries no currency with a bare
 `422 validation failed` and no field information, even though the API documents
 `currency_id` as optional. `currency_id` now defaults to the company's **base currency**
