@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-09-27
+
+### Fixed — tools advertised no titles or read-only/destructive hints
+Every tool definition carried `readOnlyHint` / `destructiveHint`, but the server
+registered tools in a way that dropped them, so clients (Claude Desktop included) saw no
+annotations and no titles on any tool. All tools now arrive with a title ("Get Invoice
+PDF") and their hint, which hosts use to decide what to confirm before running a tool.
+
+### Fixed — Desktop extension could not switch on the Interactive panels
+The `.mcpb` settings gain **Interactive panels** (off by default), which enables the
+invoice preview, contact card and dashboard. The manifest now also marks its tool list
+as a sample (`tools_generated`), since the server provides 315 tools.
+
 ## [2.6.0] - 2026-09-25
 
 Fixes the open issues #16–#20, adds follow-ups to the merged contributor PRs #21 and #22,
