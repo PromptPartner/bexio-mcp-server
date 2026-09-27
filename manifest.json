@@ -1,13 +1,19 @@
 {
   "manifest_version": "0.3",
   "name": "bexio-mcp-server",
-  "version": "2.6.1",
+  "display_name": "Bexio",
+  "version": "2.6.2",
   "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 300+ more tools through natural conversation. Supports multiple Bexio companies (mandates) from one install.",
   "author": {
     "name": "Lukas Hertig",
     "email": "lukas@promptpartner.ai"
   },
-  "homepage": "https://github.com/promptpartner/bexio-mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PromptPartner/bexio-mcp-server"
+  },
+  "homepage": "https://github.com/PromptPartner/bexio-mcp-server",
+  "support": "https://github.com/PromptPartner/bexio-mcp-server/issues",
   "icon": "icon.png",
   "license": "MIT",
   "privacy_policies": [
@@ -37,14 +43,16 @@
       "type": "string",
       "title": "Bexio API Token",
       "description": "Your Bexio API token (the primary company). Get it from Bexio > Settings > API Tokens. Required for authentication.",
-      "required": true
+      "required": true,
+      "sensitive": true
     },
     "additional_tokens": {
       "type": "string",
       "title": "Additional companies (optional)",
       "description": "For multiple Bexio companies (mandates): a comma-separated list of label:token pairs, e.g. 'Acme:token1,Globex:token2'. Generate each token while logged into that company. Then ask Claude to 'switch to Acme'. Leave empty for a single company.",
       "required": false,
-      "default": ""
+      "default": "",
+      "sensitive": true
     },
     "default_company": {
       "type": "string",

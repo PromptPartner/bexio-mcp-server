@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-09-27
+
+### Fixed — Claude Desktop stored the bexio token in plain text
+The Desktop extension's token fields are now marked sensitive, so Claude Desktop keeps
+them in the operating system's keychain instead of its plain-text config. **Re-enter
+your token after updating** if Claude Desktop asks for it. The extension listing also
+gains a display name, repository and support link.
+
+(2.6.1 was released on GitHub only; npm goes from 2.6.0 to 2.6.2.)
+
 ## [2.6.1] - 2026-09-27
 
 ### Fixed — tools advertised no titles or read-only/destructive hints
