@@ -23,4 +23,15 @@ describe("manifest.json", () => {
     expect(manifest.server.mcp_config.env.BEXIO_ENABLE_UI).toBe("${user_config.enable_ui}");
     expect(manifest.user_config.enable_ui).toMatchObject({ type: "boolean", default: false });
   });
+
+  it("stores tokens as sensitive (OS keychain, not plain-text config)", () => {
+    expect(manifest.user_config.api_token.sensitive).toBe(true);
+    expect(manifest.user_config.additional_tokens.sensitive).toBe(true);
+  });
+
+  it("carries the listing metadata the directory shows", () => {
+    expect(manifest.display_name).toBeTruthy();
+    expect(manifest.repository?.url).toMatch(/github\.com\/PromptPartner\/bexio-mcp-server/);
+    expect(manifest.support).toMatch(/^https:\/\//);
+  });
 });
