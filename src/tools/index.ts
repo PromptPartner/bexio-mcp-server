@@ -112,8 +112,26 @@ if (enabledCategories.size < Object.keys(CATEGORY_MODULES).length) {
 }
 
 /** Get all tool definitions for registration */
+const ACRONYMS = new Set(["pdf", "iban", "qr", "vat", "id", "uuid", "ui"]);
+
+/** "get_invoice_pdf" -> "Get Invoice PDF": a readable title for hosts and the directory. */
+export function toolTitle(name: string): string {
+  return name
+    .split("_")
+    .map((w) => (ACRONYMS.has(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
+// Every tool carries a title (and its read-only/destructive hint from the
+// definition): hosts use them to decide what to confirm, and Anthropic's
+// directory requires them on every tool.
+const titledDefinitions: Tool[] = allDefinitions.map((def) => {
+  const title = def.annotations?.title ?? toolTitle(def.name);
+  return { ...def, title, annotations: { ...def.annotations, title } };
+});
+
 export function getAllToolDefinitions(): Tool[] {
-  return allDefinitions;
+  return titledDefinitions;
 }
 
 /** Get handler for a specific tool */

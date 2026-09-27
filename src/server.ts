@@ -58,10 +58,13 @@ export class BexioMcpServer {
 
   private registerTools(): void {
     // Register ping tool for SDK validation
-    this.server.tool(
+    this.server.registerTool(
       "ping",
-      "Test tool that returns pong - validates SDK integration",
-      {},
+      {
+        title: "Ping",
+        description: "Test tool that returns pong - validates SDK integration",
+        annotations: { title: "Ping", readOnlyHint: true },
+      },
       async () => {
         logger.debug("ping tool called");
         return {
@@ -98,11 +101,17 @@ export class BexioMcpServer {
       // statically-unknown ZodRawShape, the SDK's generic arg-type inference
       // (z.infer over the shape) recurses past TS's depth limit (TS2589). Args
       // are re-validated by the handler's own schema, so the static type is moot.
-      this.server.tool(
+      // registerTool (not the deprecated server.tool overloads) so title and the
+      // read-only/destructive annotations reach tools/list; server.tool dropped them.
+      this.server.registerTool(
         def.name,
-        def.description || "",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        inputShape as any,
+        {
+          title: def.title,
+          description: def.description || "",
+          inputSchema: inputShape,
+          annotations: def.annotations,
+        } as any,
         async (args: unknown) => {
           try {
             // Resolve the currently-active company's client per call so

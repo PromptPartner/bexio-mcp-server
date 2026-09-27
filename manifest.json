@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "bexio-mcp-server",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Connect Claude Desktop to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 300+ more tools through natural conversation. Supports multiple Bexio companies (mandates) from one install.",
   "author": {
     "name": "Lukas Hertig",
@@ -19,13 +19,16 @@
     "entry_point": "dist/index.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/dist/index.js"],
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
       "env": {
         "BEXIO_API_TOKEN": "${user_config.api_token}",
         "BEXIO_API_TOKENS": "${user_config.additional_tokens}",
         "BEXIO_DEFAULT_COMPANY": "${user_config.default_company}",
         "BEXIO_BASE_URL": "${user_config.base_url}",
-        "BEXIO_ENABLED_CATEGORIES": "${user_config.enabled_categories}"
+        "BEXIO_ENABLED_CATEGORIES": "${user_config.enabled_categories}",
+        "BEXIO_ENABLE_UI": "${user_config.enable_ui}"
       }
     }
   },
@@ -63,10 +66,21 @@
       "description": "Comma-separated whitelist to reduce token usage. Example: contacts,invoices,purchase,banking. Leave empty to register all tools. Available: reference, company, banking, projects, timetracking, accounting, purchase, files, payroll, contacts, invoices, orders, quotes, payments, reminders, deliveries, items, reports, users, misc, notes, tasks, stock, docs, positions.",
       "required": false,
       "default": ""
+    },
+    "enable_ui": {
+      "type": "boolean",
+      "title": "Interactive panels (optional)",
+      "description": "Show invoice previews, contact cards and a dashboard as interactive panels in Claude Desktop.",
+      "required": false,
+      "default": false
     }
   },
   "compatibility": {
-    "platforms": ["darwin", "win32", "linux"]
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
   },
   "tools": [
     {
@@ -75,15 +89,15 @@
     },
     {
       "name": "preview_invoice",
-      "description": "Display interactive invoice preview"
+      "description": "Display interactive invoice preview (requires the Interactive panels setting)"
     },
     {
       "name": "show_contact_card",
-      "description": "Display formatted contact information"
+      "description": "Display formatted contact information (requires the Interactive panels setting)"
     },
     {
       "name": "show_dashboard",
-      "description": "Display dashboard with invoice and contact summary"
+      "description": "Display dashboard with invoice and contact summary (requires the Interactive panels setting)"
     },
     {
       "name": "list_contacts",
@@ -93,5 +107,6 @@
       "name": "create_invoice",
       "description": "Create a new invoice in Bexio"
     }
-  ]
+  ],
+  "tools_generated": true
 }
