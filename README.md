@@ -6,7 +6,7 @@ Manage invoices, contacts, projects, time tracking, and 300+ more tools through 
 
 > ⚠️ **Early Release Software**
 >
-> This project is under active development. While it's functional and tested, you may encounter bugs or unexpected behavior. Features will continue to be added and improved over time. Please [report any issues](https://github.com/promptpartner/bexio-mcp-server/issues) you find!
+> This project is under active development. While it's functional and tested, you may encounter bugs or unexpected behavior. Features will continue to be added and improved over time. Please [report any issues](https://github.com/PromptPartner/bexio-mcp-server/issues) you find!
 
 ## Compatibility
 
@@ -22,24 +22,27 @@ Manage invoices, contacts, projects, time tracking, and 300+ more tools through 
 
 **Option A: MCPB Bundle (Easiest)**
 
-1. Download the latest `.mcpb` file from [GitHub Releases](https://github.com/promptpartner/bexio-mcp-server/releases/latest)
-2. In Claude Desktop, go to **Settings → Extensions**
-3. Install the extension using one of these methods:
-   - **Double-click** the downloaded `.mcpb` file, or
-   - **Drag and drop** the file onto the Extensions window, or
-   - Click **Advanced Settings → Install Extension** and select the file
-4. Enter your Bexio API token when prompted
+1. Download the latest `.mcpb` file from [GitHub Releases](https://github.com/PromptPartner/bexio-mcp-server/releases/latest)
+2. Install it in Claude Desktop, either way works:
+   - **Double-click** the `.mcpb` file (or drag it onto the Claude Desktop window), or
+   - go to **Settings → Extensions → Advanced settings**, and under **Extension Developer** click **Install Extension…** and select the file
+3. Enter your Bexio API token when prompted. It is stored in your operating system's keychain.
+4. Optional: switch on **Interactive panels** in the extension's settings for invoice previews, contact cards and a dashboard.
 
-**Option B: npm**
+No Node.js installation is needed: Claude Desktop runs extensions with its built-in Node.js.
+Updating from 2.6.1 or older? Re-enter your token if Claude Desktop asks for it.
 
-Add to `claude_desktop_config.json`:
+**Option B: npm (manual config)**
+
+Requires [Node.js](https://nodejs.org/) (LTS). In Claude Desktop, open **Settings → Developer → Edit Config**
+and add:
 
 ```json
 {
   "mcpServers": {
     "bexio": {
       "command": "npx",
-      "args": ["@promptpartner/bexio-mcp-server"],
+      "args": ["-y", "@promptpartner/bexio-mcp-server"],
       "env": {
         "BEXIO_API_TOKEN": "your-token-here"
       }
@@ -51,6 +54,9 @@ Add to `claude_desktop_config.json`:
 Config location:
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+Then **quit Claude Desktop completely and restart it**. Note that this file keeps your token in plain
+text; the extension (Option A) stores it in the keychain instead.
 
 ### For n8n and Other HTTP Clients
 
@@ -82,7 +88,7 @@ BEXIO_API_TOKEN=your-token npx @promptpartner/bexio-mcp-server
 Or build from source:
 
 ```bash
-git clone https://github.com/promptpartner/bexio-mcp-server
+git clone https://github.com/PromptPartner/bexio-mcp-server
 cd bexio-mcp-server/src
 npm install && npm run build
 BEXIO_API_TOKEN=your-token node dist/index.js
@@ -330,9 +336,10 @@ Options:
 - Contact Bexio support to enable the module
 
 ### Claude Desktop doesn't see the server
-- Restart Claude Desktop after configuration changes
-- Verify the config file path is correct for your OS
-- Check Claude Desktop logs for error messages
+- Quit Claude Desktop completely (not just the window) and restart it after configuration changes
+- Check that it is connected: click **+** in the message box → **Connectors** → **Manage connectors**
+- For the JSON config: check the file path for your OS and that the JSON is valid
+- Check the logs: `~/Library/Logs/Claude/mcp-server-*.log` (macOS) or `%APPDATA%\Claude\logs` (Windows)
 
 ## Privacy Policy
 
@@ -342,7 +349,7 @@ Your data is processed according to [Bexio's Privacy Policy](https://www.bexio.c
 
 ## Support
 
-- **Issues & Bug Reports:** [GitHub Issues](https://github.com/promptpartner/bexio-mcp-server/issues)
+- **Issues & Bug Reports:** [GitHub Issues](https://github.com/PromptPartner/bexio-mcp-server/issues)
 - **Email:** lukas@promptpartner.ai
 
 ## Support the Project
