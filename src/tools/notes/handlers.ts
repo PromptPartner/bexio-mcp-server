@@ -53,7 +53,7 @@ export const handlers: Record<string, HandlerFn> = {
     // Only include optional fields when explicitly provided in raw input
     // Bexio rejects unexpected fields like is_public
     if (params.content !== undefined) noteData.info = params.content;
-    if ("is_public" in rawArgs) noteData.is_public = params.is_public;
+    if (params.is_public !== undefined) noteData.is_public = params.is_public;
     if (params.contact_id !== undefined) noteData.contact_id = params.contact_id;
     if (params.pr_project_id !== undefined) noteData.pr_project_id = params.pr_project_id;
     return client.createNote(noteData as Parameters<typeof client.createNote>[0]);

@@ -62,7 +62,7 @@ export const CreateNoteParamsSchema = z.object({
   event_start: z.string().min(1, "Event start date/time is required"),
   subject: z.string().min(1, "Subject is required"),
   content: z.string().optional(),
-  is_public: z.boolean().default(false),
+  is_public: z.boolean().optional(),
   contact_id: z.number().int().positive().optional(),
   pr_project_id: z.number().int().positive().optional(),
 });

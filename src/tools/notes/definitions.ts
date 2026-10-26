@@ -87,8 +87,7 @@ export const toolDefinitions: Tool[] = [
         },
         is_public: {
           type: "boolean",
-          description: "Whether the note is publicly visible (default: false)",
-          default: false,
+          description: "Whether the note is publicly visible. Omit it unless needed: Bexio's POST /note rejects the field (422 'Unexpected extra form field').",
         },
         contact_id: {
           type: "integer",

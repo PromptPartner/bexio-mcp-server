@@ -60,6 +60,13 @@ export const IssueBillParamsSchema = z.object({
 
 export type IssueBillParams = z.infer<typeof IssueBillParamsSchema>;
 
+// Revert bill to draft
+export const RevertBillParamsSchema = z.object({
+  bill_id: z.string(),
+});
+
+export type RevertBillParams = z.infer<typeof RevertBillParamsSchema>;
+
 // Mark bill as paid
 export const MarkBillAsPaidParamsSchema = z.object({
   bill_id: z.string(),

@@ -1961,6 +1961,11 @@ export class BexioClient {
     return this.makeVersionedRequest("4.0", "PUT", `purchase/bills/${billId}/bookings/BOOKED`);
   }
 
+  async revertBill(billId: string): Promise<unknown> {
+    // Same bookings endpoint as issueBill, in the other direction (BOOKED -> DRAFT, no body).
+    return this.makeVersionedRequest("4.0", "PUT", `purchase/bills/${billId}/bookings/DRAFT`);
+  }
+
   async markBillAsPaid(billId: string): Promise<unknown> {
     // #6: Bexio v4 has no mark-as-paid endpoint (the old POST /mark_as_paid 404s).
     // A bill is marked paid by recording a payment against it, so steer the caller

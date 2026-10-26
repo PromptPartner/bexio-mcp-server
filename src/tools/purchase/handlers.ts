@@ -14,6 +14,7 @@ import {
   DeleteBillParamsSchema,
   SearchBillsParamsSchema,
   IssueBillParamsSchema,
+  RevertBillParamsSchema,
   MarkBillAsPaidParamsSchema,
   ListExpensesParamsSchema,
   GetExpenseParamsSchema,
@@ -88,6 +89,11 @@ export const handlers: Record<string, HandlerFn> = {
   issue_bill: async (client, args) => {
     const { bill_id } = IssueBillParamsSchema.parse(args);
     return client.issueBill(bill_id);
+  },
+
+  revert_bill_to_draft: async (client, args) => {
+    const { bill_id } = RevertBillParamsSchema.parse(args);
+    return client.revertBill(bill_id);
   },
 
   mark_bill_as_paid: async (client, args) => {

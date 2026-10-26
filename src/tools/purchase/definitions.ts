@@ -171,6 +171,22 @@ export const toolDefinitions: Tool[] = [
     },
   },
   {
+    name: "revert_bill_to_draft",
+    description:
+      "Revert a BOOKED bill (creditor invoice) back to DRAFT so it can be edited or deleted (delete_bill only accepts DRAFT bills). Delete its outgoing payments first: a PAID bill must go back to BOOKED before it can be reverted. Bexio v4.0: PUT /purchase/bills/{id}/bookings/DRAFT.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        bill_id: {
+          type: "string",
+          description: "The UUID of the bill to revert (BOOKED -> DRAFT)",
+        },
+      },
+      required: ["bill_id"],
+    },
+  },
+  {
     name: "mark_bill_as_paid",
     description:
       "Mark a bill as paid. NOTE: Bexio v4.0 has no mark-as-paid endpoint — a bill is marked paid by recording a payment against it. Use create_outgoing_payment with payment_data.bill_id set to this bill's UUID (that flips the bill to PAID). Calling this tool returns that guidance rather than performing a no-op request.",
