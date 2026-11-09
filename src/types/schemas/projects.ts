@@ -171,3 +171,10 @@ export const DeleteWorkPackageParamsSchema = z.object({
 });
 
 export type DeleteWorkPackageParams = z.infer<typeof DeleteWorkPackageParamsSchema>;
+
+export const UpdateMilestoneParamsSchema = z.object({
+  project_id: z.number().int().positive(),
+  milestone_id: z.number().int().positive(),
+  milestone_data: z.record(z.unknown()),
+});
+export type UpdateMilestoneParams = z.infer<typeof UpdateMilestoneParamsSchema>;

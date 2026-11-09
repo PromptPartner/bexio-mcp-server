@@ -7,6 +7,7 @@
 
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
+import { withRequiredFields } from "../../shared/merge.js";
 import {
   // Timesheets
   ListTimesheetsParamsSchema,
@@ -23,6 +24,9 @@ import {
   // Communication Types
   ListCommunicationTypesParamsSchema,
   GetCommunicationTypeParamsSchema,
+  SearchBusinessActivitiesParamsSchema,
+  SearchCommunicationTypesParamsSchema,
+  UpdateTimesheetParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -118,5 +122,24 @@ export const handlers: Record<string, HandlerFn> = {
       throw McpError.notFound("Communication Type", type_id);
     }
     return type;
+  },
+
+  search_business_activities: async (client, args) => {
+    const { query, limit } = SearchBusinessActivitiesParamsSchema.parse(args);
+    return client.searchBusinessActivities(query, limit);
+  },
+
+  search_communication_types: async (client, args) => {
+    const { query, limit } = SearchCommunicationTypesParamsSchema.parse(args);
+    return client.searchCommunicationTypes(query, limit);
+  },
+
+  update_timesheet: async (client, args) => {
+    const { timesheet_id, timesheet_data } = UpdateTimesheetParamsSchema.parse(args);
+    const current = await client.getTimesheet(timesheet_id);
+    return client.updateTimesheet(
+      timesheet_id,
+      withRequiredFields(current, timesheet_data, ["user_id", "client_service_id", "allowable_bill"])
+    );
   },
 };

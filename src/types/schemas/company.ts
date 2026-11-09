@@ -7,7 +7,9 @@ import { z } from "zod";
 
 // ===== COMPANY PROFILE (REFDATA-09) =====
 
-export const GetCompanyProfileParamsSchema = z.object({});
+export const GetCompanyProfileParamsSchema = z.object({
+  profile_id: z.number().int().positive().optional(),
+});
 
 export type GetCompanyProfileParams = z.infer<typeof GetCompanyProfileParamsSchema>;
 
@@ -43,3 +45,9 @@ export const CreatePaymentTypeParamsSchema = z.object({
 });
 
 export type CreatePaymentTypeParams = z.infer<typeof CreatePaymentTypeParamsSchema>;
+
+export const SearchPaymentTypesParamsSchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  limit: z.number().int().positive().default(100),
+});
+export type SearchPaymentTypesParams = z.infer<typeof SearchPaymentTypesParamsSchema>;

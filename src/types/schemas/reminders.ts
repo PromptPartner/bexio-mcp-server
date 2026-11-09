@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { SearchCriteriaSchema } from "../common.js";
 
 // List reminders for an invoice
 export const ListRemindersParamsSchema = z.object({
@@ -86,3 +87,9 @@ export const SearchRemindersParamsSchema = z.object({
 });
 
 export type SearchRemindersParams = z.infer<typeof SearchRemindersParamsSchema>;
+
+export const SearchInvoiceRemindersParamsSchema = z.object({
+  invoice_id: z.number().int().positive(),
+  search_criteria: z.array(SearchCriteriaSchema).min(1),
+});
+export type SearchInvoiceRemindersParams = z.infer<typeof SearchInvoiceRemindersParamsSchema>;

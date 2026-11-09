@@ -245,4 +245,45 @@ export const toolDefinitions: Tool[] = [
       required: ["type_id"],
     },
   },
+  {
+    name: "search_business_activities",
+    description: "Search business activities (client services) by name (bexio search, matches with 'like')",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Text to match against the name" },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "search_communication_types",
+    description:
+      "Search communication types by name (bexio search, matches with 'like'). In tests bexio's search returned no built-in entries (e.g. the defaults it creates for every company), not even on an exact match; list_communication_types returns them.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Text to match against the name" },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "update_timesheet",
+    description:
+      "Edit a timesheet entry. Send only the fields to change (e.g. text, date, duration 'HH:MM', allowable_bill, status_id); the server fills bexio's required fields (user_id, client_service_id, allowable_bill) from the current entry.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        timesheet_id: { type: "integer", description: "The ID of the timesheet entry" },
+        timesheet_data: { type: "object", description: "Fields to change" },
+      },
+      required: ["timesheet_id", "timesheet_data"],
+    },
+  },
 ];

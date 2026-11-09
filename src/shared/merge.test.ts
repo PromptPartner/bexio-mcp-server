@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeBillData } from "./merge.js";
+import { mergeBillData, withRequiredFields } from "./merge.js";
 
 // A realistic GET /4.0/purchase/bills/{id} response shape (trimmed), including the
 // computed/denormalized fields that the PUT endpoint rejects as "Unrecognized
@@ -84,5 +84,16 @@ describe("mergeBillData", () => {
     expect(addr.city).toBe("Bern"); // patched
     expect(addr.postcode).toBe("6300"); // preserved from current
     expect(addr.lastname_company).toBe("bexio AG"); // preserved
+  });
+});
+
+describe("withRequiredFields", () => {
+  it("fills required fields from the current record, the patch wins", () => {
+    expect(withRequiredFields({ a: 1, b: 2, c: 3 }, { a: 9 }, ["a", "b"])).toEqual({ a: 9, b: 2 });
+  });
+
+  it("skips required fields the current record lacks or has as null", () => {
+    expect(withRequiredFields({ a: 1, b: null }, { a: 2 }, ["a", "b", "c"])).toEqual({ a: 2 });
+    expect(withRequiredFields(null, { x: 1 }, ["a"])).toEqual({ x: 1 });
   });
 });

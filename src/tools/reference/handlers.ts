@@ -5,6 +5,7 @@
 
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
+import { withRequiredFields } from "../../shared/merge.js";
 import {
   // Contact Groups
   ListContactGroupsParamsSchema,
@@ -46,6 +47,11 @@ import {
   GetUnitParamsSchema,
   CreateUnitParamsSchema,
   DeleteUnitParamsSchema,
+  SearchCountriesParamsSchema,
+  UpdateCountryParamsSchema,
+  SearchLanguagesParamsSchema,
+  SearchUnitsParamsSchema,
+  UpdateUnitParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -254,5 +260,32 @@ export const handlers: Record<string, HandlerFn> = {
   delete_unit: async (client, args) => {
     const { unit_id } = DeleteUnitParamsSchema.parse(args);
     return client.deleteUnit(unit_id);
+  },
+
+  // ===== Search and edit =====
+  search_countries: async (client, args) => {
+    const { query, limit } = SearchCountriesParamsSchema.parse(args);
+    return client.searchCountries(query, limit);
+  },
+
+  update_country: async (client, args) => {
+    const { country_id, country_data } = UpdateCountryParamsSchema.parse(args);
+    const current = await client.getCountry(country_id);
+    return client.updateCountry(country_id, withRequiredFields(current, country_data, ["name", "name_short", "iso3166_alpha2"]));
+  },
+
+  search_languages: async (client, args) => {
+    const { query, limit } = SearchLanguagesParamsSchema.parse(args);
+    return client.searchLanguages(query, limit);
+  },
+
+  search_units: async (client, args) => {
+    const { query, limit } = SearchUnitsParamsSchema.parse(args);
+    return client.searchUnits(query, limit);
+  },
+
+  update_unit: async (client, args) => {
+    const { unit_id, name } = UpdateUnitParamsSchema.parse(args);
+    return client.updateUnit(unit_id, { name });
   },
 };

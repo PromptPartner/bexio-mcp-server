@@ -444,4 +444,70 @@ export const toolDefinitions: Tool[] = [
       },
     },
   },
+  {
+    name: "get_business_year",
+    description: "Get one business year by ID (start, end, status)",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: { business_year_id: { type: "integer", description: "The ID of the business year" } },
+      required: ["business_year_id"],
+    },
+  },
+  {
+    name: "get_vat_period",
+    description: "Get one VAT period by ID (start, end, type, status)",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: { vat_period_id: { type: "integer", description: "The ID of the VAT period" } },
+      required: ["vat_period_id"],
+    },
+  },
+  {
+    name: "create_calendar_year",
+    description:
+      "Create a calendar year in bexio accounting (with its VAT settings). bexio creates the matching business year and VAT periods.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        year: { type: "string", description: "The year, e.g. '2027'" },
+        is_vat_subject: { type: "boolean", description: "Whether the company is subject to VAT in this year" },
+        is_annual_reporting: { type: "boolean", description: "Annual instead of periodic VAT reporting" },
+        vat_accounting_method: { type: "string", enum: ["effective", "net_tax"], description: "effective or net_tax (Saldosteuersatz)" },
+        vat_accounting_type: { type: "string", enum: ["agreed", "collected"], description: "agreed (vereinbart) or collected (vereinnahmt)" },
+        default_tax_income_id: { type: "integer", description: "Default tax for income" },
+        default_tax_expense_id: { type: "integer", description: "Default tax for expenses" },
+      },
+      required: ["year"],
+    },
+  },
+  {
+    name: "search_calendar_years",
+    description:
+      "Search calendar years. Searchable: start, end (bexio refuses year). For end use 'like', since '=' needs the full timestamp ('2025-12-31 23:59:59').",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        search_criteria: {
+          type: "array",
+          description: 'Criteria combined with AND, e.g. [{ "field": "start", "value": "2025-01-01", "criteria": "=" }]',
+          items: {
+            type: "object",
+            properties: {
+              field: { type: "string" },
+              value: { type: "string" },
+              criteria: { type: "string", description: "=, !=, >, >=, <, <=, like, not_like, in, not_in, is_null, not_null (default: like)" },
+            },
+            required: ["field", "value"],
+          },
+        },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+        offset: { type: "integer", description: "Number of results to skip (default: 0)", default: 0 },
+      },
+      required: ["search_criteria"],
+    },
+  },
 ];

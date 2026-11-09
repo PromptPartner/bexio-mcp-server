@@ -34,6 +34,10 @@ import {
   GetJournalParamsSchema,
   // Account Balances
   GetAccountBalancesParamsSchema,
+  GetBusinessYearParamsSchema,
+  GetVatPeriodParamsSchema,
+  CreateCalendarYearParamsSchema,
+  SearchCalendarYearsParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -189,5 +193,24 @@ export const handlers: Record<string, HandlerFn> = {
   get_account_balances: async (client, args) => {
     const params = GetAccountBalancesParamsSchema.parse(args);
     return client.getAccountBalances(params);
+  },
+
+  get_business_year: async (client, args) => {
+    const { business_year_id } = GetBusinessYearParamsSchema.parse(args);
+    return client.getBusinessYear(business_year_id);
+  },
+
+  get_vat_period: async (client, args) => {
+    const { vat_period_id } = GetVatPeriodParamsSchema.parse(args);
+    return client.getVatPeriod(vat_period_id);
+  },
+
+  create_calendar_year: async (client, args) => {
+    return client.createCalendarYear(CreateCalendarYearParamsSchema.parse(args));
+  },
+
+  search_calendar_years: async (client, args) => {
+    const { search_criteria, limit, offset } = SearchCalendarYearsParamsSchema.parse(args);
+    return client.searchCalendarYears(search_criteria, { limit, offset });
   },
 };

@@ -108,3 +108,23 @@ export const GetCommunicationTypeParamsSchema = z.object({
 });
 
 export type GetCommunicationTypeParams = z.infer<typeof GetCommunicationTypeParamsSchema>;
+
+// ===== Search and edit =====
+
+export const SearchBusinessActivitiesParamsSchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  limit: z.number().int().positive().default(100),
+});
+export type SearchBusinessActivitiesParams = z.infer<typeof SearchBusinessActivitiesParamsSchema>;
+
+export const SearchCommunicationTypesParamsSchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  limit: z.number().int().positive().default(100),
+});
+export type SearchCommunicationTypesParams = z.infer<typeof SearchCommunicationTypesParamsSchema>;
+
+export const UpdateTimesheetParamsSchema = z.object({
+  timesheet_id: z.number().int().positive(),
+  timesheet_data: z.record(z.unknown()),
+});
+export type UpdateTimesheetParams = z.infer<typeof UpdateTimesheetParamsSchema>;
