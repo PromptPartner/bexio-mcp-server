@@ -171,6 +171,18 @@ export const toolDefinitions: Tool[] = [
     },
   },
   {
+    name: "duplicate_bill",
+    description: "Duplicate a bill (bexio bill action DUPLICATE). Returns the new bill, a DRAFT copy.",
+    annotations: { destructiveHint: false },
+    inputSchema: { type: "object", properties: { bill_id: { type: "string", description: "The UUID of the bill" } }, required: ["bill_id"] },
+  },
+  {
+    name: "check_bill_document_number",
+    description: "Check whether a bill document number is still free. Returns { valid, next_available_no }.",
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: "object", properties: { document_no: { type: "string", description: "The document number to check" } }, required: ["document_no"] },
+  },
+  {
     name: "mark_bill_as_paid",
     description:
       "Mark a bill as paid. NOTE: Bexio v4.0 has no mark-as-paid endpoint — a bill is marked paid by recording a payment against it. Use create_outgoing_payment with payment_data.bill_id set to this bill's UUID (that flips the bill to PAID). Calling this tool returns that guidance rather than performing a no-op request.",
@@ -269,6 +281,32 @@ export const toolDefinitions: Tool[] = [
       },
       required: ["expense_id"],
     },
+  },
+
+  {
+    name: "book_expense",
+    description:
+      "Book an expense: DRAFT -> DONE, so it posts to the ledger. bexio requires bank_account_id and booking_account_id on the expense (and base_currency_amount for foreign currency); set them with update_expense first.",
+    annotations: { destructiveHint: false },
+    inputSchema: { type: "object", properties: { expense_id: { type: "string", description: "The UUID of the expense" } }, required: ["expense_id"] },
+  },
+  {
+    name: "revert_expense_to_draft",
+    description: "Reopen a booked expense: DONE -> DRAFT, which removes its posting until it is booked again.",
+    annotations: { destructiveHint: false },
+    inputSchema: { type: "object", properties: { expense_id: { type: "string", description: "The UUID of the expense" } }, required: ["expense_id"] },
+  },
+  {
+    name: "duplicate_expense",
+    description: "Duplicate an expense (bexio expense action DUPLICATE). Returns the new expense, a DRAFT copy.",
+    annotations: { destructiveHint: false },
+    inputSchema: { type: "object", properties: { expense_id: { type: "string", description: "The UUID of the expense" } }, required: ["expense_id"] },
+  },
+  {
+    name: "check_expense_document_number",
+    description: "Check whether an expense document number is still free. Returns { valid, next_available_no }.",
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: "object", properties: { document_no: { type: "string", description: "The document number to check" } }, required: ["document_no"] },
   },
 
   // ===== PURCHASE ORDERS (v3.0 API, integer IDs) =====

@@ -394,6 +394,35 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "POST", `banking/bank_accounts/${data.bank_account_id}/iban_payments`, undefined, data);
   }
 
+  // ===== BANKING PAYMENTS (v4.0) =====
+  // bexio's current payment API (2025-09-19). It replaces the 3.0 iban_payments /
+  // qr_payments endpoints, which bexio marked deprecated. The list is wrapped:
+  // { query, sort-by, pagination, results }.
+  async listBankingPayments(params: { "filter-by"?: string; page?: number; "per-page"?: number } = {}): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "GET", "banking/payments", params);
+  }
+
+  async getBankingPayment(paymentId: string): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "GET", `banking/payments/${paymentId}`);
+  }
+
+  async createBankingPayment(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "POST", "banking/payments", undefined, data);
+  }
+
+  async updateBankingPayment(paymentId: string, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "PUT", `banking/payments/${paymentId}`, undefined, data);
+  }
+
+  /** Cancel a payment; bexio allows it only in status downloaded, transferred or error. */
+  async cancelBankingPayment(paymentId: string): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "POST", `banking/payments/${paymentId}/cancel`);
+  }
+
+  async deleteBankingPayment(paymentId: string): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "DELETE", `banking/payments/${paymentId}`);
+  }
+
   async getIbanPayment(bankAccountId: number, paymentId: number): Promise<unknown> {
     return this.makeVersionedRequest("3.0", "GET", `banking/bank_accounts/${bankAccountId}/iban_payments/${paymentId}`);
   }
@@ -1961,6 +1990,16 @@ export class BexioClient {
     return this.makeVersionedRequest("4.0", "PUT", `purchase/bills/${billId}/bookings/BOOKED`);
   }
 
+  /** Run a bill action. bexio offers DUPLICATE (creates a new draft copy). */
+  async executeBillAction(billId: string, action: "DUPLICATE"): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "POST", `purchase/bills/${billId}/actions`, undefined, { action });
+  }
+
+  /** Whether a bill document number is still free ({ valid, next_available_no }). */
+  async checkBillDocumentNumber(documentNo: string): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "GET", "purchase/documentnumbers/bills", { document_no: documentNo });
+  }
+
   async markBillAsPaid(billId: string): Promise<unknown> {
     // #6: Bexio v4 has no mark-as-paid endpoint (the old POST /mark_as_paid 404s).
     // A bill is marked paid by recording a payment against it, so steer the caller
@@ -1992,6 +2031,21 @@ export class BexioClient {
 
   async deleteExpense(expenseId: string): Promise<unknown> {
     return this.makeVersionedRequest("4.0", "DELETE", `expenses/${expenseId}`);
+  }
+
+  /** Book (DRAFT -> DONE) or reopen (DONE -> DRAFT) an expense. The endpoint takes no body. */
+  async setExpenseStatus(expenseId: string, status: "DONE" | "DRAFT"): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "PUT", `expenses/${expenseId}/bookings/${status}`);
+  }
+
+  /** Run an expense action. bexio offers DUPLICATE (creates a new draft copy). */
+  async executeExpenseAction(expenseId: string, action: "DUPLICATE"): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "POST", `expenses/${expenseId}/actions`, undefined, { action });
+  }
+
+  /** Whether an expense document number is still free ({ valid, next_available_no }). */
+  async checkExpenseDocumentNumber(documentNo: string): Promise<unknown> {
+    return this.makeVersionedRequest("4.0", "GET", "expenses/documentnumbers", { document_no: documentNo });
   }
 
   // ===== PURCHASE ORDERS (PURCH-03, v3.0 API) =====
@@ -2105,11 +2159,14 @@ export class BexioClient {
   // Payslip PDF for one employee + period. Binary endpoint, so bypass the JSON
   // helper and request an arraybuffer directly (mirrors downloadFile), then base64.
   async getEmployeePayslipPdf(employeeId: string, year: number, month: number): Promise<unknown> {
-    const url = `https://api.bexio.com/4.0/payroll/employees/${employeeId}/paystub-pdf/${year}/${month}`;
+    // paystub-pdf-download returns the PDF itself (paystub-pdf, deprecated 2026-05-26,
+    // returns JSON). bexio requires Accept: application/json on both and answers 415
+    // to Accept: application/pdf, even though the response is a PDF.
+    const url = `https://api.bexio.com/4.0/payroll/employees/${employeeId}/paystub-pdf-download/${year}/${month}`;
     try {
       const response = await axios.get(url, {
         responseType: "arraybuffer",
-        headers: { Authorization: `Bearer ${this.config.apiToken}`, Accept: "application/pdf" },
+        headers: { Authorization: `Bearer ${this.config.apiToken}`, Accept: "application/json" },
       });
       const base64 = Buffer.from(response.data).toString("base64");
       return {

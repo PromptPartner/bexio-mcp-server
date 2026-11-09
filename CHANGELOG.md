@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — booking expenses, duplicating, document numbers, v4.0 bank payments
+- `book_expense` (DRAFT -> DONE) and `revert_expense_to_draft` (DONE -> DRAFT): expenses
+  could be created but not booked.
+- `duplicate_expense`, `duplicate_bill` (bexio's DUPLICATE action).
+- `check_expense_document_number`, `check_bill_document_number`
+  (`{ valid, next_available_no }`).
+- `list_banking_payments`, `get_banking_payment`, `create_banking_payment`,
+  `update_banking_payment`, `cancel_banking_payment`, `delete_banking_payment`: bexio's
+  v4.0 payment API (payment ids are UUIDs). bexio marked the 3.0 IBAN/QR payment
+  endpoints deprecated on 2025-09-19; `create_iban_payment` and `create_qr_payment` stay
+  and point to the new tool in their descriptions.
+
+### Fixed — `get_employee_payslip_pdf` always failed with 415
+The tool sent `Accept: application/pdf`; bexio requires `Accept: application/json` on the
+paystub endpoints, even though the response is a PDF. It now also uses
+`paystub-pdf-download`, which returns the PDF itself; `paystub-pdf` was deprecated on
+2026-05-26 and returns JSON. The tool's output is unchanged.
+
 ## [2.6.2] - 2026-09-27
 
 ### Fixed — Claude Desktop stored the bexio token in plain text

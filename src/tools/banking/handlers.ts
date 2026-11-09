@@ -23,6 +23,10 @@ import {
   CreateQrPaymentParamsSchema,
   GetQrPaymentParamsSchema,
   UpdateQrPaymentParamsSchema,
+  ListBankingPaymentsParamsSchema,
+  BankingPaymentIdParamsSchema,
+  CreateBankingPaymentParamsSchema,
+  UpdateBankingPaymentParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -182,5 +186,42 @@ export const handlers: Record<string, HandlerFn> = {
   update_qr_payment: async (client, args) => {
     const { bank_account_id, payment_id, payment_data } = UpdateQrPaymentParamsSchema.parse(args);
     return client.updateQrPayment(bank_account_id, payment_id, payment_data);
+  },
+
+  // ===== BANKING PAYMENTS (v4.0) =====
+  list_banking_payments: async (client, args) => {
+    const { filter_by, page, per_page } = ListBankingPaymentsParamsSchema.parse(args ?? {});
+    return client.listBankingPayments({
+      ...(filter_by ? { "filter-by": filter_by } : {}),
+      ...(page !== undefined ? { page } : {}),
+      ...(per_page !== undefined ? { "per-page": per_page } : {}),
+    });
+  },
+
+  get_banking_payment: async (client, args) => {
+    const { payment_id } = BankingPaymentIdParamsSchema.parse(args);
+    const payment = await client.getBankingPayment(payment_id);
+    if (!payment) throw McpError.notFound("Payment", payment_id);
+    return payment;
+  },
+
+  create_banking_payment: async (client, args) => {
+    const { payment_data } = CreateBankingPaymentParamsSchema.parse(args);
+    return client.createBankingPayment(payment_data);
+  },
+
+  update_banking_payment: async (client, args) => {
+    const { payment_id, payment_data } = UpdateBankingPaymentParamsSchema.parse(args);
+    return client.updateBankingPayment(payment_id, payment_data);
+  },
+
+  cancel_banking_payment: async (client, args) => {
+    const { payment_id } = BankingPaymentIdParamsSchema.parse(args);
+    return client.cancelBankingPayment(payment_id);
+  },
+
+  delete_banking_payment: async (client, args) => {
+    const { payment_id } = BankingPaymentIdParamsSchema.parse(args);
+    return client.deleteBankingPayment(payment_id);
   },
 };

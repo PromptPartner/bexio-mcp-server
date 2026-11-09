@@ -60,6 +60,20 @@ export const IssueBillParamsSchema = z.object({
 
 export type IssueBillParams = z.infer<typeof IssueBillParamsSchema>;
 
+// Duplicate bill (bill action DUPLICATE)
+export const DuplicateBillParamsSchema = z.object({
+  bill_id: z.string(),
+});
+
+export type DuplicateBillParams = z.infer<typeof DuplicateBillParamsSchema>;
+
+// Document number availability (bills and expenses)
+export const CheckDocumentNumberParamsSchema = z.object({
+  document_no: z.string().min(1),
+});
+
+export type CheckDocumentNumberParams = z.infer<typeof CheckDocumentNumberParamsSchema>;
+
 // Mark bill as paid
 export const MarkBillAsPaidParamsSchema = z.object({
   bill_id: z.string(),
@@ -105,6 +119,13 @@ export const DeleteExpenseParamsSchema = z.object({
 });
 
 export type DeleteExpenseParams = z.infer<typeof DeleteExpenseParamsSchema>;
+
+// Book / reopen / duplicate expense (all take just the expense UUID)
+export const ExpenseIdParamsSchema = z.object({
+  expense_id: z.string(),
+});
+
+export type ExpenseIdParams = z.infer<typeof ExpenseIdParamsSchema>;
 
 // ===== PURCHASE ORDERS (v3.0 API, integer IDs) =====
 
