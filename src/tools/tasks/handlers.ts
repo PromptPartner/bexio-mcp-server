@@ -51,8 +51,9 @@ export const handlers: Record<string, HandlerFn> = {
     };
     if (params.description) payload.description = params.description;
     if (params.finish_date) payload.finish_date = params.finish_date;
-    if (params.task_priority_id) payload.task_priority_id = params.task_priority_id;
-    if (params.task_status_id) payload.task_status_id = params.task_status_id;
+    // bexio's task fields are todo_priority_id / todo_status_id; task_* is ignored.
+    if (params.task_priority_id) payload.todo_priority_id = params.task_priority_id;
+    if (params.task_status_id) payload.todo_status_id = params.task_status_id;
     if (params.info) payload.info = params.info;
     if (params.resource_type) {
       payload.module_id = RESOURCE_TYPE_MAP[params.resource_type];

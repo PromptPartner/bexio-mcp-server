@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — four reference tools always returned 404
+`list_contact_sectors` and `search_contact_sectors` called `/contact_sector`,
+`list_task_priorities` and `list_task_statuses` called `/task_priority` and `/task_status`,
+`list_document_settings` called `/document_setting`. bexio names these resources
+`contact_branch`, `todo_priority`, `todo_status` and `kb_item_setting`; the tools now use
+those names (verified live). bexio has no `GET /contact_branch/{id}`, so
+`get_contact_sector` now picks the sector from the list.
+
+### Fixed — `create_task` dropped priority and status
+The tool sent `task_priority_id` / `task_status_id`, which bexio ignores. It now sends
+bexio's `todo_priority_id` / `todo_status_id`; the tool parameters keep their names.
+
 ## [2.6.2] - 2026-09-27
 
 ### Fixed — Claude Desktop stored the bexio token in plain text
