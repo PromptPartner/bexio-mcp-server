@@ -124,7 +124,7 @@ export const toolDefinitions: Tool[] = [
         task_data: {
           type: "object",
           description:
-            "Task fields to update (e.g., subject, description, finish_date, task_status_id)",
+            "Task fields to update, with bexio's field names (e.g., subject, info, finish_date, todo_status_id, todo_priority_id)",
         },
       },
       required: ["task_id", "task_data"],

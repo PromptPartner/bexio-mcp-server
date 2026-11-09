@@ -143,20 +143,17 @@ export class BexioClient {
 
   // ===== CONTACT SECTORS =====
   async listContactSectors(params: PaginationParams = {}): Promise<unknown[]> {
-    return this.makeRequest("GET", "/contact_sector", params);
+    return this.makeRequest("GET", "/contact_branch", params);
   }
 
   async getContactSector(sectorId: number): Promise<unknown> {
-    return this.makeRequest("GET", `/contact_sector/${sectorId}`);
-  }
-
-  async createContactSector(data: { name: string }): Promise<unknown> {
-    return this.makeRequest("POST", "/contact_sector", undefined, data);
+    const sectors = (await this.makeRequest("GET", "/contact_branch")) as Array<{ id?: number }>;
+    return sectors.find((s) => s.id === sectorId) ?? null;
   }
 
   async searchContactSectors(query: string, limit = 100): Promise<unknown[]> {
     const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
-    return this.makeRequest("POST", "/contact_sector/search", { limit }, criteria);
+    return this.makeRequest("POST", "/contact_branch/search", { limit }, criteria);
   }
 
   // ===== SALUTATIONS =====
@@ -2273,12 +2270,14 @@ export class BexioClient {
     return this.makeRequest("POST", "/task/search", params, criteria);
   }
 
+  // bexio names these resources todo_priority / todo_status; /task_priority and
+  // /task_status return 404.
   async listTaskPriorities(): Promise<unknown[]> {
-    return this.makeRequest("GET", "/task_priority");
+    return this.makeRequest("GET", "/todo_priority");
   }
 
   async listTaskStatuses(): Promise<unknown[]> {
-    return this.makeRequest("GET", "/task_status");
+    return this.makeRequest("GET", "/todo_status");
   }
 
   // ===== STOCK LOCATIONS (STOCK-01) =====
@@ -2302,8 +2301,9 @@ export class BexioClient {
   }
 
   // ===== DOCUMENT SETTINGS (DOCS-01) =====
+  // bexio's resource is "kb_item_setting"; /document_setting returns 404.
   async listDocumentSettings(params: PaginationParams = {}): Promise<unknown[]> {
-    return this.makeRequest("GET", "/document_setting", params);
+    return this.makeRequest("GET", "/kb_item_setting", params);
   }
 
   // ===== DOCUMENT TEMPLATES (DOCS-02, v3.0 API; v2.0 /kb_document_template returns 404) =====
