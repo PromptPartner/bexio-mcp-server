@@ -10,11 +10,14 @@ export const toolDefinitions: Tool[] = [
   // ===== COMPANY PROFILE (REFDATA-09) =====
   {
     name: "get_company_profile",
-    description: "Get the company profile including name, address, and settings",
+    description:
+      "Get the company profile including name, address, and settings. Without profile_id it returns the list of profiles; with profile_id one profile.",
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: "object",
-      properties: {},
+      properties: {
+        profile_id: { type: "integer", description: "Optional ID of one profile (from the list)" },
+      },
     },
   },
   {
@@ -93,6 +96,20 @@ export const toolDefinitions: Tool[] = [
         },
       },
       required: ["name"],
+    },
+  },
+  {
+    name: "search_payment_types",
+    description:
+      "Search payment types by name (bexio search, matches with 'like'). In tests bexio's search returned no built-in entries (e.g. the defaults it creates for every company), not even on an exact match; list_payment_types returns them.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Text to match against the name" },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+      },
+      required: ["query"],
     },
   },
 ];

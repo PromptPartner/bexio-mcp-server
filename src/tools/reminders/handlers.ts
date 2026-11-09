@@ -14,6 +14,7 @@ import {
   MarkReminderAsUnsentParamsSchema,
   GetReminderPdfParamsSchema,
   SendReminderParamsSchema,
+  SearchInvoiceRemindersParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -74,5 +75,10 @@ export const handlers: Record<string, HandlerFn> = {
     const { invoice_id, reminder_id } =
       GetReminderPdfParamsSchema.parse(args);
     return client.getReminderPdf(invoice_id, reminder_id);
+  },
+
+  search_invoice_reminders: async (client, args) => {
+    const { invoice_id, search_criteria } = SearchInvoiceRemindersParamsSchema.parse(args);
+    return client.searchInvoiceReminders(invoice_id, search_criteria);
   },
 };

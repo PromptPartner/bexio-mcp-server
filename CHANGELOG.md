@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — accounting years, reference data searches, edits of countries, units, timesheets and milestones
+- `get_business_year`, `get_vat_period`, `create_calendar_year`, `search_calendar_years`
+- `get_company_profile` takes an optional `profile_id` (one profile instead of the list)
+- `search_countries`, `search_languages`, `search_units`, `search_payment_types`,
+  `search_business_activities`, `search_communication_types`
+- `search_invoice_reminders`: bexio's native reminder search on one invoice
+- `update_country`, `update_unit`, `update_timesheet`, `update_milestone`
+
+bexio's edit endpoints reject a payload without the resource's required fields, even for
+a partial edit. `update_country`, `update_timesheet` and `update_milestone` read the
+current record and fill those fields (`shared/merge.ts` `withRequiredFields`), so callers
+send only what changes. Deleting a tax (`DELETE /3.0/taxes/{id}`) is left out on purpose:
+a deleted tax cannot be restored.
+
 ## [2.6.2] - 2026-09-27
 
 ### Fixed — Claude Desktop stored the bexio token in plain text

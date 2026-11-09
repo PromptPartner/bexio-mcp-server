@@ -594,4 +594,72 @@ export const toolDefinitions: Tool[] = [
       required: ["unit_id"],
     },
   },
+
+  // ===== Search and edit =====
+  {
+    name: "search_countries",
+    description: "Search countries by name (bexio search, matches with 'like')",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Text to match against the name" },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "update_country",
+    description:
+      "Edit a country. Send only the fields to change (name, name_short, iso3166_alpha2); the server fills bexio's required fields from the current record.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        country_id: { type: "integer", description: "The ID of the country" },
+        country_data: { type: "object", description: "Fields to change" },
+      },
+      required: ["country_id", "country_data"],
+    },
+  },
+  {
+    name: "search_languages",
+    description: "Search languages by name (bexio search, matches with 'like')",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Text to match against the name" },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "search_units",
+    description: "Search units by name (bexio search, matches with 'like')",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Text to match against the name" },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "update_unit",
+    description: "Rename a unit",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        unit_id: { type: "integer", description: "The ID of the unit" },
+        name: { type: "string", description: "The new name" },
+      },
+      required: ["unit_id", "name"],
+    },
+  },
 ];

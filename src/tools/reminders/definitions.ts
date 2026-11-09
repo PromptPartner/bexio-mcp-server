@@ -172,4 +172,30 @@ export const toolDefinitions: Tool[] = [
       required: ["invoice_id", "reminder_id"],
     },
   },
+  {
+    name: "search_invoice_reminders",
+    description:
+      "Search the reminders of one invoice with bexio's native search. Fields: title, reminder_level, is_sent, is_valid_from, is_valid_to.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        invoice_id: { type: "integer", description: "The ID of the invoice" },
+        search_criteria: {
+          type: "array",
+          description: 'Criteria combined with AND, e.g. [{ "field": "is_sent", "value": "true", "criteria": "=" }]',
+          items: {
+            type: "object",
+            properties: {
+              field: { type: "string" },
+              value: { type: "string" },
+              criteria: { type: "string", description: "=, !=, >, >=, <, <=, like, not_like, in, not_in, is_null, not_null (default: like)" },
+            },
+            required: ["field", "value"],
+          },
+        },
+      },
+      required: ["invoice_id", "search_criteria"],
+    },
+  },
 ];

@@ -5,6 +5,7 @@
 
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
+import { withRequiredFields } from "../../shared/merge.js";
 import {
   // Projects
   ListProjectsParamsSchema,
@@ -32,6 +33,7 @@ import {
   CreateWorkPackageParamsSchema,
   UpdateWorkPackageParamsSchema,
   DeleteWorkPackageParamsSchema,
+  UpdateMilestoneParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -168,5 +170,11 @@ export const handlers: Record<string, HandlerFn> = {
   delete_work_package: async (client, args) => {
     const { project_id, workpackage_id } = DeleteWorkPackageParamsSchema.parse(args);
     return client.deleteWorkPackage(project_id, workpackage_id);
+  },
+
+  update_milestone: async (client, args) => {
+    const { project_id, milestone_id, milestone_data } = UpdateMilestoneParamsSchema.parse(args);
+    const current = await client.getMilestone(project_id, milestone_id);
+    return client.updateMilestone(project_id, milestone_id, withRequiredFields(current, milestone_data, ["name"]));
   },
 };

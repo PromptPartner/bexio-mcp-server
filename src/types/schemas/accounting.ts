@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod";
+import { SearchCriteriaSchema } from "../common.js";
 
 // ===== ACCOUNTS - Chart of Accounts (ACCT-01) =====
 
@@ -189,3 +190,33 @@ export const GetAccountBalancesParamsSchema = z.object({
 });
 
 export type GetAccountBalancesParams = z.infer<typeof GetAccountBalancesParamsSchema>;
+
+// ===== Single business year / VAT period, calendar year create and search =====
+
+export const GetBusinessYearParamsSchema = z.object({
+  business_year_id: z.number().int().positive(),
+});
+export type GetBusinessYearParams = z.infer<typeof GetBusinessYearParamsSchema>;
+
+export const GetVatPeriodParamsSchema = z.object({
+  vat_period_id: z.number().int().positive(),
+});
+export type GetVatPeriodParams = z.infer<typeof GetVatPeriodParamsSchema>;
+
+export const CreateCalendarYearParamsSchema = z.object({
+  year: z.string().regex(/^\d{4}$/, "year must be four digits, e.g. 2027"),
+  is_vat_subject: z.boolean().optional(),
+  is_annual_reporting: z.boolean().optional(),
+  vat_accounting_method: z.enum(["effective", "net_tax"]).optional(),
+  vat_accounting_type: z.enum(["agreed", "collected"]).optional(),
+  default_tax_income_id: z.number().int().positive().optional(),
+  default_tax_expense_id: z.number().int().positive().optional(),
+});
+export type CreateCalendarYearParams = z.infer<typeof CreateCalendarYearParamsSchema>;
+
+export const SearchCalendarYearsParamsSchema = z.object({
+  search_criteria: z.array(SearchCriteriaSchema).min(1),
+  limit: z.number().int().positive().default(100),
+  offset: z.number().int().min(0).default(0),
+});
+export type SearchCalendarYearsParams = z.infer<typeof SearchCalendarYearsParamsSchema>;

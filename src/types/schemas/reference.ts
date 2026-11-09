@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { SearchCriteriaSchema } from "../common.js";
 
 // ===== CONTACT GROUPS (REFDATA-01) =====
 
@@ -240,3 +241,35 @@ export const DeleteUnitParamsSchema = z.object({
 });
 
 export type DeleteUnitParams = z.infer<typeof DeleteUnitParamsSchema>;
+
+// ===== Search and edit (countries, languages, units) =====
+
+export const SearchCountriesParamsSchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  limit: z.number().int().positive().default(100),
+});
+export type SearchCountriesParams = z.infer<typeof SearchCountriesParamsSchema>;
+
+export const UpdateCountryParamsSchema = z.object({
+  country_id: z.number().int().positive(),
+  country_data: z.record(z.unknown()),
+});
+export type UpdateCountryParams = z.infer<typeof UpdateCountryParamsSchema>;
+
+export const SearchLanguagesParamsSchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  limit: z.number().int().positive().default(100),
+});
+export type SearchLanguagesParams = z.infer<typeof SearchLanguagesParamsSchema>;
+
+export const SearchUnitsParamsSchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  limit: z.number().int().positive().default(100),
+});
+export type SearchUnitsParams = z.infer<typeof SearchUnitsParamsSchema>;
+
+export const UpdateUnitParamsSchema = z.object({
+  unit_id: z.number().int().positive(),
+  name: z.string().min(1),
+});
+export type UpdateUnitParams = z.infer<typeof UpdateUnitParamsSchema>;

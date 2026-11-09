@@ -11,6 +11,7 @@ import {
   ListPaymentTypesParamsSchema,
   GetPaymentTypeParamsSchema,
   CreatePaymentTypeParamsSchema,
+  SearchPaymentTypesParamsSchema,
 } from "../../types/index.js";
 
 export type HandlerFn = (
@@ -20,8 +21,8 @@ export type HandlerFn = (
 
 export const handlers: Record<string, HandlerFn> = {
   get_company_profile: async (client, args) => {
-    GetCompanyProfileParamsSchema.parse(args);
-    return client.getCompanyProfile();
+    const { profile_id } = GetCompanyProfileParamsSchema.parse(args ?? {});
+    return client.getCompanyProfile(profile_id);
   },
 
   update_company_profile: async (client, args) => {
@@ -47,5 +48,10 @@ export const handlers: Record<string, HandlerFn> = {
   create_payment_type: async (client, args) => {
     const { name } = CreatePaymentTypeParamsSchema.parse(args);
     return client.createPaymentType({ name });
+  },
+
+  search_payment_types: async (client, args) => {
+    const { query, limit } = SearchPaymentTypesParamsSchema.parse(args);
+    return client.searchPaymentTypes(query, limit);
   },
 };

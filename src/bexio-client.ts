@@ -220,6 +220,16 @@ export class BexioClient {
     return this.makeRequest("GET", `/country/${countryId}`);
   }
 
+  async updateCountry(countryId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/country/${countryId}`, undefined, data);
+  }
+
+  /** Search countries by name (bexio search, criteria "like"). */
+  async searchCountries(query: string, limit = 100): Promise<unknown[]> {
+    const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
+    return this.makeRequest("POST", "/country/search", { limit }, criteria);
+  }
+
   async createCountry(data: { name: string; name_short: string; iso3166_alpha2: string }): Promise<unknown> {
     return this.makeRequest("POST", "/country", undefined, data);
   }
@@ -237,6 +247,12 @@ export class BexioClient {
     return this.makeRequest("GET", `/language/${languageId}`);
   }
 
+  /** Search languages by name (bexio search, criteria "like"). */
+  async searchLanguages(query: string, limit = 100): Promise<unknown[]> {
+    const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
+    return this.makeRequest("POST", "/language/search", { limit }, criteria);
+  }
+
   async createLanguage(data: { name: string; iso_639_1: string }): Promise<unknown> {
     return this.makeRequest("POST", "/language", undefined, data);
   }
@@ -250,6 +266,16 @@ export class BexioClient {
     return this.makeRequest("GET", `/unit/${unitId}`);
   }
 
+  async updateUnit(unitId: number, data: { name: string }): Promise<unknown> {
+    return this.makeRequest("POST", `/unit/${unitId}`, undefined, data);
+  }
+
+  /** Search units by name (bexio search, criteria "like"). */
+  async searchUnits(query: string, limit = 100): Promise<unknown[]> {
+    const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
+    return this.makeRequest("POST", "/unit/search", { limit }, criteria);
+  }
+
   async createUnit(data: { name: string }): Promise<unknown> {
     return this.makeRequest("POST", "/unit", undefined, data);
   }
@@ -259,8 +285,10 @@ export class BexioClient {
   }
 
   // ===== COMPANY PROFILE =====
-  async getCompanyProfile(): Promise<unknown> {
-    return this.makeRequest("GET", "/company_profile");
+  async getCompanyProfile(profileId?: number): Promise<unknown> {
+    return profileId === undefined
+      ? this.makeRequest("GET", "/company_profile")
+      : this.makeRequest("GET", `/company_profile/${profileId}`);
   }
 
   async updateCompanyProfile(data: Record<string, unknown>): Promise<unknown> {
@@ -317,6 +345,12 @@ export class BexioClient {
 
   async getPaymentType(paymentTypeId: number): Promise<unknown> {
     return this.makeRequest("GET", `/payment_type/${paymentTypeId}`);
+  }
+
+  /** Search payment types by name (bexio search, criteria "like"). */
+  async searchPaymentTypes(query: string, limit = 100): Promise<unknown[]> {
+    const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
+    return this.makeRequest("POST", "/payment_type/search", { limit }, criteria);
   }
 
   async createPaymentType(data: { name: string }): Promise<unknown> {
@@ -891,6 +925,11 @@ export class BexioClient {
   }
 
   // ===== REMINDERS =====
+  /** Search the reminders of one invoice (fields: title, reminder_level, is_sent, is_valid_from, is_valid_to). */
+  async searchInvoiceReminders(invoiceId: number, criteria: SearchCriteria[]): Promise<unknown[]> {
+    return this.makeRequest("POST", `/kb_invoice/${invoiceId}/kb_reminder/search`, undefined, criteria);
+  }
+
   async listReminders(invoiceId: number): Promise<unknown[]> {
     return this.makeRequest("GET", `/kb_invoice/${invoiceId}/kb_reminder`);
   }
@@ -1416,6 +1455,10 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "GET", `projects/${projectId}/milestones/${milestoneId}`);
   }
 
+  async updateMilestone(projectId: number, milestoneId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "POST", `projects/${projectId}/milestones/${milestoneId}`, undefined, data);
+  }
+
   async createMilestone(projectId: number, data: { name: string; end_date?: string }): Promise<unknown> {
     return this.makeVersionedRequest("3.0", "POST", `projects/${projectId}/milestones`, undefined, data);
   }
@@ -1453,6 +1496,10 @@ export class BexioClient {
 
   async getTimesheet(timesheetId: number): Promise<unknown> {
     return this.makeRequest("GET", `/timesheet/${timesheetId}`);
+  }
+
+  async updateTimesheet(timesheetId: number, data: Record<string, unknown>): Promise<unknown> {
+    return this.makeRequest("POST", `/timesheet/${timesheetId}`, undefined, data);
   }
 
   async createTimesheet(data: {
@@ -1494,6 +1541,12 @@ export class BexioClient {
     return this.makeRequest("GET", `/client_service/${activityId}`);
   }
 
+  /** Search business activities by name (bexio search, criteria "like"). */
+  async searchBusinessActivities(query: string, limit = 100): Promise<unknown[]> {
+    const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
+    return this.makeRequest("POST", "/client_service/search", { limit }, criteria);
+  }
+
   async createBusinessActivity(data: { name: string }): Promise<unknown> {
     return this.makeRequest("POST", "/client_service", undefined, data);
   }
@@ -1501,6 +1554,12 @@ export class BexioClient {
   // ===== COMMUNICATION TYPES (PROJ-09) =====
   async listCommunicationTypes(params: PaginationParams = {}): Promise<unknown[]> {
     return this.makeRequest("GET", "/communication_kind", params);
+  }
+
+  /** Search communication types by name (bexio search, criteria "like"). */
+  async searchCommunicationTypes(query: string, limit = 100): Promise<unknown[]> {
+    const criteria: SearchCriteria[] = [{ field: "name", value: query, criteria: "like" }];
+    return this.makeRequest("POST", "/communication_kind/search", { limit }, criteria);
   }
 
   async getCommunicationType(typeId: number): Promise<unknown> {
@@ -1545,6 +1604,18 @@ export class BexioClient {
   }
 
   // ===== BUSINESS YEARS (ACCT-04, v3.0 API; v2.0 /business_year returns 404) =====
+  async createCalendarYear(data: Record<string, unknown>): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "POST", "accounting/calendar_years", undefined, data);
+  }
+
+  async searchCalendarYears(criteria: SearchCriteria[], params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeVersionedRequest("3.0", "POST", "accounting/calendar_years/search", params, criteria);
+  }
+
+  async getBusinessYear(businessYearId: number): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "GET", `accounting/business_years/${businessYearId}`);
+  }
+
   async listBusinessYears(params: PaginationParams = {}): Promise<unknown[]> {
     return this.makeVersionedRequest("3.0", "GET", "accounting/business_years", params);
   }
@@ -1628,6 +1699,10 @@ export class BexioClient {
   }
 
   // ===== VAT PERIODS (ACCT-06, v3.0 API; v2.0 /vat_period returns 404) =====
+  async getVatPeriod(vatPeriodId: number): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "GET", `accounting/vat_periods/${vatPeriodId}`);
+  }
+
   async listVatPeriods(params: PaginationParams = {}): Promise<unknown[]> {
     return this.makeVersionedRequest("3.0", "GET", "accounting/vat_periods", params);
   }

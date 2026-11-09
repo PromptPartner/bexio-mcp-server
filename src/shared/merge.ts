@@ -79,3 +79,21 @@ export function mergeBillData(current: Obj, patch: Obj): Obj {
   }
   return out;
 }
+
+/**
+ * bexio's 2.0/3.0 edit endpoints (POST /{resource}/{id}) reject a payload that lacks
+ * the resource's required fields, even for a partial edit. Fill those from the current
+ * record so callers can send only what changes.
+ */
+export function withRequiredFields(
+  current: unknown,
+  patch: Record<string, unknown>,
+  required: readonly string[]
+): Record<string, unknown> {
+  const base: Record<string, unknown> = {};
+  const record = (current && typeof current === "object" ? current : {}) as Record<string, unknown>;
+  for (const key of required) {
+    if (!(key in patch) && record[key] !== undefined && record[key] !== null) base[key] = record[key];
+  }
+  return { ...base, ...patch };
+}

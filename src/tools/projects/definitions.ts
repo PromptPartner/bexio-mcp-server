@@ -455,4 +455,19 @@ export const toolDefinitions: Tool[] = [
       required: ["project_id", "workpackage_id"],
     },
   },
+  {
+    name: "update_milestone",
+    description:
+      "Edit a project milestone (name, end_date, comment, pr_parent_milestone_id). Send only the fields to change; the server keeps the current name if none is given.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "integer", description: "The ID of the project" },
+        milestone_id: { type: "integer", description: "The ID of the milestone" },
+        milestone_data: { type: "object", description: "Fields to change" },
+      },
+      required: ["project_id", "milestone_id", "milestone_data"],
+    },
+  },
 ];
