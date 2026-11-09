@@ -363,6 +363,79 @@ export const toolDefinitions: Tool[] = [
     },
   },
 
+  {
+    name: "get_next_manual_entry_ref_nr",
+    description: "Get the reference number bexio proposes for the next manual entry ({ next_ref_nr }).",
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: "object", properties: {} },
+  },
+
+  // ===== MANUAL ENTRY FILES (receipts on manual entries) =====
+  {
+    name: "list_manual_entry_files",
+    description:
+      "List the files (receipts) attached to a manual entry. For single and group entries bexio keeps files per posting line: pass line_id. For compound entries omit line_id.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        manual_entry_id: { type: "integer", description: "ID of the manual entry (the id from list_manual_entries / get_manual_entry)" },
+        line_id: { type: "integer", description: "ID of the posting line (entries[].id from get_manual_entry). Required for single and group entries, where bexio keeps files per line; omit it only for compound entries (type manual_compound_entry), whose files hang on the entry itself." },
+        limit: { type: "integer", description: "Maximum number of results (default: 100)", default: 100 },
+        offset: { type: "integer", description: "Number of results to skip (default: 0)", default: 0 },
+      },
+      required: ["manual_entry_id"],
+    },
+  },
+  {
+    name: "get_manual_entry_file",
+    description:
+      "Get the metadata of one file attached to a manual entry. The content is not returned; use download_file with the same file_id.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        manual_entry_id: { type: "integer", description: "ID of the manual entry (the id from list_manual_entries / get_manual_entry)" },
+        line_id: { type: "integer", description: "ID of the posting line (entries[].id from get_manual_entry). Required for single and group entries, where bexio keeps files per line; omit it only for compound entries (type manual_compound_entry), whose files hang on the entry itself." },
+        file_id: { type: "integer", description: "The ID of the file" },
+      },
+      required: ["manual_entry_id", "file_id"],
+    },
+  },
+  {
+    name: "attach_file_to_manual_entry",
+    description:
+      "Upload a receipt and attach it to a manual entry (the 'Beleg' of a booking). Provide EITHER file_path (preferred: the server reads the file itself) OR content_base64 + name + content_type. bexio accepts PDF, PNG, JPG/JPEG, GIF, DOC(X), XLS(X) and PPT(X) up to 12 MB. file_path works for any local path in stdio mode; in HTTP mode only inside BEXIO_FILE_DIR.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        manual_entry_id: { type: "integer", description: "ID of the manual entry (the id from list_manual_entries / get_manual_entry)" },
+        line_id: { type: "integer", description: "ID of the posting line (entries[].id from get_manual_entry). Required for single and group entries, where bexio keeps files per line; omit it only for compound entries (type manual_compound_entry), whose files hang on the entry itself." },
+        file_path: { type: "string", description: "Path of a local file for the server to read and upload. Mutually exclusive with content_base64." },
+        content_base64: { type: "string", description: "The file content encoded as base64. Mutually exclusive with file_path; requires name and content_type." },
+        name: { type: "string", description: "The filename including extension. Defaults to the file_path's filename." },
+        content_type: { type: "string", description: "The MIME type (e.g., 'application/pdf'). With file_path it defaults from the file extension." },
+      },
+      required: ["manual_entry_id"],
+    },
+  },
+  {
+    name: "detach_file_from_manual_entry",
+    description:
+      "Remove the link between a file and a manual entry. The file itself stays in bexio (see list_files); only the attachment is removed.",
+    annotations: { destructiveHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        manual_entry_id: { type: "integer", description: "ID of the manual entry (the id from list_manual_entries / get_manual_entry)" },
+        line_id: { type: "integer", description: "ID of the posting line (entries[].id from get_manual_entry). Required for single and group entries, where bexio keeps files per line; omit it only for compound entries (type manual_compound_entry), whose files hang on the entry itself." },
+        file_id: { type: "integer", description: "The ID of the attached file" },
+      },
+      required: ["manual_entry_id", "file_id"],
+    },
+  },
+
   // ===== VAT PERIODS (ACCT-06) =====
   {
     name: "list_vat_periods",

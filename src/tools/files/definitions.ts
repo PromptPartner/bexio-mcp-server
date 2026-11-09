@@ -92,6 +92,65 @@ export const toolDefinitions: Tool[] = [
     },
   },
   {
+    name: "search_files",
+    description:
+      "Search files in bexio (v3.0). Searchable fields: id, uuid, created_at, name, extension, size_in_bytes, mime_type, user_id, is_archived, source_id. Files attached to bookings or bills are usually archived, so pass archived_state 'all' to include them.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        search_criteria: {
+          type: "array",
+          description: 'Criteria combined with AND, e.g. [{ "field": "name", "value": "Rechnung", "criteria": "like" }]',
+          items: {
+            type: "object",
+            properties: {
+              field: { type: "string" },
+              value: { type: "string" },
+              criteria: { type: "string", description: "=, !=, >, >=, <, <=, like, not_like, in, not_in, is_null, not_null (default: like)" },
+            },
+            required: ["field", "value"],
+          },
+        },
+        archived_state: {
+          type: "string",
+          enum: ["all", "archived", "not_archived"],
+          description: "Include archived files: all, archived or not_archived (bexio's default when omitted)",
+        },
+        limit: { type: "integer", description: "Maximum number of results (default: 50)", default: 50 },
+        offset: { type: "integer", description: "Number of results to skip (default: 0)", default: 0 },
+      },
+      required: ["search_criteria"],
+    },
+  },
+  {
+    name: "get_file_usage",
+    description:
+      "Show where a file is used in bexio: a list of { id, ref_class, document_nr, description } (e.g. ref_class 'journal_entry' with the manual entry id). An empty list means the file is attached to nothing.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        file_id: { type: "integer", description: "The ID of the file" },
+      },
+      required: ["file_id"],
+    },
+  },
+  {
+    name: "get_file_preview",
+    description:
+      "Get bexio's preview image of a file (a JPEG, also for PDFs: the first page). Small previews are returned inline as base64; larger ones are written to a file and the path is returned. Pass output_path to choose the location (in HTTP mode only inside BEXIO_FILE_DIR).",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        file_id: { type: "integer", description: "The ID of the file" },
+        output_path: { type: "string", description: "Optional path to write the preview to (on the server host)" },
+      },
+      required: ["file_id"],
+    },
+  },
+  {
     name: "update_file",
     description: "Update a file's metadata in Bexio",
     annotations: { destructiveHint: false },

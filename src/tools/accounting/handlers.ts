@@ -8,6 +8,7 @@
 
 import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
+import { readUploadSource } from "../../shared/upload-source.js";
 import {
   // Accounts
   ListAccountsParamsSchema,
@@ -28,6 +29,12 @@ import {
   CreateManualGroupEntryParamsSchema,
   UpdateManualEntryParamsSchema,
   DeleteManualEntryParamsSchema,
+  GetNextManualEntryRefNrParamsSchema,
+  // Manual Entry Files
+  ListManualEntryFilesParamsSchema,
+  GetManualEntryFileParamsSchema,
+  AttachFileToManualEntryParamsSchema,
+  DetachFileFromManualEntryParamsSchema,
   // VAT Periods
   ListVatPeriodsParamsSchema,
   // Journal
@@ -35,6 +42,14 @@ import {
   // Account Balances
   GetAccountBalancesParamsSchema,
 } from "../../types/index.js";
+
+// bexio returns the whole file as base64 in `data` (on get and on attach); keep it out
+// of the context. download_file fetches the content when it is needed.
+function withoutFileContent(file: unknown): unknown {
+  if (!file || typeof file !== "object" || !("data" in file)) return file;
+  const { data: _data, ...meta } = file as Record<string, unknown>;
+  return { ...meta, content: "omitted, use download_file with this file_id" };
+}
 
 export type HandlerFn = (
   client: BexioClient,
@@ -171,6 +186,36 @@ export const handlers: Record<string, HandlerFn> = {
   delete_manual_entry: async (client, args) => {
     const { entry_id } = DeleteManualEntryParamsSchema.parse(args);
     return client.deleteManualEntry(entry_id);
+  },
+
+  get_next_manual_entry_ref_nr: async (client, args) => {
+    GetNextManualEntryRefNrParamsSchema.parse(args ?? {});
+    return client.getNextManualEntryRefNr();
+  },
+
+  // ===== MANUAL ENTRY FILES =====
+  list_manual_entry_files: async (client, args) => {
+    const { manual_entry_id, line_id, limit, offset } = ListManualEntryFilesParamsSchema.parse(args);
+    return client.listManualEntryFiles(manual_entry_id, line_id, { limit, offset });
+  },
+
+  get_manual_entry_file: async (client, args) => {
+    const { manual_entry_id, line_id, file_id } = GetManualEntryFileParamsSchema.parse(args);
+    const file = await client.getManualEntryFile(manual_entry_id, line_id, file_id);
+    if (!file) throw McpError.notFound("Manual entry file", file_id);
+    return withoutFileContent(file);
+  },
+
+  attach_file_to_manual_entry: async (client, args) => {
+    const params = AttachFileToManualEntryParamsSchema.parse(args);
+    const { name, bytes, contentType } = await readUploadSource(params);
+    const created = await client.attachManualEntryFile(params.manual_entry_id, params.line_id, name, bytes, contentType);
+    return Array.isArray(created) ? created.map(withoutFileContent) : withoutFileContent(created);
+  },
+
+  detach_file_from_manual_entry: async (client, args) => {
+    const { manual_entry_id, line_id, file_id } = DetachFileFromManualEntryParamsSchema.parse(args);
+    return client.detachManualEntryFile(manual_entry_id, line_id, file_id);
   },
 
   // ===== VAT PERIODS (ACCT-06) =====
