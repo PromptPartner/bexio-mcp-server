@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — receipts on manual entries, file search, usage and preview
+bexio's v3.0 API attaches receipts to manual entries, but the server had no tools for it.
+New tools:
+- `attach_file_to_manual_entry`: upload a receipt (from a local `file_path` or base64) and
+  attach it to a manual entry
+- `list_manual_entry_files`, `get_manual_entry_file`, `detach_file_from_manual_entry`
+- `get_next_manual_entry_ref_nr`
+- `search_files`, `get_file_usage` (which booking or bill a file is attached to),
+  `get_file_preview`
+
+bexio keeps receipts per posting line for single and group entries and on the entry for
+compound entries; the tools take the line as `line_id` (from `get_manual_entry`
+`entries[].id`) and omit it for compound entries. `get_manual_entry_file` drops the
+base64 content bexio includes; `download_file` fetches it. `upload_file` and
+`attach_file_to_manual_entry` share the local-file reading (`shared/upload-source.ts`).
+
 ## [2.6.2] - 2026-09-27
 
 ### Fixed — Claude Desktop stored the bexio token in plain text

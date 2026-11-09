@@ -1627,6 +1627,45 @@ export class BexioClient {
     return this.makeVersionedRequest("3.0", "DELETE", `accounting/manual_entries/${entryId}`);
   }
 
+  /** Reference number bexio proposes for the next manual entry ({ next_ref_nr }). */
+  async getNextManualEntryRefNr(): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "GET", "accounting/manual_entries/next_ref_nr");
+  }
+
+  // ===== MANUAL ENTRY FILES (receipts on manual entries) =====
+  // bexio attaches files per posting line for single and group entries
+  // (/manual_entries/{id}/entries/{line_id}/files) and to the entry itself for compound
+  // entries (/manual_entries/{id}/files). lineId selects the first form.
+  private manualEntryFilesPath(manualEntryId: number, lineId?: number): string {
+    return lineId === undefined
+      ? `accounting/manual_entries/${manualEntryId}/files`
+      : `accounting/manual_entries/${manualEntryId}/entries/${lineId}/files`;
+  }
+
+  async listManualEntryFiles(manualEntryId: number, lineId?: number, params: PaginationParams = {}): Promise<unknown[]> {
+    return this.makeVersionedRequest("3.0", "GET", this.manualEntryFilesPath(manualEntryId, lineId), params);
+  }
+
+  async getManualEntryFile(manualEntryId: number, lineId: number | undefined, fileId: number): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "GET", `${this.manualEntryFilesPath(manualEntryId, lineId)}/${fileId}`);
+  }
+
+  /** Upload a file and attach it to a manual entry (line); bexio returns the created file(s). */
+  async attachManualEntryFile(
+    manualEntryId: number,
+    lineId: number | undefined,
+    name: string,
+    bytes: Buffer,
+    contentType: string
+  ): Promise<unknown> {
+    return this.postMultipartFile(this.manualEntryFilesPath(manualEntryId, lineId), name, bytes, contentType);
+  }
+
+  /** Remove the link between a file and a manual entry (line). The file itself stays in bexio. */
+  async detachManualEntryFile(manualEntryId: number, lineId: number | undefined, fileId: number): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "DELETE", `${this.manualEntryFilesPath(manualEntryId, lineId)}/${fileId}`);
+  }
+
   // ===== VAT PERIODS (ACCT-06, v3.0 API; v2.0 /vat_period returns 404) =====
   async listVatPeriods(params: PaginationParams = {}): Promise<unknown[]> {
     return this.makeVersionedRequest("3.0", "GET", "accounting/vat_periods", params);
@@ -2138,6 +2177,11 @@ export class BexioClient {
 
   /** Multipart upload of raw bytes (upload_file's file_path reads straight into this). */
   async uploadFileBuffer(name: string, bytes: Buffer, contentType: string): Promise<unknown> {
+    return this.postMultipartFile("files", name, bytes, contentType);
+  }
+
+  /** Multipart POST of one file to a v3.0 endpoint (files, manual entry files). */
+  private async postMultipartFile(endpoint: string, name: string, bytes: Buffer, contentType: string): Promise<unknown> {
     // Use form-data for multipart upload (transitive dep of axios). The shared
     // axios instance is bound to the v2.0 baseURL, so hit the v3.0 URL directly.
     const FormData = (await import("form-data")).default;
@@ -2146,7 +2190,7 @@ export class BexioClient {
       filename: name,
       contentType,
     });
-    const url = "https://api.bexio.com/3.0/files";
+    const url = `https://api.bexio.com/3.0/${endpoint}`;
     try {
       const response = await axios.post(url, formData, {
         headers: {
@@ -2171,6 +2215,37 @@ export class BexioClient {
         headers: { Authorization: `Bearer ${this.config.apiToken}` },
       });
       return Buffer.from(response.data).toString("base64");
+    } catch (error) {
+      throw BexioClient.toMcpError(error, url, "get");
+    }
+  }
+
+  /** Search files (v3.0 search criteria); archived_state: all | archived | not_archived. */
+  async searchFiles(
+    criteria: SearchCriteria[],
+    params: { limit?: number; offset?: number; archived_state?: string } = {}
+  ): Promise<unknown[]> {
+    return this.makeVersionedRequest("3.0", "POST", "files/search", params, criteria);
+  }
+
+  /**
+   * Where a file is used (e.g. the journal entry or bill it is attached to). bexio
+   * documents an object but returns a list: [{ id, ref_class, document_nr, description }].
+   */
+  async getFileUsage(fileId: number): Promise<unknown> {
+    return this.makeVersionedRequest("3.0", "GET", `files/${fileId}/usage`);
+  }
+
+  /** Preview image of a file (bexio renders a JPEG, also for PDFs). */
+  async getFilePreview(fileId: number): Promise<{ bytes: Buffer; contentType: string | undefined }> {
+    const url = `https://api.bexio.com/3.0/files/${fileId}/preview`;
+    try {
+      const response = await axios.get(url, {
+        responseType: "arraybuffer",
+        headers: { Authorization: `Bearer ${this.config.apiToken}`, Accept: "application/json" },
+      });
+      const type = response.headers["content-type"];
+      return { bytes: Buffer.from(response.data), contentType: typeof type === "string" ? type : undefined };
     } catch (error) {
       throw BexioClient.toMcpError(error, url, "get");
     }

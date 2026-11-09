@@ -7,30 +7,7 @@ import { BexioClient } from "../../bexio-client.js";
 import { McpError } from "../../shared/errors.js";
 import { shouldInline, writeDownloadToTemp, resolveInlineThreshold } from "../../shared/tempfile.js";
 import { resolveLocalPath } from "../../shared/path-guard.js";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-
-// Content type for upload_file(file_path) when the caller does not give one.
-const CONTENT_TYPES: Record<string, string> = {
-  ".pdf": "application/pdf",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".gif": "image/gif",
-  ".webp": "image/webp",
-  ".heic": "image/heic",
-  ".tif": "image/tiff",
-  ".tiff": "image/tiff",
-  ".txt": "text/plain",
-  ".csv": "text/csv",
-  ".xml": "application/xml",
-  ".json": "application/json",
-  ".doc": "application/msword",
-  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".xls": "application/vnd.ms-excel",
-  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ".zip": "application/zip",
-};
+import { readUploadSource } from "../../shared/upload-source.js";
 import {
   ListFilesParamsSchema,
   GetFileParamsSchema,
@@ -38,6 +15,9 @@ import {
   DownloadFileParamsSchema,
   UpdateFileParamsSchema,
   DeleteFileParamsSchema,
+  SearchFilesParamsSchema,
+  GetFileUsageParamsSchema,
+  GetFilePreviewParamsSchema,
   ListAdditionalAddressesParamsSchema,
   GetAdditionalAddressParamsSchema,
   CreateAdditionalAddressParamsSchema,
@@ -69,21 +49,9 @@ export const handlers: Record<string, HandlerFn> = {
   },
 
   upload_file: async (client, args) => {
-    const params = UploadFileParamsSchema.parse(args);
-    if (params.file_path) {
-      const source = await resolveLocalPath(params.file_path, "read");
-      const bytes = await readFile(source);
-      const name = params.name ?? path.basename(source);
-      const contentType =
-        params.content_type ?? CONTENT_TYPES[path.extname(name).toLowerCase()] ?? "application/octet-stream";
-      return client.uploadFileBuffer(name, bytes, contentType);
-    }
-    // superRefine guarantees content_base64 + name + content_type here
-    return client.uploadFile({
-      name: params.name!,
-      content_base64: params.content_base64!,
-      content_type: params.content_type!,
-    });
+    // superRefine guarantees exactly one source (file_path or content_base64 + name + content_type)
+    const { name, bytes, contentType } = await readUploadSource(UploadFileParamsSchema.parse(args));
+    return client.uploadFileBuffer(name, bytes, contentType);
   },
 
   download_file: async (client, args) => {
@@ -132,6 +100,39 @@ export const handlers: Record<string, HandlerFn> = {
       message: output_path
         ? `File written to the requested path (${size_bytes} bytes). In HTTP/n8n mode this path is on the SERVER host, not the MCP client.`
         : `File (${size_bytes} bytes) exceeded the inline threshold (${threshold} bytes) and was written to a temp file. In HTTP/n8n mode this path is on the SERVER host. Pass output_path to choose a location, or raise BEXIO_DOWNLOAD_INLINE_MAX_BYTES to inline larger files.`,
+    };
+  },
+
+  search_files: async (client, args) => {
+    const { search_criteria, archived_state, limit, offset } = SearchFilesParamsSchema.parse(args);
+    return client.searchFiles(search_criteria, { limit, offset, ...(archived_state ? { archived_state } : {}) });
+  },
+
+  get_file_usage: async (client, args) => {
+    const { file_id } = GetFileUsageParamsSchema.parse(args);
+    return client.getFileUsage(file_id);
+  },
+
+  get_file_preview: async (client, args) => {
+    const { file_id, output_path: requestedPath } = GetFilePreviewParamsSchema.parse(args);
+    const output_path = requestedPath ? await resolveLocalPath(requestedPath, "write") : undefined;
+    const { bytes, contentType } = await client.getFilePreview(file_id);
+    const content_type = contentType?.split(";")[0].trim() || "image/jpeg";
+    const size_bytes = bytes.length;
+    const threshold = resolveInlineThreshold();
+    if (!output_path && shouldInline(size_bytes, threshold)) {
+      return { file_id, content_base64: bytes.toString("base64"), size_bytes, content_type };
+    }
+    const ext = content_type === "image/png" ? "png" : "jpg";
+    const file_path = await writeDownloadToTemp(bytes, `preview-${file_id}.${ext}`, output_path);
+    return {
+      file_id,
+      file_path,
+      size_bytes,
+      content_type,
+      message: output_path
+        ? "Preview written to the requested path. In HTTP/n8n mode this path is on the SERVER host."
+        : `Preview (${size_bytes} bytes) exceeded the inline threshold (${threshold} bytes) and was written to a temp file. In HTTP/n8n mode this path is on the SERVER host.`,
     };
   },
 

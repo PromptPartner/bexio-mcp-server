@@ -133,6 +133,7 @@ This MCP server provides **315 tools** across all Bexio domains:
 ### Accounting
 - Chart of accounts
 - Manual journal entries, incl. group entries (Sammelbuchung: one voucher, many postings)
+- Receipts on manual entries: attach (from a local file path), list, detach; next reference number
 - Journal by date range and account; computed account balances (Saldenliste)
 - Business years and VAT periods
 - Account groups
@@ -144,6 +145,7 @@ This MCP server provides **315 tools** across all Bexio domains:
 
 ### Files & Documents
 - Document upload/download; upload straight from a local file path (no base64 through the chat)
+- File search, file usage (which booking or bill a file is attached to), preview images
 - File management
 
 ### Payroll (requires Bexio Payroll module)

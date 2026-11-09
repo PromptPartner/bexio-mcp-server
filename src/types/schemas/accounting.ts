@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod";
+import { UploadSourceShape, refineUploadSource } from "./files.js";
 
 // ===== ACCOUNTS - Chart of Accounts (ACCT-01) =====
 
@@ -158,6 +159,40 @@ export const DeleteManualEntryParamsSchema = z.object({
 });
 
 export type DeleteManualEntryParams = z.infer<typeof DeleteManualEntryParamsSchema>;
+
+export const GetNextManualEntryRefNrParamsSchema = z.object({});
+
+// ===== MANUAL ENTRY FILES =====
+// line_id: the posting line (single/group entries); omitted for compound entries.
+const manualEntryFileTarget = {
+  manual_entry_id: z.number().int().positive(),
+  line_id: z.number().int().positive().optional(),
+};
+
+export const ListManualEntryFilesParamsSchema = z.object({
+  ...manualEntryFileTarget,
+  limit: z.number().int().positive().default(100),
+  offset: z.number().int().min(0).default(0),
+});
+
+export type ListManualEntryFilesParams = z.infer<typeof ListManualEntryFilesParamsSchema>;
+
+export const GetManualEntryFileParamsSchema = z.object({
+  ...manualEntryFileTarget,
+  file_id: z.number().int().positive(),
+});
+
+export type GetManualEntryFileParams = z.infer<typeof GetManualEntryFileParamsSchema>;
+
+export const AttachFileToManualEntryParamsSchema = z
+  .object({ ...manualEntryFileTarget, ...UploadSourceShape })
+  .superRefine(refineUploadSource);
+
+export type AttachFileToManualEntryParams = z.infer<typeof AttachFileToManualEntryParamsSchema>;
+
+export const DetachFileFromManualEntryParamsSchema = GetManualEntryFileParamsSchema;
+
+export type DetachFileFromManualEntryParams = z.infer<typeof DetachFileFromManualEntryParamsSchema>;
 
 // ===== VAT PERIODS (ACCT-06) =====
 
