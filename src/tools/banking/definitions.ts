@@ -175,7 +175,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_iban_payment",
     description:
-      "⚠️ Creates a STANDALONE bank payment that is NOT linked to any supplier bill. To pay a supplier bill (and have it marked paid), use `create_outgoing_payment` with a `bill_id` instead — that works for both IBAN and QR and records the payment against the bill. A standalone payment created here CANNOT be attached to a bill afterward. Use this tool only for ad-hoc payments that have no underlying bill. " +
+      "Deprecated by bexio (2025-09-19): prefer create_banking_payment (v4.0). ⚠️ Creates a STANDALONE bank payment that is NOT linked to any supplier bill. To pay a supplier bill (and have it marked paid), use `create_outgoing_payment` with a `bill_id` instead — that works for both IBAN and QR and records the payment against the bill. A standalone payment created here CANNOT be attached to a bill afterward. Use this tool only for ad-hoc payments that have no underlying bill. " +
       "Create an IBAN payment (Swiss ISO 20022 standard). First use list_bank_accounts to get a valid bank_account_id. Only CHF and EUR currencies are supported. Recipient address must use structured format (street, house_number, zip, city, country_code).",
     annotations: { destructiveHint: false },
     inputSchema: {
@@ -303,7 +303,7 @@ export const toolDefinitions: Tool[] = [
   {
     name: "create_qr_payment",
     description:
-      "⚠️ Creates a STANDALONE bank payment that is NOT linked to any supplier bill. To pay a supplier bill (and have it marked paid), use `create_outgoing_payment` with a `bill_id` instead — that works for both IBAN and QR and records the payment against the bill. A standalone payment created here CANNOT be attached to a bill afterward. Use this tool only for ad-hoc payments that have no underlying bill. " +
+      "Deprecated by bexio (2025-09-19): prefer create_banking_payment (v4.0). ⚠️ Creates a STANDALONE bank payment that is NOT linked to any supplier bill. To pay a supplier bill (and have it marked paid), use `create_outgoing_payment` with a `bill_id` instead — that works for both IBAN and QR and records the payment against the bill. A standalone payment created here CANNOT be attached to a bill afterward. Use this tool only for ad-hoc payments that have no underlying bill. " +
       "Create a QR payment (Swiss QR-invoice standard per SIX Group spec v2.3). First use list_bank_accounts to get a valid bank_account_id. Only CHF and EUR currencies are supported. QR reference must be exactly 27 digits if provided. Recipient address must use structured format.",
     annotations: { destructiveHint: false },
     inputSchema: {
@@ -417,5 +417,64 @@ export const toolDefinitions: Tool[] = [
       },
       required: ["bank_account_id", "payment_id", "payment_data"],
     },
+  },
+
+  // ===== BANKING PAYMENTS (v4.0) =====
+  {
+    name: "list_banking_payments",
+    description:
+      "List bank payments (bexio's v4.0 payment API, which replaces the deprecated 3.0 IBAN/QR payment endpoints). Returns { query, sort-by, pagination, results }. filter_by narrows by range, e.g. 'execution_date:2025-01-01_2025-12-31;amount:100_500'.",
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: "object",
+      properties: {
+        filter_by: { type: "string", description: "Filters as field:from_to, several separated by ';'" },
+        page: { type: "integer", description: "Page offset (default 0)" },
+        per_page: { type: "integer", description: "Results per page (default 500, max 2000)" },
+      },
+    },
+  },
+  {
+    name: "get_banking_payment",
+    description: "Get one bank payment (v4.0) with sender, recipient, amount, status and linked bill.",
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: "object", properties: { payment_id: { type: "string", description: "The UUID of the payment (uuid from list_banking_payments)" } }, required: ["payment_id"] },
+  },
+  {
+    name: "create_banking_payment",
+    description:
+      "Create a bank payment (v4.0). payment_data: account_id (bank account), type ('iban' or 'qr'), amount, currency, execution_date (YYYY-MM-DD), is_salary, recipient { name, iban, address { street_name, house_number, zip, city, country_code } }; optional allowance, qr_reference_number, message, additional_information, purchase_reference { bill_id, bill_payment_id }. To pay a supplier bill, prefer create_outgoing_payment with the bill_id.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { payment_data: { type: "object", description: "Payment fields as described above" } },
+      required: ["payment_data"],
+    },
+  },
+  {
+    name: "update_banking_payment",
+    description:
+      "Update a bank payment (v4.0): amount, currency, execution_date, recipient, allowance, is_salary, qr_reference_number, message, additional_information.",
+    annotations: { destructiveHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        payment_id: { type: "string", description: "The UUID of the payment (uuid from list_banking_payments)" },
+        payment_data: { type: "object", description: "Fields to change" },
+      },
+      required: ["payment_id", "payment_data"],
+    },
+  },
+  {
+    name: "cancel_banking_payment",
+    description: "Cancel a bank payment (v4.0). bexio allows this only in status downloaded, transferred or error.",
+    annotations: { destructiveHint: true },
+    inputSchema: { type: "object", properties: { payment_id: { type: "string", description: "The UUID of the payment (uuid from list_banking_payments)" } }, required: ["payment_id"] },
+  },
+  {
+    name: "delete_banking_payment",
+    description: "Permanently delete a bank payment (v4.0). This cannot be undone.",
+    annotations: { destructiveHint: true },
+    inputSchema: { type: "object", properties: { payment_id: { type: "string", description: "The UUID of the payment (uuid from list_banking_payments)" } }, required: ["payment_id"] },
   },
 ];

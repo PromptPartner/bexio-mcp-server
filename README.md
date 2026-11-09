@@ -121,6 +121,7 @@ This MCP server provides **315 tools** across all Bexio domains:
 ### Banking & Payments
 - Swiss QR-bill payment support (QR-IBAN)
 - Standard IBAN payments (ISO 20022)
+- bexio v4.0 bank payments (list, create, update, cancel)
 - Currency management (CHF, EUR)
 - Bank account management
 
@@ -139,7 +140,7 @@ This MCP server provides **315 tools** across all Bexio domains:
 
 ### Purchase & Expenses
 - Bills (creditor invoices)
-- Expenses and purchase orders
+- Expenses and purchase orders; book or reopen expenses, duplicate expenses and bills, check document numbers
 - Outgoing payments
 
 ### Files & Documents

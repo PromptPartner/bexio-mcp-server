@@ -15,6 +15,9 @@ import {
   SearchBillsParamsSchema,
   IssueBillParamsSchema,
   MarkBillAsPaidParamsSchema,
+  DuplicateBillParamsSchema,
+  CheckDocumentNumberParamsSchema,
+  ExpenseIdParamsSchema,
   ListExpensesParamsSchema,
   GetExpenseParamsSchema,
   CreateExpenseParamsSchema,
@@ -90,6 +93,16 @@ export const handlers: Record<string, HandlerFn> = {
     return client.issueBill(bill_id);
   },
 
+  duplicate_bill: async (client, args) => {
+    const { bill_id } = DuplicateBillParamsSchema.parse(args);
+    return client.executeBillAction(bill_id, "DUPLICATE");
+  },
+
+  check_bill_document_number: async (client, args) => {
+    const { document_no } = CheckDocumentNumberParamsSchema.parse(args);
+    return client.checkBillDocumentNumber(document_no);
+  },
+
   mark_bill_as_paid: async (client, args) => {
     const { bill_id } = MarkBillAsPaidParamsSchema.parse(args);
     return client.markBillAsPaid(bill_id);
@@ -123,6 +136,26 @@ export const handlers: Record<string, HandlerFn> = {
   delete_expense: async (client, args) => {
     const { expense_id } = DeleteExpenseParamsSchema.parse(args);
     return client.deleteExpense(expense_id);
+  },
+
+  book_expense: async (client, args) => {
+    const { expense_id } = ExpenseIdParamsSchema.parse(args);
+    return client.setExpenseStatus(expense_id, "DONE");
+  },
+
+  revert_expense_to_draft: async (client, args) => {
+    const { expense_id } = ExpenseIdParamsSchema.parse(args);
+    return client.setExpenseStatus(expense_id, "DRAFT");
+  },
+
+  duplicate_expense: async (client, args) => {
+    const { expense_id } = ExpenseIdParamsSchema.parse(args);
+    return client.executeExpenseAction(expense_id, "DUPLICATE");
+  },
+
+  check_expense_document_number: async (client, args) => {
+    const { document_no } = CheckDocumentNumberParamsSchema.parse(args);
+    return client.checkExpenseDocumentNumber(document_no);
   },
 
   // ===== PURCHASE ORDERS (v3.0, integer IDs) =====

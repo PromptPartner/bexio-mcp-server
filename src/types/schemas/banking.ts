@@ -151,3 +151,32 @@ export const UpdateQrPaymentParamsSchema = z.object({
 });
 
 export type UpdateQrPaymentParams = z.infer<typeof UpdateQrPaymentParamsSchema>;
+
+// ===== BANKING PAYMENTS (v4.0) =====
+
+export const ListBankingPaymentsParamsSchema = z.object({
+  filter_by: z.string().optional(),
+  page: z.number().int().min(0).optional(),
+  per_page: z.number().int().positive().max(2000).optional(),
+});
+
+export type ListBankingPaymentsParams = z.infer<typeof ListBankingPaymentsParamsSchema>;
+
+export const BankingPaymentIdParamsSchema = z.object({
+  payment_id: z.string().min(1),
+});
+
+export type BankingPaymentIdParams = z.infer<typeof BankingPaymentIdParamsSchema>;
+
+export const CreateBankingPaymentParamsSchema = z.object({
+  payment_data: z.record(z.unknown()),
+});
+
+export type CreateBankingPaymentParams = z.infer<typeof CreateBankingPaymentParamsSchema>;
+
+export const UpdateBankingPaymentParamsSchema = z.object({
+  payment_id: z.string().min(1),
+  payment_data: z.record(z.unknown()),
+});
+
+export type UpdateBankingPaymentParams = z.infer<typeof UpdateBankingPaymentParamsSchema>;
