@@ -250,6 +250,8 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
 | `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
 | `BEXIO_READ_ONLY` | No | off | `1`/`true` registers only read-only tools; every write is refused — see below |
+| `BEXIO_ALLOW_TOOLS` | No | - | With `BEXIO_READ_ONLY`, individual writes to allow back, by exact tool name |
+| `BEXIO_DENY_TOOLS` | No | - | Tools refused by exact name, always, whatever else is configured — see below |
 | `BEXIO_HTTP_TOKEN` | Recommended for HTTP | - | Bearer token required on every HTTP endpoint except `GET /` |
 | `BEXIO_FILE_DIR` | No | - | Directory that `upload_file` `file_path` / `download_file` `output_path` are confined to. Required for local paths over HTTP; optional extra confinement over stdio |
 | `BEXIO_DOWNLOAD_INLINE_MAX_BYTES` | No | `64000` | `download_file` returns files up to this size inline as base64; larger ones are written to disk |
@@ -280,6 +282,47 @@ denylist would still expose it.
 Useful when the token has write permissions you do not want an assistant to
 reach, for reporting and analysis sessions, and as a way to try the server
 against production books without risk.
+
+To allow a few writes back, name them in `BEXIO_ALLOW_TOOLS`:
+
+```bash
+BEXIO_READ_ONLY=1
+BEXIO_ALLOW_TOOLS=create_invoice,create_expense,create_contact,upload_file
+```
+
+Read-only alone is rarely what an integration needs; naming the exceptions
+keeps the grant small enough to audit at a glance, and anything the server
+gains in a later release is not in the list, so it is not reachable.
+
+### Refusing Individual Tools
+
+`BEXIO_DENY_TOOLS` takes a comma-separated list of exact tool names and refuses
+them, always, whatever else is configured. It is applied last and has the final
+word; both the definition and the handler are dropped, so a client that
+supplies the name itself gets `Tool <name> not found`.
+
+```bash
+BEXIO_DENY_TOOLS=send_invoice,mark_invoice_as_sent,create_outgoing_payment,create_manual_entry
+```
+
+This is for the common shape of an integration that needs most writes but must
+never reach a few. An assistant that drafts invoices, books bills and files
+expenses is useful; one that can send a document to a customer or initiate a
+payment is a different proposition. Those acts are not reversible, and the
+category whitelist cannot express them — `send_invoice` sits in the same domain
+as `create_invoice`, and `create_outgoing_payment` in the same domain as
+`create_bill`.
+
+Pair it with `BEXIO_ENABLED_CATEGORIES` rather than relying on it alone: drop
+whole domains you never want, so that tools added to them in later releases are
+excluded without anyone editing a list, and name here only the ones inside the
+domains you keep. A name that matches no tool refuses nothing, which is safe
+but almost always a typo, so it is reported on stderr at startup along with the
+names actually refused.
+
+`BEXIO_READ_ONLY` with `BEXIO_ALLOW_TOOLS` expresses the opposite shape — reads
+plus a short list of named exceptions — and is the better fit when the writes
+you need are few enough to list.
 
 ### Reducing Token Budget — Category Whitelist
 

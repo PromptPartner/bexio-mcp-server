@@ -150,16 +150,88 @@ const titledDefinitions: Tool[] = allDefinitions.map((def) => {
 // itself: the tool would be hidden, not disabled.
 const readOnly = /^(1|true|yes|on)$/i.test(process.env["BEXIO_READ_ONLY"] ?? "");
 
-const servedDefinitions: Tool[] = readOnly
-  ? titledDefinitions.filter((def) => def.annotations?.readOnlyHint === true)
+// BEXIO_ALLOW_TOOLS names individual writes to allow back, by exact tool name.
+//
+// Read-only alone is rarely what an integration needs: a workflow that creates
+// a draft invoice from an external system needs `create_invoice` and nothing
+// else that writes. Naming the exceptions keeps the grant small enough to
+// audit at a glance, and anything the server gains later is not in the list,
+// so it is not reachable.
+//
+// Only meaningful together with BEXIO_READ_ONLY — without it every tool is
+// registered anyway.
+const allowedWrites = new Set(
+  (process.env["BEXIO_ALLOW_TOOLS"] ?? "")
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean)
+);
+
+// BEXIO_DENY_TOOLS refuses individual tools by exact name, always, whatever
+// else is configured. It is applied LAST and has the final word.
+//
+// This is the setting for an integration that needs most writes but must never
+// reach a few: an assistant that drafts invoices, books bills and files
+// expenses, while sending to the customer and initiating payment stay with a
+// person. Those acts are not reversible, and a category whitelist cannot
+// express them — `send_invoice` lives in the same domain as `create_invoice`.
+//
+// Pair it with BEXIO_ENABLED_CATEGORIES rather than relying on it alone: drop
+// whole domains you never want (payments, banking, reminders, payroll) so that
+// tools added to them in future releases are excluded without touching this
+// list, and name here only the ones inside the domains you keep.
+const deniedTools = new Set(
+  (process.env["BEXIO_DENY_TOOLS"] ?? "")
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean)
+);
+
+const afterReadOnly: Tool[] = readOnly
+  ? titledDefinitions.filter(
+      (def) => def.annotations?.readOnlyHint === true || allowedWrites.has(def.name)
+    )
   : titledDefinitions;
+
+const servedDefinitions: Tool[] = deniedTools.size
+  ? afterReadOnly.filter((def) => !deniedTools.has(def.name))
+  : afterReadOnly;
 
 const servedNames = new Set(servedDefinitions.map((def) => def.name));
 
+if (deniedTools.size) {
+  const refused = [...deniedTools].filter((name) => titledDefinitions.some((d) => d.name === name));
+  // A name that matches nothing refuses nothing — safe, but almost always a
+  // typo, and a typo here is a tool left reachable. Say so loudly.
+  const unknown = [...deniedTools].filter((name) => !titledDefinitions.some((d) => d.name === name));
+  console.error(
+    `[bexio-mcp] DENIED (${refused.length}): ${refused.join(", ") || "none"}`
+  );
+  if (unknown.length) {
+    console.error(
+      `[bexio-mcp] BEXIO_DENY_TOOLS: no such tool, so nothing was refused for: ${unknown.join(", ")} — check the spelling.`
+    );
+  }
+}
+
 if (readOnly) {
+  const granted = [...allowedWrites].filter((name) => servedNames.has(name));
+  // A name that matches nothing grants nothing — safe, but almost always a
+  // typo, so say so rather than let it pass silently.
+  const unknown = [...allowedWrites].filter((name) => !servedNames.has(name));
   // stderr only — keeps the stdio MCP channel clean.
   console.error(
-    `[bexio-mcp] READ-ONLY: ${servedDefinitions.length} of ${titledDefinitions.length} tools registered. Writes are refused.`
+    `[bexio-mcp] READ-ONLY: ${servedDefinitions.length} of ${titledDefinitions.length} tools registered. Writes are refused` +
+      (granted.length ? ` except: ${granted.join(", ")}.` : ".")
+  );
+  if (unknown.length) {
+    console.error(
+      `[bexio-mcp] BEXIO_ALLOW_TOOLS: no such tool, ignored: ${unknown.join(", ")}`
+    );
+  }
+} else if (allowedWrites.size) {
+  console.error(
+    "[bexio-mcp] BEXIO_ALLOW_TOOLS has no effect without BEXIO_READ_ONLY; all tools are registered."
   );
 }
 
@@ -169,7 +241,12 @@ export function getAllToolDefinitions(): Tool[] {
 
 /** Get handler for a specific tool */
 export function getHandler(toolName: string): HandlerFn | undefined {
-  // Guard applies only in read-only mode: behaviour is unchanged otherwise.
+  // A denied tool is never resolvable, in any mode. Hiding a definition is not
+  // the same as disabling a tool: without this, a client that supplies the
+  // name itself would still reach the handler.
+  if (deniedTools.has(toolName)) return undefined;
+  // The read-only guard applies only in that mode: behaviour is unchanged
+  // otherwise.
   if (readOnly && !servedNames.has(toolName)) return undefined;
   return allHandlers[toolName];
 }
