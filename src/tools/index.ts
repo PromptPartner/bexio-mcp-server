@@ -130,12 +130,47 @@ const titledDefinitions: Tool[] = allDefinitions.map((def) => {
   return { ...def, title, annotations: { ...def.annotations, title } };
 });
 
+// Read-only mode (BEXIO_READ_ONLY=1).
+//
+// BEXIO_ENABLED_CATEGORIES filters by DOMAIN, and `invoices`, `contacts` and
+// `accounting` each contain writes, so it cannot express "reads only". The
+// readOnlyHint/destructiveHint annotations are only a signal hosts use to
+// decide what to confirm. This gives a server-side switch.
+//
+// The filter is an ALLOWLIST on `readOnlyHint === true`, never a denylist on
+// `destructiveHint`. Concretely: `create_outgoing_payment` carries
+// `destructiveHint: false` and no `readOnlyHint`, because in MCP terms
+// "non-destructive" means "it creates rather than destroys". A denylist on
+// destructiveHint would therefore still expose payment creation. With an
+// allowlist, an unannotated tool is excluded — the error falls on the safe
+// side.
+//
+// Both definitions AND handlers are filtered. Filtering definitions alone
+// would leave the handler callable by a client that supplies the tool name
+// itself: the tool would be hidden, not disabled.
+const readOnly = /^(1|true|yes|on)$/i.test(process.env["BEXIO_READ_ONLY"] ?? "");
+
+const servedDefinitions: Tool[] = readOnly
+  ? titledDefinitions.filter((def) => def.annotations?.readOnlyHint === true)
+  : titledDefinitions;
+
+const servedNames = new Set(servedDefinitions.map((def) => def.name));
+
+if (readOnly) {
+  // stderr only — keeps the stdio MCP channel clean.
+  console.error(
+    `[bexio-mcp] READ-ONLY: ${servedDefinitions.length} of ${titledDefinitions.length} tools registered. Writes are refused.`
+  );
+}
+
 export function getAllToolDefinitions(): Tool[] {
-  return titledDefinitions;
+  return servedDefinitions;
 }
 
 /** Get handler for a specific tool */
 export function getHandler(toolName: string): HandlerFn | undefined {
+  // Guard applies only in read-only mode: behaviour is unchanged otherwise.
+  if (readOnly && !servedNames.has(toolName)) return undefined;
   return allHandlers[toolName];
 }
 

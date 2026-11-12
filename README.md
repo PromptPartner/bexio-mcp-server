@@ -249,11 +249,37 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 | `BEXIO_DEFAULT_COMPANY` | No | first | Which company is active at startup |
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
 | `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
+| `BEXIO_READ_ONLY` | No | off | `1`/`true` registers only read-only tools; every write is refused — see below |
 | `BEXIO_HTTP_TOKEN` | Recommended for HTTP | - | Bearer token required on every HTTP endpoint except `GET /` |
 | `BEXIO_FILE_DIR` | No | - | Directory that `upload_file` `file_path` / `download_file` `output_path` are confined to. Required for local paths over HTTP; optional extra confinement over stdio |
 | `BEXIO_DOWNLOAD_INLINE_MAX_BYTES` | No | `64000` | `download_file` returns files up to this size inline as base64; larger ones are written to disk |
 
 \* Provide either `BEXIO_API_TOKEN` (one company) or `BEXIO_API_TOKENS` (several).
+
+### Read-Only Mode
+
+Every tool reads or changes your books, and the category whitelist filters by
+domain — `invoices`, `contacts` and `accounting` each contain writes, so it
+cannot express "reads only". Set `BEXIO_READ_ONLY` to register read-only tools
+only:
+
+```bash
+BEXIO_READ_ONLY=1
+```
+
+Writes are refused at the server, not merely hidden: both the tool definitions
+and their handlers are filtered, so a client that supplies a tool name itself
+gets nothing back. The count registered is logged to stderr at startup.
+
+The filter is an allowlist on each tool's `readOnlyHint` annotation, so a tool
+without one is excluded. Note that it cannot be a denylist on
+`destructiveHint`: `create_outgoing_payment`, for instance, is annotated
+`destructiveHint: false` — in MCP terms it creates rather than destroys — and a
+denylist would still expose it.
+
+Useful when the token has write permissions you do not want an assistant to
+reach, for reporting and analysis sessions, and as a way to try the server
+against production books without risk.
 
 ### Reducing Token Budget — Category Whitelist
 
