@@ -12,6 +12,7 @@
  */
 import { BexioClient } from "./bexio-client.js";
 import { logger } from "./logger.js";
+import { storedAccessToken } from "./oauth-refresh.js";
 
 export interface TokenEntry {
   label: string;
@@ -62,7 +63,12 @@ export function parseCompanyTokens(env: Record<string, string | undefined>): Tok
       }
     }
   }
-  const single = env["BEXIO_API_TOKEN"]?.trim();
+  // An OAuth setup keeps the live access token in BEXIO_OAUTH_TOKEN_FILE, not
+  // in the environment: the server refreshes it hourly and writes it back, so
+  // a token pasted into a config file would be stale within the hour. It takes
+  // precedence over BEXIO_API_TOKEN, which stays the single-company default
+  // for Personal Access Tokens.
+  const single = storedAccessToken() || env["BEXIO_API_TOKEN"]?.trim();
   if (single) {
     const label = env["BEXIO_DEFAULT_COMPANY"]?.trim() || "default";
     if (!out.some((e) => e.label === label) && !out.some((e) => e.token === single)) {

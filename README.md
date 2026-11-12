@@ -249,11 +249,125 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 | `BEXIO_DEFAULT_COMPANY` | No | first | Which company is active at startup |
 | `BEXIO_BASE_URL` | No | `https://api.bexio.com/2.0` | API endpoint URL |
 | `BEXIO_ENABLED_CATEGORIES` | No | (all) | Comma-separated tool-category whitelist — see below |
+| `BEXIO_READ_ONLY` | No | off | `1`/`true` registers only read-only tools; every write is refused — see below |
+| `BEXIO_ALLOW_TOOLS` | No | - | With `BEXIO_READ_ONLY`, individual writes to allow back, by exact tool name |
+| `BEXIO_DENY_TOOLS` | No | - | Tools refused by exact name, always, whatever else is configured — see below |
+| `BEXIO_OAUTH_TOKEN_FILE` | No | - | JSON file holding an OAuth `access_token` and `refresh_token`; refreshed on 401 — see below |
+| `BEXIO_OAUTH_CLIENT_ID` | With token file | - | Client ID of your app on developer.bexio.com |
+| `BEXIO_OAUTH_CLIENT_SECRET` | With token file | - | Client secret of that app |
+| `BEXIO_OAUTH_TOKEN_URL` | No | bexio's | Token endpoint, if you need to override it |
 | `BEXIO_HTTP_TOKEN` | Recommended for HTTP | - | Bearer token required on every HTTP endpoint except `GET /` |
 | `BEXIO_FILE_DIR` | No | - | Directory that `upload_file` `file_path` / `download_file` `output_path` are confined to. Required for local paths over HTTP; optional extra confinement over stdio |
 | `BEXIO_DOWNLOAD_INLINE_MAX_BYTES` | No | `64000` | `download_file` returns files up to this size inline as base64; larger ones are written to disk |
 
 \* Provide either `BEXIO_API_TOKEN` (one company) or `BEXIO_API_TOKENS` (several).
+
+### Read-Only Mode
+
+Every tool reads or changes your books, and the category whitelist filters by
+domain — `invoices`, `contacts` and `accounting` each contain writes, so it
+cannot express "reads only". Set `BEXIO_READ_ONLY` to register read-only tools
+only:
+
+```bash
+BEXIO_READ_ONLY=1
+```
+
+Writes are refused at the server, not merely hidden: both the tool definitions
+and their handlers are filtered, so a client that supplies a tool name itself
+gets nothing back. The count registered is logged to stderr at startup.
+
+The filter is an allowlist on each tool's `readOnlyHint` annotation, so a tool
+without one is excluded. Note that it cannot be a denylist on
+`destructiveHint`: `create_outgoing_payment`, for instance, is annotated
+`destructiveHint: false` — in MCP terms it creates rather than destroys — and a
+denylist would still expose it.
+
+Useful when the token has write permissions you do not want an assistant to
+reach, for reporting and analysis sessions, and as a way to try the server
+against production books without risk.
+
+To allow a few writes back, name them in `BEXIO_ALLOW_TOOLS`:
+
+```bash
+BEXIO_READ_ONLY=1
+BEXIO_ALLOW_TOOLS=create_invoice,create_expense,create_contact,upload_file
+```
+
+Read-only alone is rarely what an integration needs; naming the exceptions
+keeps the grant small enough to audit at a glance, and anything the server
+gains in a later release is not in the list, so it is not reachable.
+
+### OAuth Tokens — Refreshed Automatically
+
+A Personal Access Token is static and needs none of this. An OAuth access
+token does: bexio issues it for one hour, after which every call returns 401.
+
+That is worth solving, because scopes exist only on the OAuth path. A PAT "has
+all default scopes granted and therefore has full access to your company's
+data" — there is no way to restrict one. An operator who wants the *token*
+limited to, say, `kb_invoice_edit` and `contact_edit` has to use OAuth, and
+without refresh that choice costs an interactive browser round trip every
+hour. In practice nobody makes it.
+
+Point the server at the file your authorization flow wrote:
+
+```bash
+BEXIO_OAUTH_TOKEN_FILE=/path/to/tokens.json   # { "access_token": "...", "refresh_token": "..." }
+BEXIO_OAUTH_CLIENT_ID=...
+BEXIO_OAUTH_CLIENT_SECRET=...
+```
+
+The access token is read from that file at startup, in preference to
+`BEXIO_API_TOKEN`. On a 401 the server exchanges the refresh token, replays the
+request once, and writes both tokens back to the file (mode 600) so the next
+process starts live. Request the `offline_access` scope during authorization,
+or bexio returns no refresh token.
+
+Two details that are not obvious:
+
+- **bexio rotates the refresh token on every exchange.** Refreshes are
+  therefore single-flight: tool calls run in parallel, so an expiry mid-batch
+  produces several 401s at once, and without the guard each would spend the
+  refresh token while the later exchanges presented one that is no longer
+  current.
+- **Both the axios instance and the stored token are updated**, because the
+  binary and multipart paths (PDF download, file upload) build their own
+  headers and would otherwise keep presenting the expired one.
+
+If the refresh itself fails — a revoked or expired refresh token — the error
+says so and says to run the authorization flow again, rather than surfacing
+the original 401, which only says "unauthorized".
+
+### Refusing Individual Tools
+
+`BEXIO_DENY_TOOLS` takes a comma-separated list of exact tool names and refuses
+them, always, whatever else is configured. It is applied last and has the final
+word; both the definition and the handler are dropped, so a client that
+supplies the name itself gets `Tool <name> not found`.
+
+```bash
+BEXIO_DENY_TOOLS=send_invoice,mark_invoice_as_sent,create_outgoing_payment,create_manual_entry
+```
+
+This is for the common shape of an integration that needs most writes but must
+never reach a few. An assistant that drafts invoices, books bills and files
+expenses is useful; one that can send a document to a customer or initiate a
+payment is a different proposition. Those acts are not reversible, and the
+category whitelist cannot express them — `send_invoice` sits in the same domain
+as `create_invoice`, and `create_outgoing_payment` in the same domain as
+`create_bill`.
+
+Pair it with `BEXIO_ENABLED_CATEGORIES` rather than relying on it alone: drop
+whole domains you never want, so that tools added to them in later releases are
+excluded without anyone editing a list, and name here only the ones inside the
+domains you keep. A name that matches no tool refuses nothing, which is safe
+but almost always a typo, so it is reported on stderr at startup along with the
+names actually refused.
+
+`BEXIO_READ_ONLY` with `BEXIO_ALLOW_TOOLS` expresses the opposite shape — reads
+plus a short list of named exceptions — and is the better fit when the writes
+you need are few enough to list.
 
 ### Reducing Token Budget — Category Whitelist
 
