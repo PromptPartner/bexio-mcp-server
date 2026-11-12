@@ -7,6 +7,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { logger } from "./logger.js";
 import { McpError, bexioErrorMessage } from "./shared/errors.js";
+import { refreshConfigured, refreshAccessToken } from "./oauth-refresh.js";
 import {
   BexioConfig,
   PaginationParams,
@@ -34,13 +35,68 @@ export class BexioClient {
       timeout: 30000,
     });
 
-    // Add response interceptor for error handling
+    // Response interceptor: refresh an expired OAuth token once, then normalize
+    // whatever is left into an McpError.
+    //
+    // An OAuth access token lives one hour, so a long-running server will meet
+    // 401 in the middle of ordinary work. Retrying once here keeps that
+    // invisible, which is what makes a scope-limited token practical to use
+    // at all — see oauth-refresh.ts. A Personal Access Token configures no
+    // refresh, so nothing changes for it.
     this.client.interceptors.response.use(
       (response) => response,
+      // Deliberately NOT async: every path except the refresh keeps throwing
+      // synchronously, exactly as before. Only the 401 branch returns a
+      // promise, because only it has to await.
       (error) => {
-        throw BexioClient.toMcpError(error, error?.config?.url, error?.config?.method);
+        const original = error?.config;
+        if (
+          error?.response?.status === 401 &&
+          refreshConfigured() &&
+          original &&
+          // Retry a given request once. Without this a token rejected for some
+          // reason other than expiry would loop.
+          !original.__bexioRetried
+        ) {
+          original.__bexioRetried = true;
+          return this.refreshAndRetry(original);
+        }
+        throw BexioClient.toMcpError(error, original?.url, original?.method);
       }
     );
+  }
+
+  /**
+   * Refresh the access token and replay the request that met the 401, once.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async refreshAndRetry(original: any): Promise<AxiosResponse> {
+    let token: string;
+    try {
+      token = await refreshAccessToken();
+    } catch (refreshError) {
+      // Surface why the refresh failed — that message says what to do — rather
+      // than the original 401, which only says "unauthorized".
+      throw McpError.bexioApi((refreshError as Error).message, 401, {
+        url: original.url,
+        method: original.method,
+      });
+    }
+    this.setApiToken(token);
+    original.headers = { ...original.headers, Authorization: `Bearer ${token}` };
+    return this.client.request(original);
+  }
+
+  /**
+   * Point this client at a new access token.
+   *
+   * Both the axios instance and `config.apiToken` are updated: the binary and
+   * multipart paths (PDF download, file upload) build their own headers from
+   * `config.apiToken` and would otherwise keep presenting the expired one.
+   */
+  private setApiToken(token: string): void {
+    this.config.apiToken = token;
+    this.client.defaults.headers["Authorization"] = `Bearer ${token}`;
   }
 
   /**

@@ -252,6 +252,10 @@ Claude uses `find_contact_by_name` to identify the customer, then `get_customer_
 | `BEXIO_READ_ONLY` | No | off | `1`/`true` registers only read-only tools; every write is refused — see below |
 | `BEXIO_ALLOW_TOOLS` | No | - | With `BEXIO_READ_ONLY`, individual writes to allow back, by exact tool name |
 | `BEXIO_DENY_TOOLS` | No | - | Tools refused by exact name, always, whatever else is configured — see below |
+| `BEXIO_OAUTH_TOKEN_FILE` | No | - | JSON file holding an OAuth `access_token` and `refresh_token`; refreshed on 401 — see below |
+| `BEXIO_OAUTH_CLIENT_ID` | With token file | - | Client ID of your app on developer.bexio.com |
+| `BEXIO_OAUTH_CLIENT_SECRET` | With token file | - | Client secret of that app |
+| `BEXIO_OAUTH_TOKEN_URL` | No | bexio's | Token endpoint, if you need to override it |
 | `BEXIO_HTTP_TOKEN` | Recommended for HTTP | - | Bearer token required on every HTTP endpoint except `GET /` |
 | `BEXIO_FILE_DIR` | No | - | Directory that `upload_file` `file_path` / `download_file` `output_path` are confined to. Required for local paths over HTTP; optional extra confinement over stdio |
 | `BEXIO_DOWNLOAD_INLINE_MAX_BYTES` | No | `64000` | `download_file` returns files up to this size inline as base64; larger ones are written to disk |
@@ -293,6 +297,47 @@ BEXIO_ALLOW_TOOLS=create_invoice,create_expense,create_contact,upload_file
 Read-only alone is rarely what an integration needs; naming the exceptions
 keeps the grant small enough to audit at a glance, and anything the server
 gains in a later release is not in the list, so it is not reachable.
+
+### OAuth Tokens — Refreshed Automatically
+
+A Personal Access Token is static and needs none of this. An OAuth access
+token does: bexio issues it for one hour, after which every call returns 401.
+
+That is worth solving, because scopes exist only on the OAuth path. A PAT "has
+all default scopes granted and therefore has full access to your company's
+data" — there is no way to restrict one. An operator who wants the *token*
+limited to, say, `kb_invoice_edit` and `contact_edit` has to use OAuth, and
+without refresh that choice costs an interactive browser round trip every
+hour. In practice nobody makes it.
+
+Point the server at the file your authorization flow wrote:
+
+```bash
+BEXIO_OAUTH_TOKEN_FILE=/path/to/tokens.json   # { "access_token": "...", "refresh_token": "..." }
+BEXIO_OAUTH_CLIENT_ID=...
+BEXIO_OAUTH_CLIENT_SECRET=...
+```
+
+The access token is read from that file at startup, in preference to
+`BEXIO_API_TOKEN`. On a 401 the server exchanges the refresh token, replays the
+request once, and writes both tokens back to the file (mode 600) so the next
+process starts live. Request the `offline_access` scope during authorization,
+or bexio returns no refresh token.
+
+Two details that are not obvious:
+
+- **bexio rotates the refresh token on every exchange.** Refreshes are
+  therefore single-flight: tool calls run in parallel, so an expiry mid-batch
+  produces several 401s at once, and without the guard each would spend the
+  refresh token while the later exchanges presented one that is no longer
+  current.
+- **Both the axios instance and the stored token are updated**, because the
+  binary and multipart paths (PDF download, file upload) build their own
+  headers and would otherwise keep presenting the expired one.
+
+If the refresh itself fails — a revoked or expired refresh token — the error
+says so and says to run the authorization flow again, rather than surfacing
+the original 401, which only says "unauthorized".
 
 ### Refusing Individual Tools
 
